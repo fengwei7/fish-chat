@@ -15,9 +15,113 @@ fish-chat.....
 
 #### 使用说明
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+### 1. MySQL 服务
+
+```bash
+docker run -d \
+  --name fish-chat-mysql \
+  -e MYSQL_ROOT_PASSWORD=123456 \
+  -e MYSQL_DATABASE=test \
+  -p 3306:3306 \
+  -v mysql_data:/var/lib/mysql \
+  mysql:8.0
+```
+
+
+### 2. Redis 服务
+
+```bash
+docker run -d \
+  --name fish-chat-redis \
+  -p 6379:6379 \
+  redis:latest \
+  redis-server --requirepass 123456
+```
+
+
+### 3. MongoDB 服务
+
+```bash
+docker run -d \
+  --name fish-chat-mongodb \
+  -e MONGO_INITDB_ROOT_USERNAME=myuser \
+  -e MONGO_INITDB_ROOT_PASSWORD=mypassword \
+  -p 27017:27017 \
+  -v mongodb_data:/data/db \
+  mongo:latest
+```
+
+
+### 4. fish-chat 应用服务
+
+首先需要构建 Docker 镜像：
+
+```bash
+docker build -t fish-chat -f docker/Dockerfile .
+```
+
+
+然后运行应用容器：
+
+```bash
+docker run -d \
+  --name fish-chat-app \
+  --link fish-chat-mysql:mysql \
+  --link fish-chat-redis:redis \
+  --link fish-chat-mongodb:mongodb \
+  -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=docker \
+  fish-chat
+```
+
+
+### 启动顺序说明
+
+由于应用服务依赖于其他三个数据库服务，您需要按以下顺序启动容器：
+
+1. 首先启动 MySQL:
+   ```bash
+   docker run -d --name fish-chat-mysql -e MYSQL_ROOT_PASSWORD=123456 -e MYSQL_DATABASE=test -p 3306:3306 -v mysql_data:/var/lib/mysql mysql:8.0
+   ```
+
+
+2. 然后启动 Redis:
+   ```bash
+   docker run -d --name fish-chat-redis -p 6379:6379 redis:latest redis-server --requirepass 123456
+   ```
+
+
+3. 接着启动 MongoDB:
+   ```bash
+   docker run -d --name fish-chat-mongodb -e MONGO_INITDB_ROOT_USERNAME=myuser -e MONGO_INITDB_ROOT_PASSWORD=mypassword -p 27017:27017 -v mongodb_data:/data/db mongo:latest
+   ```
+
+
+4. 最后启动主应用 (需要等待数据库服务完全启动):
+   ```bash
+   docker run -d --name fish-chat-app --link fish-chat-mysql:mysql --link fish-chat-redis:redis --link fish-chat-mongodb:mongodb -p 8080:8080 -e SPRING_PROFILES_ACTIVE=docker fish-chat
+   ```
+
+
+### 停止和清理命令
+
+停止所有容器:
+```bash
+docker stop fish-chat-app fish-chat-mysql fish-chat-redis fish-chat-mongodb
+```
+
+
+删除所有容器:
+```bash
+docker rm fish-chat-app fish-chat-mysql fish-chat-redis fish-chat-mongodb
+```
+
+
+删除数据卷:
+```bash
+docker volume rm mysql_data mongodb_data
+```
+
 
 #### 参与贡献
 
