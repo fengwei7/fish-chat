@@ -36,8 +36,6 @@ spring:
 
       # 连接池配置
       auto-index-creation: true
-      gridfs:
-        database: mygridfs  # GridFS 存储的数据库
 
   redis:
     host: 116.205.110.130
@@ -55,10 +53,9 @@ mybatis-plus:
     multiple-result-sets-enabled: true
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
   global-config:
-    banner: false
     db-config:
       id-type: assign_id
       table-underline: true
+      table-prefix: tb_
+      logic-delete-field: deleted
     enable-sql-runner: true
-    #数据库类型
-    db-type: MYSQL
