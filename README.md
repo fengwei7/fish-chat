@@ -1,17 +1,46 @@
 # fish-chat
 
-#### 介绍
-fish-chat.....
+## 介绍
 
-#### 软件架构
-软件架构说明
+fish-chat 是一个基于 Spring Boot 的聊天服务项目，旨在提供一个基础的即时通讯功能实现。该项目采用了现代化的技术栈，包括 MySQL、Redis、MongoDB 等，支持权限认证、缓存、数据持久化等功能。
 
+## 软件架构
 
-#### 安装教程
+### 技术选型
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+- 后端框架：Spring Boot 2.6.13
+- 数据库：MySQL 8.0、MongoDB
+- 缓存：Redis
+- 权限框架：Sa-Token 1.44.0
+- ORM 框架：MyBatis-Plus 3.5.13
+- 连接池：Druid 1.2.8
+- 构建工具：Maven 3.8.1+
+- 其他工具：Lombok、Hutool、Fastjson
+
+### 架构特性
+
+- 权限认证（Sa-Token）
+- Redis 缓存支持
+- MongoDB 数据存储
+- MySQL 数据持久化
+- 响应式编程支持
+- 数据源监控（Druid）
+
+## 环境要求
+
+- JDK 1.8 或更高版本
+- Maven 3.8.1+
+- MySQL 8.0+
+- Redis
+- MongoDB
+- Docker (可选，用于容器化部署)
+
+## 安装教程
+
+1.  确保已安装 JDK 1.8+、Maven、MySQL、Redis 和 MongoDB
+2.  配置数据库连接信息（在 application.yaml 中）
+3.  使用 Maven 构建项目：`mvn clean package`
+4.  运行项目：`java -jar bootstrap/target/bootstrap-0.0.1-SNAPSHOT.jar`
 
 #### 使用说明
 
@@ -130,12 +159,3 @@ docker volume rm mysql_data mongodb_data
 3.  提交代码
 4.  新建 Pull Request
 
-
-#### 特技
-
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
