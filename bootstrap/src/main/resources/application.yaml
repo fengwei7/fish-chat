@@ -21,17 +21,17 @@ sa-token:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/test?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://116.205.110.130:3306/fish_chat?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: 123456
+    password: M7PlDMXRsk9_wPReR
     type: com.alibaba.druid.pool.DruidDataSource
   data:
     mongodb:
-      host: localhost
+      host: 116.205.110.130
       port: 27017
-      database: mydb
-      username: myuser
-      password: mypassword
+      database: fishchat
+      username: fishchat
+      password: 9tiCBO4AxM9l
       authentication-database: admin  # 认证数据库
 
       # 连接池配置
@@ -40,9 +40,9 @@ spring:
         database: mygridfs  # GridFS 存储的数据库
 
   redis:
-    host: localhost
+    host: 116.205.110.130
     port: 6379
-    password: 123456
+    password: COflR2xUxLwN
     database: 0
     timeout: 3000
 
@@ -62,9 +62,3 @@ mybatis-plus:
     enable-sql-runner: true
     #数据库类型
     db-type: MYSQL
-  configuration-properties:
-    prefix:
-    #如果数据库为postgresql，则需要配置为blobType: BINARY
-    blobType: BLOB
-    #如果数据库为oracle或mssql，则需要配置为boolValue: 1
-    boolValue: true
