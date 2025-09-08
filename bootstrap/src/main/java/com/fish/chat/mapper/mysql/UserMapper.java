@@ -7,4 +7,6 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface UserMapper extends BaseMapper<User> {
 
+    // 功能测试
+    User getMessage(User user);
 }

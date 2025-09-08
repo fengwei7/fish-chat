@@ -56,6 +56,6 @@ mybatis-plus:
     db-config:
       id-type: assign_id
       table-underline: true
-      table-prefix: tb_
+      table-prefix: t_
       logic-delete-field: deleted
     enable-sql-runner: true
