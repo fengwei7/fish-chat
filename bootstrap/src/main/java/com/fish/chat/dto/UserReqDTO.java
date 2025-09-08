@@ -1,6 +1,5 @@
 package com.fish.chat.dto;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -13,5 +12,8 @@ public class UserReqDTO {
     private String username;
     private String password;
     private String mobile;
-
+    private String email;
+    private String nickname;
+    private String avatarUrl;
+    private String profile;
 }
