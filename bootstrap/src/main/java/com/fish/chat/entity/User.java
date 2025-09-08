@@ -34,6 +34,12 @@ public class User implements Serializable {
     private String password;
 
     /**
+     * 密码盐值
+     */
+    @TableField("salt")
+    private String salt;
+
+    /**
      * 昵称
      */
     @TableField("nickname")

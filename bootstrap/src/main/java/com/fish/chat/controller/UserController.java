@@ -1,10 +1,14 @@
 package com.fish.chat.controller;
 
+import cn.dev33.satoken.annotation.SaCheckLogin;
+import cn.dev33.satoken.stp.StpUtil;
+import com.fish.chat.dto.UserReqDTO;
+import com.fish.chat.entity.User;
 import com.fish.chat.service.UserService;
 import com.fish.chat.utils.result.Result;
 import javax.annotation.Resource;
+import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,9 +23,28 @@ public class UserController {
     @Resource
     UserService userService;
 
-    @GetMapping("/getInfoById/{id}")
-    public Result getInfoById(@PathVariable Long id) {
+    @GetMapping("/getInfo")
+    @SaCheckLogin
+    public Result getInfoById() {
+        Long id = (Long) StpUtil.getLoginId();
         return Result.data(userService.getById(id));
+    }
+
+    public Result updateInfo(UserReqDTO user) {
+        Long id = (Long) StpUtil.getLoginId();
+        if (user.getId() == null || user.getId() == 0) {
+            return Result.error("用户ID不能为空");
+        }
+        if (!user.getId().equals(id)) {
+            return Result.error("用户ID不匹配");
+        }
+        User dbUser = new User();
+        BeanUtils.copyProperties(user, dbUser);
+
+        if (!userService.updateById(dbUser)){
+            return Result.error("更新失败");
+        }
+        return Result.ok();
     }
 
 }
