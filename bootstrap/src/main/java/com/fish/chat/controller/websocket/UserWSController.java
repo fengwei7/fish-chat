@@ -1,25 +1,21 @@
 package com.fish.chat.controller.websocket;
 
-import com.fish.chat.service.UserService;
+import com.fish.chat.dto.UserDTO;
 import com.fish.chat.utils.result.Result;
 import com.fish.chat.utils.websocket.WebSocketUtil;
 import com.fish.chat.websocket.ChatWebSocket;
-import java.util.List;
-import javax.annotation.Resource;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * WebSocket测试控制器
+ * WebSocket用户相关接口
  */
 @RestController
 @RequestMapping("/ws")
 public class UserWSController {
+
     /**
      * 获取在线用户数
      */
@@ -35,7 +31,7 @@ public class UserWSController {
      */
     @GetMapping("/send")
     public Result sendMessageToUser(@RequestParam String userId,
-        @RequestParam String message) {
+                                    @RequestParam String message) {
         WebSocketUtil.sendMessageToUser(userId, "notification", message);
         return Result.data("消息发送成功");
     }
@@ -55,8 +51,9 @@ public class UserWSController {
     @GetMapping("/online/users")
     public Result getOnlineUsers() {
         Map<String, Object> data = new HashMap<>();
-        data.put("users", ChatWebSocket.getOnlineClients().keySet());
-        data.put("count", ChatWebSocket.getOnlineCount());
+        Map<String, UserDTO> onlineUsers = ChatWebSocket.getOnlineUsers();
+        data.put("users", onlineUsers);
+        data.put("count", onlineUsers.size());
         return Result.data(data);
     }
 }

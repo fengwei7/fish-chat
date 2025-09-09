@@ -2,9 +2,11 @@ package com.fish.chat.websocket;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.fastjson.JSON;
+import com.fish.chat.dto.UserDTO;
 import com.fish.chat.entity.User;
 import com.fish.chat.service.UserService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -25,14 +27,18 @@ public class ChatWebSocket {
     // 用于存放所有在线客户端
     private static final Map<String, ChatWebSocket> onlineClients = new ConcurrentHashMap<>();
     
+    // 用于存放所有在线用户信息
+    private static final Map<String, UserDTO> onlineUsers = new ConcurrentHashMap<>();
+    
     // 与某个客户端的连接会话
     private Session session;
     
     // 用户ID
     private String userId;
+
     
-    // 用户名
-    private String username;
+    // 用户信息
+    private UserDTO userDTO;
     
     // 注入UserService (通过静态方法注入)
     private static UserService userService;
@@ -60,10 +66,16 @@ public class ChatWebSocket {
         
         this.session = session;
         this.userId = StpUtil.getLoginIdAsString();
-        
-        // 获取用户名
+
         User user = userService.getById(userId);
-        this.username = (user != null) ? user.getUsername() : "用户" + userId;
+        
+        // 构造UserDTO
+        if (user != null) {
+            this.userDTO = new UserDTO();
+            BeanUtils.copyProperties(user, userDTO);
+            // 将用户信息加入在线用户列表
+            onlineUsers.put(userId, this.userDTO);
+        }
         
         // 将客户端连接加入在线列表
         onlineClients.put(userId, this);
@@ -83,6 +95,7 @@ public class ChatWebSocket {
     public void onClose() {
         // 从在线列表中移除
         onlineClients.remove(userId);
+        onlineUsers.remove(userId);
         log.info("用户 {} 断开连接，当前在线人数: {}", userId, onlineClients.size());
     }
 
@@ -169,6 +182,7 @@ public class ChatWebSocket {
     public void onError(Session session, Throwable error) {
         log.error("WebSocket发生错误", error);
         onlineClients.remove(userId);
+        onlineUsers.remove(userId);
     }
 
     /**
@@ -197,5 +211,13 @@ public class ChatWebSocket {
      */
     public static Map<String, ChatWebSocket> getOnlineClients() {
         return onlineClients;
+    }
+    
+    /**
+     * 获取在线用户信息列表
+     * @return 在线用户信息列表
+     */
+    public static Map<String, UserDTO> getOnlineUsers() {
+        return onlineUsers;
     }
 }
