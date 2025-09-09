@@ -15,7 +15,10 @@ public class CodeGenerator {
     /**
      * MybatisPlus 代码生成器
      * 不怎么好用，待优化
+     * 生成内容中Controller没有方法，暂时使用EasyCode单独生成Controller
+     * 最优解@Qwen3-coder、@豆包
      * @param args
+     * @Author weii
      */
     public static void main(String[] args) {
         String dbUrl = "jdbc:mysql://116.205.110.130:3306/fish_chat?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true";
@@ -39,6 +42,7 @@ public class CodeGenerator {
                 )
                 .strategyConfig(builder -> builder
                         .addTablePrefix("t_", "sys_") // 设置过滤表前缀
+                        .addInclude("t_table") // 设置需要生成的表名
                         .entityBuilder()
                         .enableLombok()
                         .logicDeleteColumnName("deleted")
