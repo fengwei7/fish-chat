@@ -92,7 +92,6 @@ public class LoginController {
     }
 
     @PostMapping("/logout")
-    @SaCheckLogin
     public Result logout() {
         StpUtil.logout();
         return Result.data("登出成功");

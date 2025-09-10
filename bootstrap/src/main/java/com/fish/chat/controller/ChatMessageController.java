@@ -16,7 +16,6 @@ import java.util.List;
 @CrossOrigin
 @RestController
 @RequestMapping("/chat/messages")
-@SaCheckLogin
 public class ChatMessageController {
 
     @Autowired

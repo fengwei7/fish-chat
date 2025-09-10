@@ -29,7 +29,6 @@ public class UserController {
     UserService userService;
 
     @GetMapping("/info")
-    @SaCheckLogin
     public Result getInfoById() {
         Long id = StpUtil.getLoginIdAsLong();
         User user = userService.getById(id);
@@ -39,7 +38,6 @@ public class UserController {
     }
 
     @PostMapping("/update")
-    @SaCheckLogin
     public Result updateInfo(@RequestBody UserReqDTO user) {
         Long id = StpUtil.getLoginIdAsLong();
         if (user.getId() == null || user.getId() == 0) {
