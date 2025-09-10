@@ -78,7 +78,8 @@
         <input type="password" id="password" placeholder="请输入密码">
         <br>
         <button onclick="login()">登录</button>
-        <button onclick="testAccLogin()">一键登录</button>
+        <button onclick="testAccLogin('test1','test123456')">一键登录test1</button>
+        <button onclick="testAccLogin('test2','test123456')">一键登录test2</button>
         <p>提示：可以使用测试账号进行登录</p>
     </div>
     
@@ -165,9 +166,9 @@
                 alert('登录请求失败: ' + error.message);
             });
         }
-        function testAccLogin() {
-            const username = "test"
-            const password = "test123456"
+        function testAccLogin(usernameArg, passwordArg) {
+            const username = usernameArg
+            const password = passwordArg
 
             if (!username || !password) {
                 alert('请输入用户名和密码');

@@ -1,6 +1,5 @@
 package com.fish.chat.controller;
 
-import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
 import com.fish.chat.dto.UserDTO;
 import com.fish.chat.dto.UserReqDTO;

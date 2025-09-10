@@ -29,9 +29,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     // 用于存放所有在线客户端
     private static final Map<String, WebSocketSession> onlineSessions = new ConcurrentHashMap<>();
     
-    // 用于存放所有在线用户信息
-    private static final Map<String, UserDTO> onlineUsers = new ConcurrentHashMap<>();
-
     private static UserService userService;
 
     private static ChatMessageService chatMessageService;
@@ -74,9 +71,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         // 将客户端连接加入在线列表
         onlineSessions.put(userIdStr, session);
-        if (userDTO != null) {
-            onlineUsers.put(userIdStr, userDTO);
-        }
 
         System.out.println("用户 " + userId + " 连接成功，当前在线人数: " + onlineSessions.size());
 
@@ -97,7 +91,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         // 从在线列表中移除
         onlineSessions.remove(userIdStr);
-        onlineUsers.remove(userIdStr);
 
         // 从Redis中删除用户在线状态
         redisOnlineUserMapper.removeOnlineUser(userIdStr);
@@ -240,6 +233,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      * @return 在线用户信息列表
      */
     public static Map<String, UserDTO> getOnlineUsers() {
-        return onlineUsers;
+        return redisOnlineUserMapper.getAllOnlineUsers();
     }
 }
