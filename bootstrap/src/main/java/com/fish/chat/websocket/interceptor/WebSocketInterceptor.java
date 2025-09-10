@@ -19,17 +19,27 @@ public class WebSocketInterceptor implements HandshakeInterceptor {
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler handler,
                                    Map<String, Object> attributes) throws Exception {
         
-        System.out.println("---- 握手之前触发 " + StpUtil.getTokenValue());
+        System.out.println("---- 握手之前触发");
         
-        // 未登录情况下拒绝握手
-        if (!StpUtil.isLogin()) {
-            System.out.println("---- 未授权客户端，连接失败");
+        // 从参数中获取token
+        String query = request.getURI().getQuery();
+        String token = null;
+        if (query != null && query.contains("token=")) {
+            token = query.substring(query.indexOf("token=") + 6);
+            if (token.contains("&")) {
+                token = token.substring(0, token.indexOf("&"));
+            }
+        }
+
+        try {
+            Object loginId = StpUtil.getLoginIdByToken(token);
+            // 标记 userId，握手成功
+            attributes.put("userId", loginId);
+            return true;
+        } catch (Exception e) {
+            System.out.println("---- 未授权客户端，连接失败: " + e.getMessage());
             return false;
         }
-        long loginIdAsLong = StpUtil.getLoginIdAsLong();
-        // 标记 userId，握手成功
-        attributes.put("userId", StpUtil.getLoginIdAsLong());
-        return true;
     }
 
     // 握手之后触发

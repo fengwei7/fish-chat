@@ -9,7 +9,7 @@ import java.util.Date;
 @Component
 public class MyMetaObjectHandler implements MetaObjectHandler {
 
-//   在每次insert和update时自动填充
+//   在每次insert和update时自动填充createTime和updateTime字段
     @Override
     public void insertFill(MetaObject metaObject) {
         // 如果create_time为null，则自动填充

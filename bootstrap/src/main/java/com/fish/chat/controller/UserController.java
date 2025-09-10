@@ -9,6 +9,7 @@ import com.fish.chat.service.UserService;
 import com.fish.chat.utils.result.Result;
 import javax.annotation.Resource;
 import org.springframework.beans.BeanUtils;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author fish-chat
  * @since 2025-09-06
  */
+@CrossOrigin
 @RestController
 @RequestMapping("/user")
 public class UserController {

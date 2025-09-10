@@ -13,6 +13,7 @@ import java.util.List;
 /**
  * 聊天消息控制器
  */
+@CrossOrigin
 @RestController
 @RequestMapping("/chat/messages")
 @SaCheckLogin

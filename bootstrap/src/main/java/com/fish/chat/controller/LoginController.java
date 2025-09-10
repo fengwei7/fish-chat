@@ -9,6 +9,7 @@ import com.fish.chat.entity.User;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Resource;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +18,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.core.util.RandomUtil;
 
+@CrossOrigin
 @RestController
 @RequestMapping("/auth")
 public class LoginController {

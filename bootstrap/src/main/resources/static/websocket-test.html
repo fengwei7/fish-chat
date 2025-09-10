@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket聊天测试</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .login-section, .chat-section {
+            border: 1px solid #ddd;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .chat-section {
+            display: none;
+        }
+        input, button, textarea {
+            margin: 5px;
+            padding: 8px;
+        }
+        input, textarea {
+            width: 300px;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        #messageList {
+            height: 300px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+        .message {
+            margin-bottom: 10px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+        .system-message {
+            background-color: #e0e0e0;
+            font-style: italic;
+        }
+        .sent-message {
+            background-color: #d4edda;
+            text-align: right;
+        }
+        .received-message {
+            background-color: #f8d7da;
+        }
+        .status {
+            font-weight: bold;
+        }
+        .connected {
+            color: green;
+        }
+        .disconnected {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <h1>WebSocket聊天测试</h1>
+    
+    <!-- 登录区域 -->
+    <div id="loginSection" class="login-section">
+        <h2>用户登录</h2>
+        <label for="username">用户名:</label>
+        <input type="text" id="username" placeholder="请输入用户名">
+        <br>
+        <label for="password">密码:</label>
+        <input type="password" id="password" placeholder="请输入密码">
+        <br>
+        <button onclick="login()">登录</button>
+        <button onclick="testAccLogin()">一键登录</button>
+        <p>提示：可以使用测试账号进行登录</p>
+    </div>
+    
+    <!-- 聊天区域 -->
+    <div id="chatSection" class="chat-section">
+        <h2>聊天室</h2>
+        <div>
+            <span class="status">连接状态: </span>
+            <span id="connectionStatus" class="disconnected">未连接</span>
+            <span> | 当前用户: </span>
+            <span id="currentUsername"></span>
+        </div>
+        <br>
+        <button onclick="connectWebSocket()">连接WebSocket</button>
+        <button onclick="disconnectWebSocket()">断开连接</button>
+        <button onclick="clearMessages()">清空消息</button>
+        
+        <h3>发送消息</h3>
+        <label for="targetUserId">目标用户ID:</label>
+        <input type="text" id="targetUserId" placeholder="请输入目标用户ID">
+        <br>
+        <label for="messageContent">消息内容:</label>
+        <br>
+        <textarea id="messageContent" placeholder="请输入消息内容"></textarea>
+        <br>
+        <button onclick="sendMessage()">发送消息</button>
+        
+        <h3>消息记录</h3>
+        <div id="messageList"></div>
+    </div>
+
+    <script>
+        // 基础URL配置
+        const baseHttpURL = "http://127.0.0.1:8080";
+        const baseWsURL = "ws://127.0.0.1:8080";
+        
+        let websocket = null;
+        let currentUserId = null;
+        let currentUsername = null;
+        let token = null;
+        
+        // 登录功能
+        function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+            
+            // 调用登录接口
+            fetch(baseHttpURL + '/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    // 登录成功
+                    currentUserId = data.data.userId;
+                    currentUsername = data.data.username;
+                    token = data.data.token;
+                    
+                    // 显示聊天区域
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('chatSection').style.display = 'block';
+                    document.getElementById('currentUsername').textContent = currentUsername;
+                    
+                    addMessage('system', '登录成功，用户: ' + currentUsername + ' (ID: ' + currentUserId + ')');
+                } else {
+                    // 登录失败
+                    alert('登录失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('登录请求失败:', error);
+                alert('登录请求失败: ' + error.message);
+            });
+        }
+        function testAccLogin() {
+            const username = "test"
+            const password = "test123456"
+
+            if (!username || !password) {
+                alert('请输入用户名和密码');
+                return;
+            }
+
+            // 调用登录接口
+            fetch(baseHttpURL + '/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 200) {
+                    // 登录成功
+                    currentUserId = data.data.userId;
+                    currentUsername = data.data.username;
+                    token = data.data.token;
+
+                    // 显示聊天区域
+                    document.getElementById('loginSection').style.display = 'none';
+                    document.getElementById('chatSection').style.display = 'block';
+                    document.getElementById('currentUsername').textContent = currentUsername;
+
+                    addMessage('system', '登录成功，用户: ' + currentUsername + ' (ID: ' + currentUserId + ')');
+                } else {
+                    // 登录失败
+                    alert('登录失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('登录请求失败:', error);
+                alert('登录请求失败: ' + error.message);
+            });
+        }
+        
+        // 连接WebSocket
+        function connectWebSocket() {
+            if (!token) {
+                alert('请先登录');
+                return;
+            }
+            
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                addMessage('system', 'WebSocket已经连接');
+                return;
+            }
+            
+            // 构建WebSocket连接URL
+            const wsUrl = baseWsURL + '/websocket/chat';
+            
+            try {
+                // 创建WebSocket连接
+                websocket = new WebSocket(wsUrl + '?token=' + token);
+                
+                // 连接成功回调
+                websocket.onopen = function(event) {
+                    console.log('WebSocket连接已建立');
+                    document.getElementById('connectionStatus').textContent = '已连接';
+                    document.getElementById('connectionStatus').className = 'connected';
+                    addMessage('system', 'WebSocket连接已建立');
+                };
+                
+                // 收到消息回调
+                websocket.onmessage = function(event) {
+                    console.log('收到消息:', event.data);
+                    handleMessage(event.data);
+                };
+                
+                // 连接关闭回调
+                websocket.onclose = function(event) {
+                    console.log('WebSocket连接已关闭');
+                    document.getElementById('connectionStatus').textContent = '未连接';
+                    document.getElementById('connectionStatus').className = 'disconnected';
+                    addMessage('system', 'WebSocket连接已关闭');
+                };
+                
+                // 连接错误回调
+                websocket.onerror = function(error) {
+                    console.error('WebSocket连接出错:', error);
+                    addMessage('system', 'WebSocket连接出错: ' + error);
+                };
+            } catch (e) {
+                console.error('WebSocket连接失败:', e);
+                addMessage('system', 'WebSocket连接失败: ' + e.message);
+            }
+        }
+        
+        // 处理收到的消息
+        function handleMessage(data) {
+            try {
+                const message = JSON.parse(data);
+                const type = message.type;
+                
+                switch (type) {
+                    case 'connect':
+                        addMessage('system', '服务器: ' + message.message);
+                        break;
+                    case 'chat':
+                        addMessage('received', '来自用户' + message.from + ': ' + message.content);
+                        break;
+                    case 'error':
+                        addMessage('system', '错误: ' + message.message);
+                        break;
+                    case 'pong':
+                        addMessage('system', '心跳响应: pong');
+                        break;
+                    default:
+                        addMessage('system', '收到未知类型消息: ' + data);
+                }
+            } catch (e) {
+                addMessage('system', '解析消息失败: ' + data);
+            }
+        }
+        
+        // 发送消息
+        function sendMessage() {
+            if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+                alert('WebSocket未连接');
+                return;
+            }
+            
+            const targetUserId = document.getElementById('targetUserId').value;
+            const content = document.getElementById('messageContent').value;
+            
+            if (!targetUserId) {
+                alert('请输入目标用户ID');
+                return;
+            }
+            
+            if (!content) {
+                alert('请输入消息内容');
+                return;
+            }
+            
+            // 构造聊天消息
+            const message = {
+                type: 'chat',
+                to: targetUserId,
+                content: content
+            };
+            
+            // 发送消息
+            websocket.send(JSON.stringify(message));
+            addMessage('sent', '发送给用户' + targetUserId + ': ' + content);
+            
+            // 清空消息内容
+            document.getElementById('messageContent').value = '';
+        }
+        
+        // 发送心跳消息
+        function sendPing() {
+            if (!websocket || websocket.readyState !== WebSocket.OPEN) {
+                return;
+            }
+            
+            const pingMessage = {
+                type: 'ping'
+            };
+            
+            websocket.send(JSON.stringify(pingMessage));
+        }
+        
+        // 定期发送心跳消息
+        setInterval(sendPing, 30000); // 每30秒发送一次心跳
+        
+        // 断开WebSocket连接
+        function disconnectWebSocket() {
+            if (websocket) {
+                websocket.close();
+                websocket = null;
+            }
+        }
+        
+        // 添加消息到消息列表
+        function addMessage(type, content) {
+            const messageList = document.getElementById('messageList');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ' + type + '-message';
+            messageDiv.textContent = '[' + new Date().toLocaleTimeString() + '] ' + content;
+            messageList.appendChild(messageDiv);
+            messageList.scrollTop = messageList.scrollHeight;
+        }
+        
+        // 清空消息
+        function clearMessages() {
+            document.getElementById('messageList').innerHTML = '';
+        }
+        
+        // 页面加载完成后的初始化
+        window.onload = function() {
+            addMessage('system', '页面加载完成，请先登录');
+        };
+        
+        // 页面关闭前断开WebSocket连接
+        window.onbeforeunload = function() {
+            disconnectWebSocket();
+        };
+    </script>
+</body>
+</html>

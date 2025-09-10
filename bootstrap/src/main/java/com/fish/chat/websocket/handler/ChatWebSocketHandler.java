@@ -55,98 +55,92 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         // 从会话属性中获取用户ID（在拦截器中设置）
-        Long userId = (Long) session.getAttributes().get("userId");
-        
-        if (userId != null) {
-            String userIdStr = String.valueOf(userId);
-            
-            // 获取用户信息
-            User user = userService.getById(userId);
-            
-            // 构造UserDTO
-            UserDTO userDTO = null;
-            if (user != null) {
-                userDTO = new UserDTO();
-                BeanUtils.copyProperties(user, userDTO);
-                
-                // 将用户信息保存到Redis
-                redisOnlineUserMapper.saveOnlineUser(userIdStr, userDTO, 5);
-            }
-            
-            // 将客户端连接加入在线列表
-            onlineSessions.put(userIdStr, session);
-            if (userDTO != null) {
-                onlineUsers.put(userIdStr, userDTO);
-            }
-            
-            System.out.println("用户 " + userId + " 连接成功，当前在线人数: " + onlineSessions.size());
-            
-            // 发送连接成功消息
-            Map<String, Object> connectMsg = new HashMap<>();
-            connectMsg.put("type", "connect");
-            connectMsg.put("message", "连接成功");
-            sendMessage(session, JSON.toJSONString(connectMsg));
+        Long userId = Long.valueOf((String) session.getAttributes().get("userId"));
+
+        String userIdStr = String.valueOf(userId);
+
+        // 获取用户信息
+        User user = userService.getById(userId);
+
+        // 构造UserDTO
+        UserDTO userDTO = null;
+        if (user != null) {
+            userDTO = new UserDTO();
+            BeanUtils.copyProperties(user, userDTO);
+
+            // 将用户信息保存到Redis
+            redisOnlineUserMapper.saveOnlineUser(userIdStr, userDTO, 5);
         }
+
+        // 将客户端连接加入在线列表
+        onlineSessions.put(userIdStr, session);
+        if (userDTO != null) {
+            onlineUsers.put(userIdStr, userDTO);
+        }
+
+        System.out.println("用户 " + userId + " 连接成功，当前在线人数: " + onlineSessions.size());
+
+        // 发送连接成功消息
+        Map<String, Object> connectMsg = new HashMap<>();
+        connectMsg.put("type", "connect");
+        connectMsg.put("message", "连接成功");
+        sendMessage(session, JSON.toJSONString(connectMsg));
     }
 
     // 监听：连接关闭
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception {
         // 从会话属性中获取用户ID
-        Long userId = (Long) session.getAttributes().get("userId");
-        
-        if (userId != null) {
-            String userIdStr = String.valueOf(userId);
-            
-            // 从在线列表中移除
-            onlineSessions.remove(userIdStr);
-            onlineUsers.remove(userIdStr);
-            
-            // 从Redis中删除用户在线状态
-            redisOnlineUserMapper.removeOnlineUser(userIdStr);
-            
-            System.out.println("用户 " + userId + " 断开连接，当前在线人数: " + onlineSessions.size());
-        }
+        Long userId = Long.valueOf((String) session.getAttributes().get("userId"));
+
+        String userIdStr = String.valueOf(userId);
+
+        // 从在线列表中移除
+        onlineSessions.remove(userIdStr);
+        onlineUsers.remove(userIdStr);
+
+        // 从Redis中删除用户在线状态
+        redisOnlineUserMapper.removeOnlineUser(userIdStr);
+
+        System.out.println("用户 " + userId + " 断开连接，当前在线人数: " + onlineSessions.size());
     }
 
     // 收到消息
     @Override
     public void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
         // 从会话属性中获取用户ID
-        Long userId = (Long) session.getAttributes().get("userId");
-        
-        if (userId != null) {
-            String userIdStr = String.valueOf(userId);
-            System.out.println("来自用户 " + userId + " 的消息: " + message.getPayload());
-            
-            try {
-                // 解析消息
-                Map<String, Object> msg = JSON.parseObject(message.getPayload(), Map.class);
-                String type = (String) msg.get("type");
-                
-                switch (type) {
-                    case "chat":
-                        // 处理聊天消息
-                        handleChatMessage(userIdStr, msg);
-                        break;
-                    case "ping":
-                        // 处理心跳消息
-                        handlePingMessage(userIdStr);
-                        break;
-                    default:
-                        Map<String, Object> errorMsg = new HashMap<>();
-                        errorMsg.put("type", "error");
-                        errorMsg.put("message", "未知消息类型");
-                        sendMessage(session, JSON.toJSONString(errorMsg));
-                        break;
-                }
-            } catch (Exception e) {
-                System.err.println("处理消息失败: " + e.getMessage());
-                Map<String, Object> errorMsg = new HashMap<>();
-                errorMsg.put("type", "error");
-                errorMsg.put("message", "消息处理失败");
-                sendMessage(session, JSON.toJSONString(errorMsg));
+        Long userId = Long.valueOf((String) session.getAttributes().get("userId"));
+
+        String userIdStr = String.valueOf(userId);
+        System.out.println("来自用户 " + userId + " 的消息: " + message.getPayload());
+
+        try {
+            // 解析消息
+            Map<String, Object> msg = JSON.parseObject(message.getPayload(), Map.class);
+            String type = (String) msg.get("type");
+
+            switch (type) {
+                case "chat":
+                    // 处理聊天消息
+                    handleChatMessage(userIdStr, msg);
+                    break;
+                case "ping":
+                    // 处理心跳消息
+                    handlePingMessage(userIdStr);
+                    break;
+                default:
+                    Map<String, Object> errorMsg = new HashMap<>();
+                    errorMsg.put("type", "error");
+                    errorMsg.put("message", "未知消息类型");
+                    sendMessage(session, JSON.toJSONString(errorMsg));
+                    break;
             }
+        } catch (Exception e) {
+            System.err.println("处理消息失败: " + e.getMessage());
+            Map<String, Object> errorMsg = new HashMap<>();
+            errorMsg.put("type", "error");
+            errorMsg.put("message", "消息处理失败");
+            sendMessage(session, JSON.toJSONString(errorMsg));
         }
     }
 
