@@ -4,6 +4,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.fastjson.JSON;
 import com.fish.chat.dto.UserDTO;
 import com.fish.chat.entity.User;
+import com.fish.chat.mapper.redis.RedisOnlineUserMapper;
 import com.fish.chat.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -27,9 +28,6 @@ public class ChatWebSocket {
     // 用于存放所有在线客户端
     private static final Map<String, ChatWebSocket> onlineClients = new ConcurrentHashMap<>();
     
-    // 用于存放所有在线用户信息
-    private static final Map<String, UserDTO> onlineUsers = new ConcurrentHashMap<>();
-    
     // 与某个客户端的连接会话
     private Session session;
     
@@ -43,9 +41,17 @@ public class ChatWebSocket {
     // 注入UserService (通过静态方法注入)
     private static UserService userService;
     
+    // 注入RedisOnlineUserMapper (通过静态方法注入)
+    private static RedisOnlineUserMapper redisOnlineUserMapper;
+    
     @Autowired
     public void setUserService(UserService userService) {
         ChatWebSocket.userService = userService;
+    }
+    
+    @Autowired
+    public void setRedisOnlineUserMapper(RedisOnlineUserMapper redisOnlineUserMapper) {
+        ChatWebSocket.redisOnlineUserMapper = redisOnlineUserMapper;
     }
 
     /**
@@ -73,8 +79,8 @@ public class ChatWebSocket {
         if (user != null) {
             this.userDTO = new UserDTO();
             BeanUtils.copyProperties(user, userDTO);
-            // 将用户信息加入在线用户列表
-            onlineUsers.put(userId, this.userDTO);
+            // 将用户信息保存到Redis，设置过期时间（例如5分钟）
+            redisOnlineUserMapper.saveOnlineUser(userId, userDTO, 5);
         }
         
         // 将客户端连接加入在线列表
@@ -95,7 +101,10 @@ public class ChatWebSocket {
     public void onClose() {
         // 从在线列表中移除
         onlineClients.remove(userId);
-        onlineUsers.remove(userId);
+        // 从Redis中删除用户在线状态
+        if (redisOnlineUserMapper != null) {
+            redisOnlineUserMapper.removeOnlineUser(userId);
+        }
         log.info("用户 {} 断开连接，当前在线人数: {}", userId, onlineClients.size());
     }
 
@@ -173,6 +182,10 @@ public class ChatWebSocket {
         Map<String, Object> pongMsg = new HashMap<>();
         pongMsg.put("type", "pong");
         sendMessageToSelf(JSON.toJSONString(pongMsg));
+        // 更新用户在线状态
+        if (userDTO != null && redisOnlineUserMapper != null) {
+            redisOnlineUserMapper.updateOnlineUserExpire(userId, 5);
+        }
     }
 
     /**
@@ -182,7 +195,10 @@ public class ChatWebSocket {
     public void onError(Session session, Throwable error) {
         log.error("WebSocket发生错误", error);
         onlineClients.remove(userId);
-        onlineUsers.remove(userId);
+        // 从Redis中删除用户在线状态
+        if (redisOnlineUserMapper != null) {
+            redisOnlineUserMapper.removeOnlineUser(userId);
+        }
     }
 
     /**
@@ -206,8 +222,8 @@ public class ChatWebSocket {
     }
 
     /**
-     * 获取在线用户列表
-     * @return 在线用户列表
+     * 获取在线客户端
+     * @return 在线用户客户端
      */
     public static Map<String, ChatWebSocket> getOnlineClients() {
         return onlineClients;
@@ -218,6 +234,9 @@ public class ChatWebSocket {
      * @return 在线用户信息列表
      */
     public static Map<String, UserDTO> getOnlineUsers() {
-        return onlineUsers;
+        if (redisOnlineUserMapper != null) {
+            return redisOnlineUserMapper.getAllOnlineUsers();
+        }
+        return new HashMap<>();
     }
 }
