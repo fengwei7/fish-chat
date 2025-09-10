@@ -2,8 +2,9 @@ package com.fish.chat.controller.websocket;
 
 import com.fish.chat.dto.UserDTO;
 import com.fish.chat.utils.result.Result;
-import com.fish.chat.utils.websocket.WebSocketUtil;
-import com.fish.chat.websocket.ChatWebSocket;
+
+import com.fish.chat.websocket.handler.ChatWebSocketHandler;
+import com.fish.chat.websocket.util.WebSocketUtil;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -22,7 +23,7 @@ public class UserWSController {
     @GetMapping("/online/count")
     public Result getOnlineCount() {
         Map<String, Object> data = new HashMap<>();
-        data.put("count", ChatWebSocket.getOnlineCount());
+        data.put("count", ChatWebSocketHandler.getOnlineCount());
         return Result.data(data);
     }
 
@@ -51,7 +52,7 @@ public class UserWSController {
     @GetMapping("/online/users")
     public Result getOnlineUsers() {
         Map<String, Object> data = new HashMap<>();
-        Map<String, UserDTO> onlineUsers = ChatWebSocket.getOnlineUsers();
+        Map<String, UserDTO> onlineUsers = ChatWebSocketHandler.getOnlineUsers();
         data.put("users", onlineUsers);
         data.put("count", onlineUsers.size());
         return Result.data(data);

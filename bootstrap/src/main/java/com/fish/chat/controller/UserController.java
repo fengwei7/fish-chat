@@ -10,6 +10,8 @@ import com.fish.chat.utils.result.Result;
 import javax.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,7 +26,7 @@ public class UserController {
     @Resource
     UserService userService;
 
-    @GetMapping("/getInfo")
+    @GetMapping("/info")
     @SaCheckLogin
     public Result getInfoById() {
         Long id = StpUtil.getLoginIdAsLong();
@@ -34,7 +36,9 @@ public class UserController {
         return Result.data(userDTO);
     }
 
-    public Result updateInfo(UserReqDTO user) {
+    @PostMapping("/update")
+    @SaCheckLogin
+    public Result updateInfo(@RequestBody UserReqDTO user) {
         Long id = StpUtil.getLoginIdAsLong();
         if (user.getId() == null || user.getId() == 0) {
             return Result.error("用户ID不能为空");
