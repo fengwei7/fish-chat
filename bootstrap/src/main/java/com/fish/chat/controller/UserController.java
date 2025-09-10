@@ -2,6 +2,7 @@ package com.fish.chat.controller;
 
 import cn.dev33.satoken.annotation.SaCheckLogin;
 import cn.dev33.satoken.stp.StpUtil;
+import com.fish.chat.dto.UserDTO;
 import com.fish.chat.dto.UserReqDTO;
 import com.fish.chat.entity.User;
 import com.fish.chat.service.UserService;
@@ -26,12 +27,15 @@ public class UserController {
     @GetMapping("/getInfo")
     @SaCheckLogin
     public Result getInfoById() {
-        Long id = (Long) StpUtil.getLoginId();
-        return Result.data(userService.getById(id));
+        Long id = StpUtil.getLoginIdAsLong();
+        User user = userService.getById(id);
+        UserDTO userDTO = new UserDTO();
+        BeanUtils.copyProperties(user, userDTO);
+        return Result.data(userDTO);
     }
 
     public Result updateInfo(UserReqDTO user) {
-        Long id = (Long) StpUtil.getLoginId();
+        Long id = StpUtil.getLoginIdAsLong();
         if (user.getId() == null || user.getId() == 0) {
             return Result.error("用户ID不能为空");
         }

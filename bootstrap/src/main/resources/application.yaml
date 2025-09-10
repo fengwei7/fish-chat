@@ -25,6 +25,39 @@ spring:
     username: root
     password: M7PlDMXRsk9_wPReR
     type: com.alibaba.druid.pool.DruidDataSource
+    # Druid数据源配置
+    druid:
+      # 初始化大小
+      initial-size: 5
+      # 最小空闲连接数
+      min-idle: 5
+      # 最大连接数
+      max-active: 20
+      # 获取连接等待超时的时间
+      max-wait: 60000
+      # 间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
+      time-between-eviction-runs-millis: 60000
+      # 一个连接在池中最小生存的时间，单位是毫秒
+      min-evictable-idle-time-millis: 300000
+      # 用来检测连接是否有效的sql
+      validation-query: SELECT 1
+      # 申请连接的时候检测，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效
+      test-while-idle: true
+      # 申请连接时执行validationQuery检测连接是否有效
+      test-on-borrow: false
+      # 归还连接时执行validationQuery检测连接是否有效
+      test-on-return: false
+      # 是否缓存preparedStatement
+      pool-prepared-statements: true
+      # maxPoolPreparedStatementPerConnectionSize
+      max-pool-prepared-statement-per-connection-size: 20
+      # 配置监控统计拦截的filters
+      filters: stat,wall
+      # 合并多个DruidDataSource的监控数据
+      use-global-data-source-stat: true
+      # 连接空闲超时时间
+      keep-alive: true
+      
   data:
     mongodb:
       host: 116.205.110.130
@@ -32,8 +65,7 @@ spring:
       database: fishchat
       username: fishchat
       password: 9tiCBO4AxM9l
-      authentication-database: admin  # 认证数据库
-
+      authentication-database: admin
       # 连接池配置
       auto-index-creation: true
 
@@ -45,7 +77,6 @@ spring:
     timeout: 3000
 
 mybatis-plus:
-
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: true

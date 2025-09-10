@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-@TableName("user")
+@TableName("t_user")
 public class User implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -18,7 +18,7 @@ public class User implements Serializable {
     /**
      * 主键ID
      */
-    @TableId(value = "id", type = IdType.AUTO)
+    @TableId()
     private Long id;
 
     /**
