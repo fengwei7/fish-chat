@@ -3,8 +3,10 @@ package com.fish.chat.websocket;
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.fastjson.JSON;
 import com.fish.chat.dto.UserDTO;
+import com.fish.chat.entity.MongoChatMessage;
 import com.fish.chat.entity.User;
 import com.fish.chat.mapper.redis.RedisOnlineUserMapper;
+import com.fish.chat.service.ChatMessageService;
 import com.fish.chat.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -41,16 +43,26 @@ public class ChatWebSocket {
     // 注入UserService (通过静态方法注入)
     private static UserService userService;
     
+    // 注入ChatMessageService (通过静态方法注入)
+    private static ChatMessageService chatMessageService;
+    
     // 注入RedisOnlineUserMapper (通过静态方法注入)
     private static RedisOnlineUserMapper redisOnlineUserMapper;
-    
+
+
+
     @Autowired
     public void setUserService(UserService userService) {
         ChatWebSocket.userService = userService;
     }
     
     @Autowired
-    public void setRedisOnlineUserMapper(RedisOnlineUserMapper redisOnlineUserMapper) {
+    public void setChatMessageService(ChatMessageService chatMessageService) {
+        ChatWebSocket.chatMessageService = chatMessageService;
+    }
+    
+    @Autowired
+    public void setRedisOnlineUserMapper(com.fish.chat.mapper.redis.RedisOnlineUserMapper redisOnlineUserMapper) {
         ChatWebSocket.redisOnlineUserMapper = redisOnlineUserMapper;
     }
 
@@ -79,7 +91,7 @@ public class ChatWebSocket {
         if (user != null) {
             this.userDTO = new UserDTO();
             BeanUtils.copyProperties(user, userDTO);
-            // 将用户信息保存到Redis，设置过期时间（例如5分钟）
+            // 将用户信息保存到Redis
             redisOnlineUserMapper.saveOnlineUser(userId, userDTO, 5);
         }
         
@@ -173,19 +185,33 @@ public class ChatWebSocket {
             offlineMsg.put("message", "用户不在线");
             sendMessageToSelf(JSON.toJSONString(offlineMsg));
         }
+        
+        // 持久化聊天记录到MongoDB
+        try {
+            MongoChatMessage chatMessage = new MongoChatMessage();
+            chatMessage.setType("chat");
+            chatMessage.setFrom(userId);
+            chatMessage.setTo(toUserId);
+            chatMessage.setContent(content);
+            chatMessage.setTimestamp(System.currentTimeMillis());
+            chatMessageService.saveMessage(chatMessage);
+        } catch (Exception e) {
+            log.error("保存聊天记录到MongoDB失败", e);
+        }
     }
 
     /**
      * 处理心跳消息
      */
     private void handlePingMessage() {
+        // 更新Redis中用户在线状态的过期时间
+        if (redisOnlineUserMapper != null) {
+            redisOnlineUserMapper.updateOnlineUserExpire(userId, 5);
+        }
+        
         Map<String, Object> pongMsg = new HashMap<>();
         pongMsg.put("type", "pong");
         sendMessageToSelf(JSON.toJSONString(pongMsg));
-        // 更新用户在线状态
-        if (userDTO != null && redisOnlineUserMapper != null) {
-            redisOnlineUserMapper.updateOnlineUserExpire(userId, 5);
-        }
     }
 
     /**
@@ -214,23 +240,19 @@ public class ChatWebSocket {
     }
 
     /**
-     * 获取在线用户数
-     * @return 在线用户数
-     */
-    public static int getOnlineCount() {
-        return onlineClients.size();
-    }
-
-    /**
-     * 获取在线客户端
-     * @return 在线用户客户端
+     * 获取在线客户端列表
+     * @return 在线客户端列表
      */
     public static Map<String, ChatWebSocket> getOnlineClients() {
         return onlineClients;
     }
-    
+
+    public static Object getOnlineCount() {
+        return onlineClients.size();
+    }
+
     /**
-     * 获取在线用户信息列表
+     * 获取在线用户信息列表（从Redis获取）
      * @return 在线用户信息列表
      */
     public static Map<String, UserDTO> getOnlineUsers() {
