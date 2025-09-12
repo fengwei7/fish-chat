@@ -11,6 +11,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class SaTokenConfigure implements WebMvcConfigurer {
+
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(new SaInterceptor(handle -> {
@@ -24,6 +25,6 @@ public class SaTokenConfigure implements WebMvcConfigurer {
     // 动态获取哪些 path 可以忽略鉴权
     public List<String> excludePaths() {
 //        return Arrays.asList("/path1", "/path2", "/path3");
-        return Arrays.asList("/auth/login","/auth/register");
+        return Arrays.asList("/auth/login", "/auth/register");
     }
 }

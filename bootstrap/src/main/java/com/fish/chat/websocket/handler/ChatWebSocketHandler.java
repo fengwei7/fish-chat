@@ -1,27 +1,21 @@
 package com.fish.chat.websocket.handler;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.fastjson.JSON;
 import com.fish.chat.dto.UserDTO;
 import com.fish.chat.dto.WebSocketMessageDTO;
-import com.fish.chat.entity.MongoChatMessage;
-import com.fish.chat.entity.User;
 import com.fish.chat.mapper.redis.RedisOnlineUserMapper;
 import com.fish.chat.service.ChatMessageService;
 import com.fish.chat.service.UserService;
 import com.fish.chat.websocket.util.WebSocketMessageUtil;
 import com.fish.chat.websocket.util.WebSocketStorageUtil;
-import org.springframework.beans.BeanUtils;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * WebSocket聊天处理器
@@ -31,21 +25,50 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     // 用于存放所有在线客户端
     private static final Map<String, WebSocketSession> onlineSessions = new ConcurrentHashMap<>();
-    
+
     private static UserService userService;
 
     private static ChatMessageService chatMessageService;
 
     private static RedisOnlineUserMapper redisOnlineUserMapper;
 
+    /**
+     * 获取在线会话列表
+     *
+     * @return 在线会话列表
+     */
+    public static Map<String, WebSocketSession> getOnlineSessions() {
+        return onlineSessions;
+    }
+
+    /**
+     * 获取在线用户数
+     *
+     * @return 在线用户数
+     */
+    public static int getOnlineCount() {
+        return onlineSessions.size();
+    }
+
+    /**
+     * 获取在线用户信息列表
+     *
+     * @return 在线用户信息列表
+     */
+    public static Map<String, UserDTO> getOnlineUsers() {
+        return redisOnlineUserMapper.getAllOnlineUsers();
+    }
+
     @Autowired
     public void setUserService(UserService userService) {
         ChatWebSocketHandler.userService = userService;
     }
+
     @Autowired
     public void setChatMessageService(ChatMessageService chatMessageService) {
         ChatWebSocketHandler.chatMessageService = chatMessageService;
     }
+
     @Autowired
     public void setRedisOnlineUserMapper(RedisOnlineUserMapper redisOnlineUserMapper) {
         ChatWebSocketHandler.redisOnlineUserMapper = redisOnlineUserMapper;
@@ -123,16 +146,17 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     /**
      * 处理聊天消息
+     *
      * @param fromUserId 发送用户ID
      * @param msg 消息内容
      */
     private void handleChatMessage(String fromUserId, Map<String, Object> msg) throws Exception {
         String toUserId = (String) msg.get("to");
         String content = (String) msg.get("content");
-        
+
         // 构造返回消息
         String response = WebSocketMessageUtil.buildChatMessage(fromUserId, content, System.currentTimeMillis());
-        
+
         // 发送给指定用户
         WebSocketSession toSession = onlineSessions.get(toUserId);
         if (toSession != null && toSession.isOpen()) {
@@ -144,7 +168,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                 sendMessage(fromSession, WebSocketMessageUtil.buildUserOfflineMessage());
             }
         }
-        
+
         // 持久化聊天记录到MongoDB
         WebSocketMessageDTO messageDTO = new WebSocketMessageDTO();
         messageDTO.setType("chat");
@@ -161,7 +185,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private void handlePingMessage(String userId) {
         // 更新Redis中用户在线状态的过期时间
         WebSocketStorageUtil.updateOnlineUserExpire(userId, 5);
-        
+
         WebSocketSession session = onlineSessions.get(userId);
         if (session != null && session.isOpen()) {
             try {
@@ -174,6 +198,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
     /**
      * 发送消息给指定会话
+     *
      * @param session WebSocket会话
      * @param message 消息内容
      */
@@ -181,29 +206,5 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         if (session != null && session.isOpen()) {
             session.sendMessage(new TextMessage(message));
         }
-    }
-
-    /**
-     * 获取在线会话列表
-     * @return 在线会话列表
-     */
-    public static Map<String, WebSocketSession> getOnlineSessions() {
-        return onlineSessions;
-    }
-
-    /**
-     * 获取在线用户数
-     * @return 在线用户数
-     */
-    public static int getOnlineCount() {
-        return onlineSessions.size();
-    }
-
-    /**
-     * 获取在线用户信息列表
-     * @return 在线用户信息列表
-     */
-    public static Map<String, UserDTO> getOnlineUsers() {
-        return redisOnlineUserMapper.getAllOnlineUsers();
     }
 }

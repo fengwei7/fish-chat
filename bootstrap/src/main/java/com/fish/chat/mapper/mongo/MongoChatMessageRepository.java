@@ -1,11 +1,10 @@
 package com.fish.chat.mapper.mongo;
 
 import com.fish.chat.entity.MongoChatMessage;
+import java.util.List;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * 聊天消息MongoDB操作接口
@@ -17,7 +16,7 @@ public interface MongoChatMessageRepository extends MongoRepository<MongoChatMes
      * 根据发送方和接收方查询聊天记录
      *
      * @param from 发送方用户ID
-     * @param to   接收方用户ID
+     * @param to 接收方用户ID
      * @return 聊天记录列表
      */
     List<MongoChatMessage> findByFromAndToOrderByTimestamp(String from, String to);

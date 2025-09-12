@@ -20,7 +20,7 @@ public interface ChatMessageService {
      * 根据发送方和接收方查询聊天记录
      *
      * @param from 发送方用户ID
-     * @param to   接收方用户ID
+     * @param to 接收方用户ID
      * @return 聊天记录列表
      */
     List<MongoChatMessage> findMessagesByFromAndTo(String from, String to);

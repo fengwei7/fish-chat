@@ -3,13 +3,14 @@ package com.fish.chat.controller.websocket;
 import com.fish.chat.dto.UserDTO;
 import com.fish.chat.service.ChatWebSocketService;
 import com.fish.chat.utils.result.Result;
-
 import com.fish.chat.websocket.handler.ChatWebSocketHandler;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * WebSocket用户相关接口
@@ -37,7 +38,7 @@ public class UserWSController {
      */
     @GetMapping("/send")
     public Result sendMessageToUser(@RequestParam String userId,
-                                    @RequestParam String message) {
+        @RequestParam String message) {
         chatWebSocketService.sendMessageToUser(userId, "notification", message);
         return Result.data("消息发送成功");
     }

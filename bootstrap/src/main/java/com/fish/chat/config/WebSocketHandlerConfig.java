@@ -18,12 +18,13 @@ public class WebSocketHandlerConfig implements WebSocketConfigurer {
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         // 注册WebSocket处理器和拦截器
         registry.addHandler(chatWebSocketHandler(), "/websocket/chat")
-                .addInterceptors(webSocketInterceptor())
-                .setAllowedOrigins("*");
+            .addInterceptors(webSocketInterceptor())
+            .setAllowedOrigins("*");
     }
 
     /**
      * WebSocket处理器
+     *
      * @return ChatWebSocketHandler
      */
     public ChatWebSocketHandler chatWebSocketHandler() {
@@ -32,6 +33,7 @@ public class WebSocketHandlerConfig implements WebSocketConfigurer {
 
     /**
      * WebSocket拦截器
+     *
      * @return WebSocketInterceptor
      */
     public WebSocketInterceptor webSocketInterceptor() {

@@ -1,7 +1,6 @@
 package com.fish.chat.websocket.util;
 
 import com.alibaba.fastjson.JSON;
-
 import java.util.HashMap;
 import java.util.Map;
 

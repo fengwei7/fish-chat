@@ -12,8 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 /**
- * WebSocket存储工具类
- * 用于处理Redis和MongoDB的存储操作
+ * WebSocket存储工具类 用于处理Redis和MongoDB的存储操作
  */
 @Component
 public class WebSocketStorageUtil {
@@ -21,21 +20,6 @@ public class WebSocketStorageUtil {
     private static RedisOnlineUserMapper redisOnlineUserMapper;
     private static ChatMessageService chatMessageService;
     private static UserService userService;
-
-    @Autowired
-    public void setRedisOnlineUserMapper(RedisOnlineUserMapper redisOnlineUserMapper) {
-        WebSocketStorageUtil.redisOnlineUserMapper = redisOnlineUserMapper;
-    }
-
-    @Autowired
-    public void setChatMessageService(ChatMessageService chatMessageService) {
-        WebSocketStorageUtil.chatMessageService = chatMessageService;
-    }
-
-    @Autowired
-    public void setUserService(UserService userService) {
-        WebSocketStorageUtil.userService = userService;
-    }
 
     /**
      * 保存用户在线信息到Redis
@@ -46,13 +30,13 @@ public class WebSocketStorageUtil {
     public static void saveOnlineUser(String userId, long expireMinutes) {
         // 获取用户信息
         User user = userService.getById(Long.valueOf(userId));
-        
+
         // 构造UserDTO
         UserDTO userDTO = null;
         if (user != null) {
             userDTO = new UserDTO();
             BeanUtils.copyProperties(user, userDTO);
-            
+
             redisOnlineUserMapper.saveOnlineUser(userId, userDTO, expireMinutes);
         }
     }
@@ -89,5 +73,20 @@ public class WebSocketStorageUtil {
         } catch (Exception e) {
             System.err.println("保存聊天记录到MongoDB失败: " + e.getMessage());
         }
+    }
+
+    @Autowired
+    public void setRedisOnlineUserMapper(RedisOnlineUserMapper redisOnlineUserMapper) {
+        WebSocketStorageUtil.redisOnlineUserMapper = redisOnlineUserMapper;
+    }
+
+    @Autowired
+    public void setChatMessageService(ChatMessageService chatMessageService) {
+        WebSocketStorageUtil.chatMessageService = chatMessageService;
+    }
+
+    @Autowired
+    public void setUserService(UserService userService) {
+        WebSocketStorageUtil.userService = userService;
     }
 }

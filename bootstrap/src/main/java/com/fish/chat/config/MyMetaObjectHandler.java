@@ -1,15 +1,14 @@
 package com.fish.chat.config;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
+import java.util.Date;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
-
-import java.util.Date;
 
 @Component
 public class MyMetaObjectHandler implements MetaObjectHandler {
 
-//   在每次insert和update时自动填充createTime和updateTime字段
+    //   在每次insert和update时自动填充createTime和updateTime字段
     @Override
     public void insertFill(MetaObject metaObject) {
         // 如果create_time为null，则自动填充
@@ -17,7 +16,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         if (createTime == null) {
             this.strictInsertFill(metaObject, "createTime", Date.class, new Date());
         }
-        
+
         // 如果update_time为null，则自动填充
         Object updateTime = getFieldValByName("updateTime", metaObject);
         if (updateTime == null) {
