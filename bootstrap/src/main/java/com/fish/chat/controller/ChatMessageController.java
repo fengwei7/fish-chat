@@ -13,7 +13,7 @@ import java.util.List;
 /**
  * 聊天消息控制器
  */
-@CrossOrigin
+//@CrossOrigin
 @RestController
 @RequestMapping("/chat/messages")
 public class ChatMessageController {

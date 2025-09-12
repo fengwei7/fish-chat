@@ -19,7 +19,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import cn.hutool.crypto.digest.DigestUtil;
 import cn.hutool.core.util.RandomUtil;
 
-@CrossOrigin
+//@CrossOrigin
 @RestController
 @RequestMapping("/auth")
 public class LoginController {

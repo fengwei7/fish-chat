@@ -14,7 +14,7 @@ import java.util.Map;
 /**
  * WebSocket用户相关接口
  */
-@CrossOrigin
+//@CrossOrigin
 @RestController
 @RequestMapping("/ws")
 public class UserWSController {

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @author fish-chat
  * @since 2025-09-06
  */
-@CrossOrigin
+//@CrossOrigin
 @RestController
 @RequestMapping("/user")
 public class UserController {
