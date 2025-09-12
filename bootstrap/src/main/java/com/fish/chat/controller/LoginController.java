@@ -9,6 +9,7 @@ import com.fish.chat.entity.User;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +24,7 @@ import cn.hutool.core.util.RandomUtil;
 @RequestMapping("/auth")
 public class LoginController {
 
-    @Resource
+    @Autowired
     UserService userService;
 
     @PostMapping("/register")

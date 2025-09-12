@@ -1,10 +1,11 @@
 package com.fish.chat.controller.websocket;
 
 import com.fish.chat.dto.UserDTO;
+import com.fish.chat.service.ChatWebSocketService;
 import com.fish.chat.utils.result.Result;
 
 import com.fish.chat.websocket.handler.ChatWebSocketHandler;
-import com.fish.chat.websocket.util.WebSocketUtil;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -17,6 +18,9 @@ import java.util.Map;
 @RestController
 @RequestMapping("/ws")
 public class UserWSController {
+
+    @Autowired
+    ChatWebSocketService chatWebSocketService;
 
     /**
      * 获取在线用户数
@@ -34,7 +38,7 @@ public class UserWSController {
     @GetMapping("/send")
     public Result sendMessageToUser(@RequestParam String userId,
                                     @RequestParam String message) {
-        WebSocketUtil.sendMessageToUser(userId, "notification", message);
+        chatWebSocketService.sendMessageToUser(userId, "notification", message);
         return Result.data("消息发送成功");
     }
 
@@ -43,7 +47,7 @@ public class UserWSController {
      */
     @GetMapping("/broadcast")
     public Result broadcastMessage(@RequestParam String message) {
-        WebSocketUtil.broadcastMessage("notification", message);
+        chatWebSocketService.broadcastMessage("notification", message);
         return Result.data("广播消息发送成功");
     }
 

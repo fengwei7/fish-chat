@@ -3,11 +3,14 @@ package com.fish.chat.websocket.handler;
 import cn.dev33.satoken.stp.StpUtil;
 import com.alibaba.fastjson.JSON;
 import com.fish.chat.dto.UserDTO;
+import com.fish.chat.dto.WebSocketMessageDTO;
 import com.fish.chat.entity.MongoChatMessage;
 import com.fish.chat.entity.User;
 import com.fish.chat.mapper.redis.RedisOnlineUserMapper;
 import com.fish.chat.service.ChatMessageService;
 import com.fish.chat.service.UserService;
+import com.fish.chat.websocket.util.WebSocketMessageUtil;
+import com.fish.chat.websocket.util.WebSocketStorageUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -56,18 +59,8 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
 
         String userIdStr = String.valueOf(userId);
 
-        // 获取用户信息
-        User user = userService.getById(userId);
-
-        // 构造UserDTO
-        UserDTO userDTO = null;
-        if (user != null) {
-            userDTO = new UserDTO();
-            BeanUtils.copyProperties(user, userDTO);
-
-            // 将用户信息保存到Redis
-            redisOnlineUserMapper.saveOnlineUser(userIdStr, userDTO, 5);
-        }
+        // 将用户信息保存到Redis
+        WebSocketStorageUtil.saveOnlineUser(userIdStr, 5);
 
         // 将客户端连接加入在线列表
         onlineSessions.put(userIdStr, session);
@@ -75,10 +68,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         System.out.println("用户 " + userId + " 连接成功，当前在线人数: " + onlineSessions.size());
 
         // 发送连接成功消息
-        Map<String, Object> connectMsg = new HashMap<>();
-        connectMsg.put("type", "connect");
-        connectMsg.put("message", "连接成功");
-        sendMessage(session, JSON.toJSONString(connectMsg));
+        sendMessage(session, WebSocketMessageUtil.buildConnectMessage("连接成功"));
     }
 
     // 监听：连接关闭
@@ -93,7 +83,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         onlineSessions.remove(userIdStr);
 
         // 从Redis中删除用户在线状态
-        redisOnlineUserMapper.removeOnlineUser(userIdStr);
+        WebSocketStorageUtil.removeOnlineUser(userIdStr);
 
         System.out.println("用户 " + userId + " 断开连接，当前在线人数: " + onlineSessions.size());
     }
@@ -122,18 +112,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
                     handlePingMessage(userIdStr);
                     break;
                 default:
-                    Map<String, Object> errorMsg = new HashMap<>();
-                    errorMsg.put("type", "error");
-                    errorMsg.put("message", "未知消息类型");
-                    sendMessage(session, JSON.toJSONString(errorMsg));
+                    sendMessage(session, WebSocketMessageUtil.buildErrorMessage("未知消息类型"));
                     break;
             }
         } catch (Exception e) {
             System.err.println("处理消息失败: " + e.getMessage());
-            Map<String, Object> errorMsg = new HashMap<>();
-            errorMsg.put("type", "error");
-            errorMsg.put("message", "消息处理失败");
-            sendMessage(session, JSON.toJSONString(errorMsg));
+            sendMessage(session, WebSocketMessageUtil.buildErrorMessage("消息处理失败"));
         }
     }
 
@@ -147,39 +131,28 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         String content = (String) msg.get("content");
         
         // 构造返回消息
-        Map<String, Object> response = new HashMap<>();
-        response.put("type", "chat");
-        response.put("from", fromUserId);
-        response.put("content", content);
-        response.put("timestamp", System.currentTimeMillis());
+        String response = WebSocketMessageUtil.buildChatMessage(fromUserId, content, System.currentTimeMillis());
         
         // 发送给指定用户
         WebSocketSession toSession = onlineSessions.get(toUserId);
         if (toSession != null && toSession.isOpen()) {
-            sendMessage(toSession, JSON.toJSONString(response));
+            sendMessage(toSession, response);
         } else {
             // 用户不在线，返回错误信息给发送方
             WebSocketSession fromSession = onlineSessions.get(fromUserId);
             if (fromSession != null && fromSession.isOpen()) {
-                Map<String, Object> offlineMsg = new HashMap<>();
-                offlineMsg.put("type", "error");
-                offlineMsg.put("message", "用户不在线");
-                sendMessage(fromSession, JSON.toJSONString(offlineMsg));
+                sendMessage(fromSession, WebSocketMessageUtil.buildUserOfflineMessage());
             }
         }
         
         // 持久化聊天记录到MongoDB
-        try {
-            MongoChatMessage chatMessage = new MongoChatMessage();
-            chatMessage.setType("chat");
-            chatMessage.setFrom(fromUserId);
-            chatMessage.setTo(toUserId);
-            chatMessage.setContent(content);
-            chatMessage.setTimestamp(System.currentTimeMillis());
-            chatMessageService.saveMessage(chatMessage);
-        } catch (Exception e) {
-            System.err.println("保存聊天记录到MongoDB失败: " + e.getMessage());
-        }
+        WebSocketMessageDTO messageDTO = new WebSocketMessageDTO();
+        messageDTO.setType("chat");
+        messageDTO.setFrom(fromUserId);
+        messageDTO.setTo(toUserId);
+        messageDTO.setContent(content);
+        messageDTO.setTimestamp(System.currentTimeMillis());
+        WebSocketStorageUtil.saveChatMessage(messageDTO);
     }
 
     /**
@@ -187,14 +160,12 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
      */
     private void handlePingMessage(String userId) {
         // 更新Redis中用户在线状态的过期时间
-        redisOnlineUserMapper.updateOnlineUserExpire(userId, 5);
+        WebSocketStorageUtil.updateOnlineUserExpire(userId, 5);
         
         WebSocketSession session = onlineSessions.get(userId);
         if (session != null && session.isOpen()) {
-            Map<String, Object> pongMsg = new HashMap<>();
-            pongMsg.put("type", "pong");
             try {
-                sendMessage(session, JSON.toJSONString(pongMsg));
+                sendMessage(session, WebSocketMessageUtil.buildPongMessage());
             } catch (Exception e) {
                 System.err.println("发送心跳响应失败: " + e.getMessage());
             }

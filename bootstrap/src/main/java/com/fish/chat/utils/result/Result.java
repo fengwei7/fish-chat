@@ -7,6 +7,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+/**
+ * 照抄
+ * package cn.dev33.satoken.util.SaResult;
+ */
 public class Result extends LinkedHashMap<String, Object> implements Serializable {
     private static final long serialVersionUID = 1L;
     public static final int CODE_SUCCESS = 200;
