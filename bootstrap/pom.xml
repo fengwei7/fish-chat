@@ -125,7 +125,6 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>com.fish.chat.BootstrapApplication</mainClass>
-                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>

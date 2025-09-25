@@ -1,5 +1,7 @@
-# 使用 Maven 3.6.3 和 OpenJDK 8 作为基础镜像
-FROM maven:3.6.3-openjdk-8
+# 使用 Maven 3.8.6 和 OpenJDK 8 作为基础镜像
+# FROM maven:3.8.6-openjdk-8
+# 使用镜像加速
+FROM docker.1ms.run/maven:3.8.6-openjdk-8
 
 # 设置工作目录
 WORKDIR /app
@@ -18,8 +20,8 @@ RUN mvn clean package -DskipTests
 EXPOSE 8080
 
 # 复制入口脚本
-COPY docker/entrypoint.sh /app/docker/entrypoint.sh
-RUN chmod +x /app/docker/entrypoint.sh
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
 
 # 设置入口点
-ENTRYPOINT ["sh", "/app/docker/entrypoint.sh"]
+ENTRYPOINT ["sh", "/app/entrypoint.sh"]

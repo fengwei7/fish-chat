@@ -162,7 +162,6 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>com.fish.chat.ChatApplication</mainClass>
-                    <skip>true</skip>
                 </configuration>
                 <executions>
                     <execution>
