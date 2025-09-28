@@ -3,6 +3,7 @@ package com.fish.chat.websocket.util;
 import com.fish.chat.dto.UserDTO;
 import com.fish.chat.dto.WebSocketMessageDTO;
 import com.fish.chat.entity.MongoChatMessage;
+import com.fish.chat.entity.MongoGroupMessage;
 import com.fish.chat.entity.User;
 import com.fish.chat.mapper.redis.RedisOnlineUserMapper;
 import com.fish.chat.service.ChatMessageService;
@@ -72,6 +73,21 @@ public class WebSocketStorageUtil {
             chatMessageService.saveMessage(chatMessage);
         } catch (Exception e) {
             System.err.println("保存聊天记录到MongoDB失败: " + e.getMessage());
+        }
+    }
+    
+    /**
+     * 保存群组消息到MongoDB
+     *
+     * @param messageDTO 消息DTO
+     */
+    public static void saveGroupMessage(WebSocketMessageDTO messageDTO) {
+        try {
+            MongoGroupMessage groupMessage = new MongoGroupMessage();
+            BeanUtils.copyProperties(messageDTO, groupMessage);
+            chatMessageService.saveGroupMessage(groupMessage);
+        } catch (Exception e) {
+            System.err.println("保存群组消息到MongoDB失败: " + e.getMessage());
         }
     }
 

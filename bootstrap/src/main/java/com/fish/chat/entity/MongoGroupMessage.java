@@ -1,18 +1,15 @@
 package com.fish.chat.entity;
 
-import java.io.Serializable;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
+import java.io.Serializable;
 
-/**
- * Mongo聊天消息实体类
- */
 @Data
-@Document(collection = "chat_messages")
-public class MongoChatMessage implements Serializable {
+@Document(collection = "group_messages")
+public class MongoGroupMessage implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -36,11 +33,11 @@ public class MongoChatMessage implements Serializable {
     private String from;
 
     /**
-     * 接收方用户ID
+     * 群组ID
      */
-    @Field("to")
+    @Field("group_id")
     @Indexed
-    private String to;
+    private String groupId;
 
     /**
      * 消息内容
@@ -54,9 +51,9 @@ public class MongoChatMessage implements Serializable {
     @Field("timestamp")
     @Indexed
     private Long timestamp;
-
+    
     /**
-     * 消息状态 (sent: 已发送, received: 已接收, read: 已读)
+     * 消息状态 (sent: 已发送, read: 已读)
      */
     @Field("status")
     private String status = "sent";

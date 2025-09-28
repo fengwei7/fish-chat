@@ -1,6 +1,7 @@
 package com.fish.chat.service;
 
 import com.fish.chat.entity.MongoChatMessage;
+import com.fish.chat.entity.MongoGroupMessage;
 import java.util.List;
 
 /**
@@ -48,4 +49,50 @@ public interface ChatMessageService {
      * @return 聊天记录列表
      */
     List<MongoChatMessage> findMessagesByTo(String to);
+    
+    /**
+     * 分页查询用户之间的聊天记录
+     * 
+     * @param from 发送方用户ID
+     * @param to 接收方用户ID
+     * @param page 页码（从1开始）
+     * @param size 每页大小
+     * @return 聊天记录列表
+     */
+    List<MongoChatMessage> findMessagesByFromAndToWithPagination(String from, String to, int page, int size);
+    
+    /**
+     * 分页查询群组消息
+     * 
+     * @param groupId 群组ID
+     * @param page 页码（从1开始）
+     * @param size 每页大小
+     * @return 群组消息列表
+     */
+    List<MongoGroupMessage> findGroupMessagesWithPagination(String groupId, int page, int size);
+    
+    /**
+     * 更新消息状态
+     * 
+     * @param messageId 消息ID
+     * @param status 消息状态
+     * @return 是否更新成功
+     */
+    boolean updateMessageStatus(String messageId, String status);
+    
+    /**
+     * 保存群组消息
+     * 
+     * @param groupMessage 群组消息
+     * @return 保存后的群组消息
+     */
+    MongoGroupMessage saveGroupMessage(MongoGroupMessage groupMessage);
+    
+    /**
+     * 根据群组ID查询群组消息
+     * 
+     * @param groupId 群组ID
+     * @return 群组消息列表
+     */
+    List<MongoGroupMessage> findGroupMessagesByGroupId(String groupId);
 }

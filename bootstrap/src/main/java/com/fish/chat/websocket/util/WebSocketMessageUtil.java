@@ -38,6 +38,25 @@ public class WebSocketMessageUtil {
         response.put("timestamp", timestamp);
         return JSON.toJSONString(response);
     }
+    
+    /**
+     * 构造群组消息
+     *
+     * @param fromUserId 发送方用户ID
+     * @param groupId 群组ID
+     * @param content 消息内容
+     * @param timestamp 时间戳
+     * @return 群组消息JSON字符串
+     */
+    public static String buildGroupMessage(String fromUserId, String groupId, String content, long timestamp) {
+        Map<String, Object> response = new HashMap<>();
+        response.put("type", "group");
+        response.put("from", fromUserId);
+        response.put("groupId", groupId);
+        response.put("content", content);
+        response.put("timestamp", timestamp);
+        return JSON.toJSONString(response);
+    }
 
     /**
      * 构造错误消息
