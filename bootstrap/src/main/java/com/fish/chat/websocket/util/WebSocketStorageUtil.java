@@ -26,20 +26,11 @@ public class WebSocketStorageUtil {
      * 保存用户在线信息到Redis
      *
      * @param userId 用户ID
+     * @param userDTO 用户信息
      * @param expireMinutes 过期时间（分钟）
      */
-    public static void saveOnlineUser(String userId, long expireMinutes) {
-        // 获取用户信息
-        User user = userService.getById(Long.valueOf(userId));
-
-        // 构造UserDTO
-        UserDTO userDTO = null;
-        if (user != null) {
-            userDTO = new UserDTO();
-            BeanUtils.copyProperties(user, userDTO);
-
-            redisOnlineUserMapper.saveOnlineUser(userId, userDTO, expireMinutes);
-        }
+    public static void saveOnlineUser(String userId, UserDTO userDTO, long expireMinutes) {
+        redisOnlineUserMapper.saveOnlineUser(userId, userDTO, expireMinutes);
     }
 
     /**

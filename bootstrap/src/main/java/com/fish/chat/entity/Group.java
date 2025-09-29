@@ -14,7 +14,7 @@ public class Group implements Serializable {
     /**
      * 主键ID
      */
-    @TableId(type = IdType.AUTO)
+    @TableId()
     private Long id;
 
     /**
