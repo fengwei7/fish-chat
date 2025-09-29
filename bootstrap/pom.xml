@@ -1,148 +1,147 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xmlns="http://maven.apache.org/POM/4.0.0"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <artifactId>bootstrap</artifactId>
-  <build>
-    <plugins>
-      <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <groupId>org.apache.maven.plugins</groupId>
-      </plugin>
-      <plugin>
-        <artifactId>spring-boot-maven-plugin</artifactId>
-        <configuration>
-          <mainClass>com.fish.chat.BootstrapApplication</mainClass>
-        </configuration>
-        <executions>
-          <execution>
-            <goals>
-              <goal>repackage</goal>
-            </goals>
-            <id>repackage</id>
-          </execution>
-        </executions>
-        <groupId>org.springframework.boot</groupId>
-        <version>${spring-boot.version}</version>
-      </plugin>
-    </plugins>
-  </build>
-  <dependencies>
-    <dependency>
-      <artifactId>spring-boot-starter</artifactId>
-      <groupId>org.springframework.boot</groupId>
-    </dependency>
-
-    <dependency>
-      <artifactId>spring-boot-starter-test</artifactId>
-      <groupId>org.springframework.boot</groupId>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
-      <artifactId>spring-boot-starter-web</artifactId>
-      <groupId>org.springframework.boot</groupId>
-    </dependency>
-
-    <dependency>
-      <artifactId>spring-boot-devtools</artifactId>
-      <groupId>org.springframework.boot</groupId>
-      <optional>true</optional>
-      <scope>runtime</scope>
-      <version>${spring-boot.version}</version>
-    </dependency>
-    <dependency>
-      <artifactId>lombok</artifactId>
-      <groupId>org.projectlombok</groupId>
-      <optional>true</optional>
-      <version>${lombok.version}</version>
-    </dependency>
-
-    <!-- Sa-Token 权限认证，在线文档：https://sa-token.cc -->
-    <dependency>
-      <artifactId>sa-token-spring-boot-starter</artifactId>
-      <groupId>cn.dev33</groupId>
-    </dependency>
-    <!-- 集成redis依赖  -->
-    <dependency>
-      <artifactId>spring-boot-starter-data-redis</artifactId>
-      <groupId>org.springframework.boot</groupId>
-    </dependency>
-    <!-- MySQL连接 -->
-    <dependency>
-      <artifactId>mysql-connector-java</artifactId>
-      <groupId>mysql</groupId>
-      <scope>runtime</scope>
-    </dependency>
-    <!-- Spring Data MongoDB -->
-    <dependency>
-      <artifactId>spring-boot-starter-data-mongodb</artifactId>
-      <groupId>org.springframework.boot</groupId>
-    </dependency>
-
-    <!-- 响应式支持 -->
-    <dependency>
-      <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
-      <groupId>org.springframework.boot</groupId>
-    </dependency>
-    <dependency>
-      <artifactId>mybatis-plus-boot-starter</artifactId>
-      <groupId>com.baomidou</groupId>
-    </dependency>
-    <dependency>
-      <artifactId>druid-spring-boot-starter</artifactId>
-      <groupId>com.alibaba</groupId>
-    </dependency>
-    <!--fastjson-->
-    <dependency>
-      <artifactId>fastjson</artifactId>
-      <groupId>com.alibaba</groupId>
-    </dependency>
-
-    <!--hutool-->
-    <dependency>
-      <artifactId>hutool-all</artifactId>
-      <groupId>cn.hutool</groupId>
-    </dependency>
-    <dependency>
-      <artifactId>mybatis-plus-generator</artifactId>
-      <groupId>com.baomidou</groupId>
-    </dependency>
-
-    <!-- freemarker模板引擎，用于代码生成器 -->
-    <dependency>
-      <artifactId>freemarker</artifactId>
-      <groupId>org.freemarker</groupId>
-    </dependency>
-
-    <dependency>
-      <artifactId>spring-boot-starter-data-redis</artifactId>
-      <groupId>org.springframework.boot</groupId>
-    </dependency>
-
-    <!-- WebSocket支持 -->
-    <dependency>
-      <artifactId>spring-boot-starter-websocket</artifactId>
-      <groupId>org.springframework.boot</groupId>
-    </dependency>
-
-    <!-- 消息代理 -->
-    <dependency>
-      <artifactId>spring-messaging</artifactId>
-      <groupId>org.springframework</groupId>
-    </dependency>
-  </dependencies>
-  <description>module</description>
-  <modelVersion>4.0.0</modelVersion>
-  <name>bootstrap</name>
-
-  <parent>
-    <artifactId>fish-chat</artifactId>
-    <groupId>com.fish</groupId>
-    <relativePath>../pom.xml</relativePath>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.fish</groupId>
+        <artifactId>fish-chat</artifactId>
+        <version>0.0.1-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
+    </parent>
+    <artifactId>bootstrap</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-  </parent>
+    <name>bootstrap</name>
+    <description>module</description>
 
-  <version>0.0.1-SNAPSHOT</version>
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <version>${spring-boot.version}</version>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <version>${lombok.version}</version>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Sa-Token 权限认证，在线文档：https://sa-token.cc -->
+        <dependency>
+            <groupId>cn.dev33</groupId>
+            <artifactId>sa-token-spring-boot-starter</artifactId>
+        </dependency>
+        <!-- 集成redis依赖  -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <!-- MySQL连接 -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- Spring Data MongoDB -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+
+        <!-- 响应式支持 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb-reactive</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+        </dependency>
+        <!--fastjson-->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>fastjson</artifactId>
+        </dependency>
+
+        <!--hutool-->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>mybatis-plus-generator</artifactId>
+        </dependency>
+        
+        <!-- freemarker模板引擎，用于代码生成器 -->
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        
+        <!-- WebSocket支持 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        
+        <!-- 消息代理 -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-messaging</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <configuration>
+                    <mainClass>com.fish.chat.BootstrapApplication</mainClass>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>repackage</id>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
