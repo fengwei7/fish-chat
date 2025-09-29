@@ -38,7 +38,7 @@ public class WebSocketMessageUtil {
         response.put("timestamp", timestamp);
         return JSON.toJSONString(response);
     }
-    
+
     /**
      * 构造群组消息
      *

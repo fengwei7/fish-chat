@@ -1,6 +1,8 @@
 package com.fish.chat.websocket.interceptor;
 
 import cn.dev33.satoken.stp.StpUtil;
+import java.util.List;
+import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
@@ -14,9 +16,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-import java.util.List;
-import java.util.Map;
-
 @Slf4j
 @Component
 public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeInterceptor {
@@ -24,13 +23,13 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
-        
+
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
             // 获取连接中的token
             List<String> tokenHeaders = accessor.getNativeHeader("token");
             if (tokenHeaders != null && !tokenHeaders.isEmpty()) {
                 String token = tokenHeaders.get(0);
-                
+
                 try {
                     Object loginId = StpUtil.getLoginIdByToken(token);
                     // 将用户ID添加到会话属性中
@@ -45,13 +44,13 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
                 return null; // 拒绝连接
             }
         }
-        
+
         return message;
     }
 
     @Override
-    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response, 
-                                  WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+    public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
+        WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         // 从参数中获取token
         String query = request.getURI().getQuery();
         String token = null;
@@ -74,8 +73,8 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
     }
 
     @Override
-    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, 
-                              WebSocketHandler wsHandler, Exception exception) {
+    public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
+        WebSocketHandler wsHandler, Exception exception) {
         // 握手之后触发
     }
 }

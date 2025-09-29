@@ -5,18 +5,22 @@ import com.fish.chat.entity.Group;
 import com.fish.chat.entity.GroupMember;
 import com.fish.chat.service.GroupService;
 import com.fish.chat.utils.result.Result;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/group")
 public class GroupController {
-    
+
     @Autowired
     private GroupService groupService;
-    
+
     /**
      * 创建群组
      */
@@ -26,7 +30,7 @@ public class GroupController {
         Long groupId = groupService.createGroup(group, userId);
         return Result.data(groupId);
     }
-    
+
     /**
      * 解散群组
      */
@@ -40,7 +44,7 @@ public class GroupController {
             return Result.error("群组解散失败");
         }
     }
-    
+
     /**
      * 邀请用户加入群组
      */
@@ -54,7 +58,7 @@ public class GroupController {
             return Result.error("邀请失败");
         }
     }
-    
+
     /**
      * 退出群组
      */
@@ -68,7 +72,7 @@ public class GroupController {
             return Result.error("退出群组失败");
         }
     }
-    
+
     /**
      * 获取群组成员列表
      */
@@ -77,7 +81,7 @@ public class GroupController {
         List<GroupMember> members = groupService.getGroupMembers(groupId);
         return Result.data(members);
     }
-    
+
     /**
      * 获取用户加入的群组列表
      */
@@ -87,7 +91,7 @@ public class GroupController {
         List<Group> groups = groupService.getUserGroups(userId);
         return Result.data(groups);
     }
-    
+
     /**
      * 更新群组信息
      */
@@ -101,7 +105,7 @@ public class GroupController {
             return Result.error("群组信息更新失败");
         }
     }
-    
+
     /**
      * 转让群主
      */
@@ -115,7 +119,7 @@ public class GroupController {
             return Result.error("群主转让失败");
         }
     }
-    
+
     /**
      * 踢出群组成员
      */

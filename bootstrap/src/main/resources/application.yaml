@@ -57,7 +57,7 @@ spring:
       use-global-data-source-stat: true
       # 连接空闲超时时间
       keep-alive: true
-      
+
   data:
     mongodb:
       host: 116.205.110.130

@@ -1,9 +1,13 @@
 package com.fish.chat.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
-import lombok.Data;
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
+import lombok.Data;
 
 @Data
 @TableName("t_group")
@@ -46,7 +50,7 @@ public class Group implements Serializable {
      */
     @TableField("notice")
     private String notice;
-    
+
     /**
      * 群组最大成员数
      */

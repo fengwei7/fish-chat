@@ -5,21 +5,25 @@ import com.fish.chat.entity.MongoChatMessage;
 import com.fish.chat.entity.MongoGroupMessage;
 import com.fish.chat.service.ChatMessageService;
 import com.fish.chat.utils.result.Result;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/messages")
 public class MessageController {
-    
+
     @Autowired
     private ChatMessageService chatMessageService;
-    
+
     /**
      * 分页获取用户之间的聊天记录
-     * 
+     *
      * @param userId 对方用户ID
      * @param page 页码（默认1）
      * @param size 每页大小（默认20）
@@ -27,24 +31,24 @@ public class MessageController {
      */
     @GetMapping("/user/{userId}")
     public Result getUserMessages(@PathVariable String userId,
-                                  @RequestParam(defaultValue = "1") int page,
-                                  @RequestParam(defaultValue = "20") int size) {
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "20") int size) {
         String currentUserId = StpUtil.getLoginIdAsString();
-        
+
         // 限制每页最大数量
         if (size > 100) {
             size = 100;
         }
-        
+
         List<MongoChatMessage> messages = chatMessageService.findMessagesByFromAndToWithPagination(
-                currentUserId, userId, page, size);
-        
+            currentUserId, userId, page, size);
+
         return Result.data(messages);
     }
-    
+
     /**
      * 分页获取群组消息
-     * 
+     *
      * @param groupId 群组ID
      * @param page 页码（默认1）
      * @param size 每页大小（默认20）
@@ -52,22 +56,22 @@ public class MessageController {
      */
     @GetMapping("/group/{groupId}")
     public Result getGroupMessages(@PathVariable String groupId,
-                                   @RequestParam(defaultValue = "1") int page,
-                                   @RequestParam(defaultValue = "20") int size) {
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "20") int size) {
         // 限制每页最大数量
         if (size > 100) {
             size = 100;
         }
-        
+
         List<MongoGroupMessage> messages = chatMessageService.findGroupMessagesWithPagination(
-                groupId, page, size);
-        
+            groupId, page, size);
+
         return Result.data(messages);
     }
-    
+
     /**
      * 更新消息状态为已读
-     * 
+     *
      * @param messageId 消息ID
      * @return 操作结果
      */

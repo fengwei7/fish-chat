@@ -1,11 +1,11 @@
 package com.fish.chat.entity;
 
+import java.io.Serializable;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-import java.io.Serializable;
 
 @Data
 @Document(collection = "group_messages")
@@ -51,7 +51,7 @@ public class MongoGroupMessage implements Serializable {
     @Field("timestamp")
     @Indexed
     private Long timestamp;
-    
+
     /**
      * 消息状态 (sent: 已发送, read: 已读)
      */

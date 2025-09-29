@@ -1,24 +1,21 @@
 package com.fish.chat.websocket.service;
 
 import com.fish.chat.service.GroupService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class GroupCacheService {
 
-    @Autowired
-    private GroupService groupService;
-
     // 群组成员缓存，key为groupId，value为该群组的成员userId集合
     private final Map<String, Set<String>> groupMembersCache = new ConcurrentHashMap<>();
+    @Autowired
+    private GroupService groupService;
 
     /**
      * 更新群组成员缓存
@@ -29,8 +26,8 @@ public class GroupCacheService {
         // 从数据库获取群组成员列表并更新缓存
         List<com.fish.chat.entity.GroupMember> groupMembers = groupService.getGroupMembers(Long.valueOf(groupId));
         Set<String> members = groupMembers.stream()
-                .map(m -> String.valueOf(m.getUserId()))
-                .collect(Collectors.toSet());
+            .map(m -> String.valueOf(m.getUserId()))
+            .collect(Collectors.toSet());
         groupMembersCache.put(groupId, members);
     }
 

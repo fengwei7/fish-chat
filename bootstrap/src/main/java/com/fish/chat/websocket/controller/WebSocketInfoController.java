@@ -1,13 +1,17 @@
 package com.fish.chat.websocket.controller;
 
 import com.fish.chat.websocket.service.GroupCacheService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.messaging.simp.user.SimpUserRegistry;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.user.SimpUserRegistry;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/websocket")
@@ -15,7 +19,7 @@ public class WebSocketInfoController {
 
     @Autowired
     private SimpUserRegistry userRegistry;
-    
+
     @Autowired
     private GroupCacheService groupCacheService;
 
@@ -42,14 +46,14 @@ public class WebSocketInfoController {
     public Map<String, Object> getOnlineUsers() {
         Map<String, Object> result = new HashMap<>();
         Collection<String> users = userRegistry.getUsers().stream()
-                .map(user -> user.getName())
-                .collect(java.util.stream.Collectors.toList());
+            .map(user -> user.getName())
+            .collect(java.util.stream.Collectors.toList());
         result.put("code", 200);
         result.put("data", users);
         result.put("message", "success");
         return result;
     }
-    
+
     /**
      * 更新群组成员缓存
      *
@@ -69,7 +73,7 @@ public class WebSocketInfoController {
         }
         return result;
     }
-    
+
     /**
      * 清除群组缓存
      *
