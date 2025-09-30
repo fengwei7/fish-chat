@@ -1,6 +1,8 @@
 package com.fish.chat.websocket.interceptor;
 
 import cn.dev33.satoken.stp.StpUtil;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
@@ -26,11 +28,29 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
         StompHeaderAccessor accessor = MessageHeaderAccessor.getAccessor(message, StompHeaderAccessor.class);
 
         if (StompCommand.CONNECT.equals(accessor.getCommand())) {
+            log.info("处理STOMP CONNECT命令");
+
+            // 每次发送消息时鉴权
+
             // 获取连接中的token
             List<String> tokenHeaders = accessor.getNativeHeader("token");
+            String token = null;
+            
             if (tokenHeaders != null && !tokenHeaders.isEmpty()) {
-                String token = tokenHeaders.get(0);
+                token = tokenHeaders.get(0);
+                log.info("从header中获取到token: {}", token);
+            }
 
+            // 如果从header中没有获取到token，尝试从session中获取
+            if (token == null && accessor.getSessionAttributes() != null) {
+                Object sessionToken = accessor.getSessionAttributes().get("token");
+                if (sessionToken instanceof String) {
+                    token = (String) sessionToken;
+                    log.info("从session中获取到token: {}", token);
+                }
+            }
+
+            if (token != null) {
                 try {
                     Object loginId = StpUtil.getLoginIdByToken(token);
                     // 将用户ID添加到会话属性中
@@ -52,6 +72,8 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
     @Override
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
         WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
+        log.info("WebSocket握手开始: {}", request.getURI());
+        
         // 从参数中获取token
         String token = getTokenFromRequest(request);
 
@@ -64,6 +86,7 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
             Object loginId = StpUtil.getLoginIdByToken(token);
             // 标记 userId，握手成功
             attributes.put("userId", loginId);
+            attributes.put("token", token); // 保存token到session属性中
             log.info("用户 {} WebSocket握手成功", loginId);
             return true;
         } catch (Exception e) {
@@ -76,6 +99,7 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
         WebSocketHandler wsHandler, Exception exception) {
         // 握手之后触发
+        log.info("WebSocket握手完成");
     }
 
     /**
@@ -91,6 +115,13 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
             if (token.contains("&")) {
                 token = token.substring(0, token.indexOf("&"));
             }
+            // URL解码token
+            try {
+                token = URLDecoder.decode(token, StandardCharsets.UTF_8.toString());
+            } catch (Exception e) {
+                log.warn("Token URL解码失败: {}", e.getMessage());
+            }
+            log.info("从请求中解析到token: {}", token);
             return token;
         }
         return null;
