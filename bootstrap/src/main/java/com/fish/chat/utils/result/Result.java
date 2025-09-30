@@ -62,6 +62,9 @@ public class Result extends LinkedHashMap<String, Object> implements Serializabl
     public static Result notPermission() {
         return new Result(403, "not permission", null);
     }
+    public static Result notPermission(Exception e) {
+        return new Result(403, e.getMessage(), null);
+    }
 
     public static Result get(int code, String msg, Object data) {
         return new Result(code, msg, data);

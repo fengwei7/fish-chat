@@ -573,6 +573,7 @@
   async function apiRequest(url, options = {}) {
     try {
       const response = await fetch(baseHttpURL + url, {
+        credentials: 'include', // 添加这个选项以确保发送和接收cookie
         headers: {
           'Content-Type': 'application/json',
           ...(token && {'Authorization': token}),
