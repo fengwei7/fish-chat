@@ -17,7 +17,7 @@
         <lombok.version>1.18.22</lombok.version>
         <sa-token.version>1.44.0</sa-token.version>
         <mybatis-plus.version>3.5.13</mybatis-plus.version>
-        <druid.version>1.2.8</druid.version>
+        <druid.version>1.2.9</druid.version>
         <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
         <fastjson.version>1.2.83</fastjson.version>
         <hutool.version>5.8.26</hutool.version>
