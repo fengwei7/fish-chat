@@ -36,15 +36,15 @@ spring:
       # 获取连接等待超时的时间
       max-wait: 60000
       # 间隔多久才进行一次检测，检测需要关闭的空闲连接，单位是毫秒
-      time-between-eviction-runs-millis: 60000
+      time-between-eviction-runs-millis: 30000
       # 一个连接在池中最小生存的时间，单位是毫秒
-      min-evictable-idle-time-millis: 300000
+      min-evictable-idle-time-millis: 180000
       # 用来检测连接是否有效的sql
       validation-query: SELECT 1
       # 申请连接的时候检测，如果空闲时间大于timeBetweenEvictionRunsMillis，执行validationQuery检测连接是否有效
       test-while-idle: true
       # 申请连接时执行validationQuery检测连接是否有效
-      test-on-borrow: false
+      test-on-borrow: true
       # 归还连接时执行validationQuery检测连接是否有效
       test-on-return: false
       # 是否缓存preparedStatement
