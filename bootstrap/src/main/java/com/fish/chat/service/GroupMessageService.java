@@ -4,7 +4,7 @@ import com.fish.chat.entity.MongoGroupMessage;
 import java.util.List;
 
 public interface GroupMessageService {
-    
+
     /**
      * 保存群组消息
      *

@@ -1,13 +1,15 @@
 package com.fish.chat.controller;
 
-import cn.dev33.satoken.stp.StpUtil;
 import com.fish.chat.entity.MongoGroupMessage;
 import com.fish.chat.service.GroupMessageService;
 import com.fish.chat.utils.result.Result;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/group/message")
@@ -26,15 +28,15 @@ public class GroupMessageController {
      */
     @GetMapping("/list/{groupId}")
     public Result getGroupMessages(@PathVariable String groupId,
-                                   @RequestParam(defaultValue = "1") int page,
-                                   @RequestParam(defaultValue = "20") int size) {
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "20") int size) {
         // 限制每页最大数量
         if (size > 100) {
             size = 100;
         }
 
         List<MongoGroupMessage> messages = groupMessageService.findGroupMessagesWithPagination(
-                groupId, page, size);
+            groupId, page, size);
 
         return Result.data(messages);
     }

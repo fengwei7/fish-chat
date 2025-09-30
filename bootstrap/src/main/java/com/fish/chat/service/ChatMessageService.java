@@ -1,7 +1,6 @@
 package com.fish.chat.service;
 
 import com.fish.chat.entity.MongoChatMessage;
-import com.fish.chat.entity.MongoGroupMessage;
 import java.util.List;
 
 /**

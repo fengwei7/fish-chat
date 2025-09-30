@@ -54,7 +54,7 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
         WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         // 从参数中获取token
         String token = getTokenFromRequest(request);
-        
+
         if (!StringUtils.hasText(token)) {
             log.warn("WebSocket握手失败: 缺少token参数");
             return false;
@@ -77,9 +77,10 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
         WebSocketHandler wsHandler, Exception exception) {
         // 握手之后触发
     }
-    
+
     /**
      * 从请求中提取token
+     *
      * @param request ServerHttpRequest对象
      * @return token字符串，如果不存在则返回null
      */
