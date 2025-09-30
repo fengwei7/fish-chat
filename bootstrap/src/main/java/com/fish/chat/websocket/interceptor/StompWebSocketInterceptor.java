@@ -13,6 +13,7 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.messaging.support.MessageHeaderAccessor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
@@ -34,13 +35,13 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
                     Object loginId = StpUtil.getLoginIdByToken(token);
                     // 将用户ID添加到会话属性中
                     accessor.setUser(() -> String.valueOf(loginId));
-                    log.info("用户 " + loginId + " STOMP连接成功");
+                    log.info("用户 {} STOMP连接成功", loginId);
                 } catch (Exception e) {
-                    log.info("未授权客户端，STOMP连接失败: " + e.getMessage());
+                    log.warn("未授权客户端，STOMP连接失败: {}", e.getMessage());
                     return null; // 拒绝连接
                 }
             } else {
-                log.info("STOMP连接缺少token参数");
+                log.warn("STOMP连接缺少token参数");
                 return null; // 拒绝连接
             }
         }
@@ -52,22 +53,21 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
     public boolean beforeHandshake(ServerHttpRequest request, ServerHttpResponse response,
         WebSocketHandler wsHandler, Map<String, Object> attributes) throws Exception {
         // 从参数中获取token
-        String query = request.getURI().getQuery();
-        String token = null;
-        if (query != null && query.contains("token=")) {
-            token = query.substring(query.indexOf("token=") + 6);
-            if (token.contains("&")) {
-                token = token.substring(0, token.indexOf("&"));
-            }
+        String token = getTokenFromRequest(request);
+        
+        if (!StringUtils.hasText(token)) {
+            log.warn("WebSocket握手失败: 缺少token参数");
+            return false;
         }
 
         try {
             Object loginId = StpUtil.getLoginIdByToken(token);
             // 标记 userId，握手成功
             attributes.put("userId", loginId);
+            log.info("用户 {} WebSocket握手成功", loginId);
             return true;
         } catch (Exception e) {
-            log.warn("未授权客户端，连接失败: " + e.getMessage());
+            log.warn("未授权客户端，WebSocket握手失败: {}", e.getMessage());
             return false;
         }
     }
@@ -76,5 +76,22 @@ public class StompWebSocketInterceptor implements ChannelInterceptor, HandshakeI
     public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response,
         WebSocketHandler wsHandler, Exception exception) {
         // 握手之后触发
+    }
+    
+    /**
+     * 从请求中提取token
+     * @param request ServerHttpRequest对象
+     * @return token字符串，如果不存在则返回null
+     */
+    private String getTokenFromRequest(ServerHttpRequest request) {
+        String query = request.getURI().getQuery();
+        if (query != null && query.contains("token=")) {
+            String token = query.substring(query.indexOf("token=") + 6);
+            if (token.contains("&")) {
+                token = token.substring(0, token.indexOf("&"));
+            }
+            return token;
+        }
+        return null;
     }
 }
