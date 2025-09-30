@@ -19,6 +19,11 @@ public class WebSocketStompConfig implements WebSocketMessageBrokerConfigurer {
             .addInterceptors(new StompWebSocketInterceptor())
             .setAllowedOriginPatterns("*")
             .withSockJS(); // 使用SockJS，提供备选方案
+        
+        // 添加不使用SockJS的端点
+        registry.addEndpoint("/ws")
+            .addInterceptors(new StompWebSocketInterceptor())
+            .setAllowedOriginPatterns("*");
     }
 
     @Override

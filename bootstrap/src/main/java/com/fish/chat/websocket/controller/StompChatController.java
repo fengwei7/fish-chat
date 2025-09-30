@@ -22,7 +22,6 @@ import org.springframework.stereotype.Controller;
 @Slf4j
 public class StompChatController {
 
-
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
@@ -49,6 +48,8 @@ public class StompChatController {
      */
     @MessageMapping("/chat")
     public void handleChatMessage(@Payload Map<String, Object> msg) {
+        log.info("收到私聊消息: {}", msg);
+        
         String fromUserId = msg.get("from").toString();
         String toUserId = msg.get("to").toString();
         String content = (String) msg.get("content");
@@ -65,10 +66,12 @@ public class StompChatController {
         if (isUserOnline) {
             // 发送给指定用户
             messagingTemplate.convertAndSendToUser(toUserId, "/queue/messages", response);
+            log.info("私聊消息已发送给用户 {}", toUserId);
         } else {
             // 用户不在线，返回错误信息给发送方
             String errorMessage = WebSocketMessageUtil.buildUserOfflineMessage();
             messagingTemplate.convertAndSendToUser(fromUserId, "/queue/errors", errorMessage);
+            log.info("目标用户 {} 不在线", toUserId);
         }
 
         // 持久化聊天记录到MongoDB
@@ -79,6 +82,7 @@ public class StompChatController {
         messageDTO.setContent(content);
         messageDTO.setTimestamp(System.currentTimeMillis());
         WebSocketStorageUtil.saveChatMessage(messageDTO);
+        log.info("私聊消息已持久化到数据库");
     }
 
     /**
@@ -86,6 +90,8 @@ public class StompChatController {
      */
     @MessageMapping("/group")
     public void handleGroupMessage(@Payload Map<String, Object> msg) {
+        log.info("收到群组消息: {}", msg);
+        
         String fromUserId = msg.get("from").toString();
         String groupId = msg.get("groupId").toString();
         String content = (String) msg.get("content");
@@ -96,6 +102,7 @@ public class StompChatController {
         if (!groupService.isGroupMember(Long.valueOf(groupId), Long.valueOf(fromUserId))) {
             String errorMessage = WebSocketMessageUtil.buildErrorMessage("您不在该群组中");
             messagingTemplate.convertAndSendToUser(fromUserId, "/queue/errors", errorMessage);
+            log.info("用户 {} 不在群组 {} 中，已通知", fromUserId, groupId);
             return;
         }
 
@@ -106,6 +113,7 @@ public class StompChatController {
         // 优化：使用topic广播消息给所有订阅该群组的客户端
         // 客户端需要订阅 /topic/group/{groupId} 主题来接收消息
         messagingTemplate.convertAndSend("/topic/group/" + groupId, groupMessage);
+        log.info("群组消息已广播到群组 {}", groupId);
 
         // 持久化群组消息到MongoDB
         WebSocketMessageDTO messageDTO = new WebSocketMessageDTO();
@@ -115,6 +123,7 @@ public class StompChatController {
         messageDTO.setContent(content);
         messageDTO.setTimestamp(System.currentTimeMillis());
         WebSocketStorageUtil.saveGroupMessage(messageDTO);
+        log.info("群组消息已持久化到数据库");
     }
 
     /**
