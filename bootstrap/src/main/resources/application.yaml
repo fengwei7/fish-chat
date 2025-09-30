@@ -96,7 +96,7 @@ mybatis-plus:
     log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
   global-config:
     db-config:
-      id-type: assign_id
+      id-type: AUTO
       table-underline: true
       table-prefix: t_
       logic-delete-field: deleted
