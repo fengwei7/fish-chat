@@ -2,6 +2,7 @@ package com.fish.chat.websocket.controller;
 
 import com.fish.chat.dto.WebSocketMessageDTO;
 import com.fish.chat.service.ChatMessageService;
+import com.fish.chat.service.GroupMessageService;
 import com.fish.chat.service.GroupService;
 import com.fish.chat.service.UserService;
 import com.fish.chat.websocket.service.GroupCacheService;
@@ -27,6 +28,9 @@ public class StompChatController {
 
     @Autowired
     private ChatMessageService chatMessageService;
+
+    @Autowired
+    private GroupMessageService groupMessageService;
 
     @Autowired
     private GroupService groupService;

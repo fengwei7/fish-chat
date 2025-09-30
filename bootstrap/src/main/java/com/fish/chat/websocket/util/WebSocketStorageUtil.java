@@ -6,6 +6,7 @@ import com.fish.chat.entity.MongoChatMessage;
 import com.fish.chat.entity.MongoGroupMessage;
 import com.fish.chat.mapper.redis.RedisOnlineUserMapper;
 import com.fish.chat.service.ChatMessageService;
+import com.fish.chat.service.GroupMessageService;
 import com.fish.chat.service.UserService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ public class WebSocketStorageUtil {
 
     private static RedisOnlineUserMapper redisOnlineUserMapper;
     private static ChatMessageService chatMessageService;
+    private static GroupMessageService groupMessageService;
     private static UserService userService;
 
     /**
@@ -75,7 +77,7 @@ public class WebSocketStorageUtil {
         try {
             MongoGroupMessage groupMessage = new MongoGroupMessage();
             BeanUtils.copyProperties(messageDTO, groupMessage);
-            chatMessageService.saveGroupMessage(groupMessage);
+            groupMessageService.saveGroupMessage(groupMessage);
         } catch (Exception e) {
             System.err.println("保存群组消息到MongoDB失败: " + e.getMessage());
         }
@@ -89,6 +91,11 @@ public class WebSocketStorageUtil {
     @Autowired
     public void setChatMessageService(ChatMessageService chatMessageService) {
         WebSocketStorageUtil.chatMessageService = chatMessageService;
+    }
+
+    @Autowired
+    public void setGroupMessageService(GroupMessageService groupMessageService) {
+        WebSocketStorageUtil.groupMessageService = groupMessageService;
     }
 
     @Autowired

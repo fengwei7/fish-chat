@@ -21,7 +21,7 @@ sa-token:
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://116.205.110.130:3306/fish_chat?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://116.205.110.130:3306/fish_chat?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true&autoReconnect=true
     username: root
     password: M7PlDMXRsk9_wPReR
     type: com.alibaba.druid.pool.DruidDataSource
@@ -57,6 +57,17 @@ spring:
       use-global-data-source-stat: true
       # 连接空闲超时时间
       keep-alive: true
+      # 连接泄露监测
+      remove-abandoned: false
+      remove-abandoned-timeout: 1800
+      log-abandoned: true
+      # 配置连接超时检测
+      connect-timeout: 30000
+      socket-timeout: 30000
+      # 配置连接有效性检测
+      validation-query-timeout: 5
+      # 配置连接池检测时间
+      time-between-connect-error-millis: 5000
 
   data:
     mongodb:

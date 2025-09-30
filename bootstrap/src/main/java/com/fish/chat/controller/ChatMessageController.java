@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -73,5 +74,21 @@ public class ChatMessageController {
         String currentUserId = StpUtil.getLoginIdAsString();
         List<MongoChatMessage> messages = chatMessageService.findMessagesByUserId(currentUserId);
         return Result.data(messages);
+    }
+
+    /**
+     * 更新消息状态为已读
+     *
+     * @param messageId 消息ID
+     * @return 操作结果
+     */
+    @PostMapping("/read/{messageId}")
+    public Result markAsRead(@PathVariable String messageId) {
+        boolean success = chatMessageService.updateMessageStatus(messageId, "read");
+        if (success) {
+            return Result.ok("消息状态更新成功");
+        } else {
+            return Result.error("消息状态更新失败");
+        }
     }
 }

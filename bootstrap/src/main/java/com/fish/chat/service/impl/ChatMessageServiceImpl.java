@@ -1,9 +1,7 @@
 package com.fish.chat.service.impl;
 
 import com.fish.chat.entity.MongoChatMessage;
-import com.fish.chat.entity.MongoGroupMessage;
 import com.fish.chat.mapper.mongo.MongoChatMessageRepository;
-import com.fish.chat.mapper.mongo.MongoGroupMessageRepository;
 import com.fish.chat.service.ChatMessageService;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,9 +20,6 @@ public class ChatMessageServiceImpl implements ChatMessageService {
 
     @Autowired
     private MongoChatMessageRepository mongoChatMessageRepository;
-
-    @Autowired
-    private MongoGroupMessageRepository mongoGroupMessageRepository;
 
     @Override
     public MongoChatMessage saveMessage(MongoChatMessage chatMessage) {
@@ -81,18 +76,6 @@ public class ChatMessageServiceImpl implements ChatMessageService {
     }
 
     @Override
-    public List<MongoGroupMessage> findGroupMessagesWithPagination(String groupId, int page, int size) {
-        // 创建分页请求，按时间戳降序排列
-        Pageable pageable = PageRequest.of(page - 1, size, Sort.by(Sort.Direction.DESC, "timestamp"));
-
-        // 查询群组消息
-        Page<MongoGroupMessage> pageResult = mongoGroupMessageRepository.findByGroupIdOrderByTimestampDesc(groupId,
-            pageable);
-
-        return pageResult.getContent();
-    }
-
-    @Override
     public boolean updateMessageStatus(String messageId, String status) {
         MongoChatMessage message = mongoChatMessageRepository.findById(messageId).orElse(null);
         if (message != null) {
@@ -101,15 +84,5 @@ public class ChatMessageServiceImpl implements ChatMessageService {
             return true;
         }
         return false;
-    }
-
-    @Override
-    public MongoGroupMessage saveGroupMessage(MongoGroupMessage groupMessage) {
-        return mongoGroupMessageRepository.save(groupMessage);
-    }
-
-    @Override
-    public List<MongoGroupMessage> findGroupMessagesByGroupId(String groupId) {
-        return mongoGroupMessageRepository.findByGroupIdOrderByTimestamp(groupId);
     }
 }
