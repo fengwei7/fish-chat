@@ -9,6 +9,7 @@ import com.fish.chat.websocket.service.GroupCacheService;
 import com.fish.chat.websocket.util.WebSocketMessageUtil;
 import com.fish.chat.websocket.util.WebSocketStorageUtil;
 import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -18,7 +19,9 @@ import org.springframework.messaging.simp.user.SimpUserRegistry;
 import org.springframework.stereotype.Controller;
 
 @Controller
+@Slf4j
 public class StompChatController {
+
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
@@ -50,7 +53,7 @@ public class StompChatController {
         String toUserId = msg.get("to").toString();
         String content = (String) msg.get("content");
 
-        System.out.println("来自用户 " + fromUserId + " 的私聊消息: " + content);
+        log.info("来自用户 {} 的私聊消息: {}", fromUserId, content);
 
         // 构造返回消息
         String response = WebSocketMessageUtil.buildChatMessage(fromUserId, content, System.currentTimeMillis());
@@ -87,7 +90,7 @@ public class StompChatController {
         String groupId = msg.get("groupId").toString();
         String content = (String) msg.get("content");
 
-        System.out.println("来自用户 " + fromUserId + " 的群组消息: " + content);
+        log.info("来自用户 {} 的群组消息: {}", fromUserId, content);
 
         // 检查用户是否在群组中
         if (!groupService.isGroupMember(Long.valueOf(groupId), Long.valueOf(fromUserId))) {
@@ -121,7 +124,7 @@ public class StompChatController {
     @SendToUser("/queue/pong")
     public String handlePingMessage(@Payload Map<String, Object> msg) {
         String userId = msg.get("from").toString();
-        System.out.println("收到用户 " + userId + " 的心跳消息");
+        log.info("收到用户 {} 的心跳消息", userId);
         return WebSocketMessageUtil.buildPongMessage();
     }
 

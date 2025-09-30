@@ -8,6 +8,7 @@ import com.fish.chat.mapper.redis.RedisOnlineUserMapper;
 import com.fish.chat.service.ChatMessageService;
 import com.fish.chat.service.GroupMessageService;
 import com.fish.chat.service.UserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -16,7 +17,9 @@ import org.springframework.stereotype.Component;
  * WebSocket存储工具类 用于处理Redis和MongoDB的存储操作
  */
 @Component
+@Slf4j
 public class WebSocketStorageUtil {
+
 
     private static RedisOnlineUserMapper redisOnlineUserMapper;
     private static ChatMessageService chatMessageService;
@@ -64,7 +67,7 @@ public class WebSocketStorageUtil {
             BeanUtils.copyProperties(messageDTO, chatMessage);
             chatMessageService.saveMessage(chatMessage);
         } catch (Exception e) {
-            System.err.println("保存聊天记录到MongoDB失败: " + e.getMessage());
+            log.error("保存聊天记录到MongoDB失败: {}", e.getMessage(), e);
         }
     }
 
@@ -79,7 +82,7 @@ public class WebSocketStorageUtil {
             BeanUtils.copyProperties(messageDTO, groupMessage);
             groupMessageService.saveGroupMessage(groupMessage);
         } catch (Exception e) {
-            System.err.println("保存群组消息到MongoDB失败: " + e.getMessage());
+            log.error("保存群组消息到MongoDB失败: {}", e.getMessage(), e);
         }
     }
 
