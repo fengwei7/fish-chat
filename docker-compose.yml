@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: fish-chat-app
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=jdbc:mysql://mysql:3306/fish_chat?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+      - DB_USERNAME=root
+      - DB_PASSWORD=SecurePassword123
+      - MONGODB_URI=mongodb://mongo:27017/fishchat
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      mysql:
+        condition: service_healthy
+      mongo:
+        condition: service_started
+      redis:
+        condition: service_started
+    networks:
+      - fish-chat-network
+  
+  mysql:
+    image: mysql:8.0
+    container_name: fish-chat-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: SecurePassword123
+      MYSQL_DATABASE: fish_chat
+    volumes:
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - fish-chat-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+  
+  mongo:
+    image: mongo:7
+    container_name: fish-chat-mongo
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: fishchat
+      MONGO_INITDB_ROOT_PASSWORD: SecurePassword123
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - "27017:27017"
+    networks:
+      - fish-chat-network
+  
+  redis:
+    image: redis:7-alpine
+    container_name: fish-chat-redis
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - fish-chat-network
+
+volumes:
+  mysql_data:
+  mongo_data:
+  redis_data:
+
+networks:
+  fish-chat-network:
+    driver: bridge

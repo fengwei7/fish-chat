@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fish-Chat 聊天验证</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 800px;
+            width: 100%;
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
+        .content { padding: 30px; }
+        
+        /* 登录表单 */
+        .form-group { margin-bottom: 20px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            width: 100%;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4); }
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+            margin-right: 10px;
+        }
+        
+        /* 聊天区域 */
+        .chat-section { display: none; }
+        .chat-box {
+            height: 400px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            overflow-y: auto;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: #fafafa;
+        }
+        .message {
+            margin: 10px 0;
+            padding: 12px 16px;
+            border-radius: 12px;
+            max-width: 70%;
+            word-wrap: break-word;
+        }
+        .sent {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+            text-align: right;
+        }
+        .received {
+            background: white;
+            border: 1px solid #e0e0e0;
+        }
+        .system {
+            background: #fff3cd;
+            color: #856404;
+            text-align: center;
+            max-width: 100%;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .input-row input { flex: 1; }
+        
+        .status-bar {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .status-indicator.connected { background: #28a745; }
+        .status-indicator.disconnected { background: #dc3545; }
+        
+        .actions { display: flex; gap: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐟 Fish-Chat 聊天验证</h1>
+            <p>即时通讯测试工具</p>
+        </div>
+        
+        <div class="content">
+            <!-- 登录区域 -->
+            <div id="loginSection">
+                <div class="form-group">
+                    <label for="username">用户名</label>
+                    <input type="text" id="username" placeholder="请输入用户名"/>
+                </div>
+                <div class="form-group">
+                    <label for="password">密码</label>
+                    <input type="password" id="password" placeholder="请输入密码"/>
+                </div>
+                <button class="btn btn-primary" onclick="login()">登录</button>
+                <button class="btn btn-secondary" style="width:100%; margin-top:10px;" onclick="register()">注册新账号</button>
+            </div>
+            
+            <!-- 聊天区域 -->
+            <div id="chatSection" class="chat-section">
+                <div class="status-bar">
+                    <div>
+                        <span class="status-indicator" id="statusIndicator"></span>
+                        <span id="statusText">未连接</span>
+                    </div>
+                    <div>
+                        <strong>用户:</strong> <span id="currentUser"></span>
+                    </div>
+                </div>
+                
+                <div class="chat-box" id="messages"></div>
+                
+                <div class="input-row">
+                    <input type="text" id="toUserId" placeholder="接收者 ID"/>
+                    <input type="text" id="messageContent" placeholder="输入消息内容..." onkeypress="if(event.keyCode===13) sendMessage()"/>
+                </div>
+                
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="sendMessage()">发送</button>
+                    <button class="btn btn-secondary" onclick="disconnect()">断开连接</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const API_BASE = '';
+        let ws = null;
+        let token = null;
+        let userId = null;
+        let username = null;
+        
+        // 登录
+        async function login() {
+            const usernameVal = document.getElementById('username').value.trim();
+            const passwordVal = document.getElementById('password').value.trim();
+            
+            if (!usernameVal || !passwordVal) {
+                alert('请输入用户名和密码');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE + '/auth/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: usernameVal, password: passwordVal})
+                });
+                
+                const result = await response.json();
+                if (result.code === 200) {
+                    token = result.data.token;
+                    userId = result.data.userId;
+                    username = result.data.username;
+                    
+                    connectWebSocket(token);
+                    showChatSection();
+                } else {
+                    alert(result.message || '登录失败');
+                }
+            } catch (error) {
+                console.error('登录错误:', error);
+                alert('网络错误，请稍后重试');
+            }
+        }
+        
+        // 注册
+        async function register() {
+            const usernameVal = document.getElementById('username').value.trim();
+            const passwordVal = document.getElementById('password').value.trim();
+            
+            if (!usernameVal || passwordVal.length < 6) {
+                alert('用户名不能为空，密码长度至少 6 位');
+                return;
+            }
+            
+            try {
+                const response = await fetch(API_BASE + '/auth/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        username: usernameVal,
+                        password: passwordVal,
+                        nickname: usernameVal
+                    })
+                });
+                
+                const result = await response.json();
+                if (result.code === 200) {
+                    alert('注册成功，请登录');
+                } else {
+                    alert(result.message || '注册失败');
+                }
+            } catch (error) {
+                console.error('注册错误:', error);
+                alert('网络错误，请稍后重试');
+            }
+        }
+        
+        // 连接 WebSocket
+        function connectWebSocket(token) {
+            const wsUrl = `ws://localhost:8080/websocket/chat?token=${token}`;
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = () => {
+                updateStatus(true);
+                appendMessage('system', '✓ 连接成功');
+            };
+            
+            ws.onmessage = (event) => {
+                try {
+                    const msg = JSON.parse(event.data);
+                    const type = msg.type || 'unknown';
+                    const content = msg.content || msg.message || '';
+                    
+                    switch(type) {
+                        case 'chat':
+                            appendMessage('received', content);
+                            break;
+                        case 'connect':
+                            appendMessage('system', content);
+                            break;
+                        case 'pong':
+                            console.log('收到心跳响应');
+                            break;
+                        case 'error':
+                            appendMessage('error', content);
+                            break;
+                        default:
+                            appendMessage('system', `收到消息：${JSON.stringify(msg)}`);
+                    }
+                } catch (e) {
+                    console.error('解析消息失败:', e);
+                }
+            };
+            
+            ws.onclose = () => {
+                updateStatus(false);
+                appendMessage('system', '✗ 连接已断开');
+            };
+            
+            ws.onerror = (error) => {
+                console.error('WebSocket 错误:', error);
+                appendMessage('error', '连接错误');
+            };
+        }
+        
+        // 发送消息
+        function sendMessage() {
+            const toUserId = document.getElementById('toUserId').value.trim();
+            const content = document.getElementById('messageContent').value.trim();
+            
+            if (!toUserId || !content) {
+                alert('请输入接收者 ID 和消息内容');
+                return;
+            }
+            
+            if (!ws || ws.readyState !== WebSocket.OPEN) {
+                alert('WebSocket 未连接');
+                return;
+            }
+            
+            const message = {
+                type: 'chat',
+                to: toUserId,
+                content: content
+            };
+            
+            ws.send(JSON.stringify(message));
+            appendMessage('sent', content);
+            document.getElementById('messageContent').value = '';
+        }
+        
+        // 断开连接
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+            updateStatus(false);
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('chatSection').style.display = 'none';
+            token = null;
+            userId = null;
+        }
+        
+        // 显示聊天区域
+        function showChatSection() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('chatSection').style.display = 'block';
+            document.getElementById('currentUser').textContent = `${username} (${userId})`;
+        }
+        
+        // 更新状态
+        function updateStatus(connected) {
+            const indicator = document.getElementById('statusIndicator');
+            const text = document.getElementById('statusText');
+            
+            if (connected) {
+                indicator.className = 'status-indicator connected';
+                text.textContent = '已连接';
+            } else {
+                indicator.className = 'status-indicator disconnected';
+                text.textContent = '未连接';
+            }
+        }
+        
+        // 添加消息到聊天框
+        function appendMessage(type, content) {
+            const messagesDiv = document.getElementById('messages');
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${type}`;
+            msgDiv.textContent = content;
+            messagesDiv.appendChild(msgDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
