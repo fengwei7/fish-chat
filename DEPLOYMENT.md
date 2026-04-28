@@ -66,7 +66,7 @@ CREATE DATABASE fish_chat CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```bash
 mongosh
 > use fishchat
-> db.createUser({user: "fishchat", pwd: "your_password", roles: ["readWrite"]})
+> db.createUser({userPO: "fishchat", pwd: "your_password", roles: ["readWrite"]})
 ```
 
 **Redis:**
@@ -76,7 +76,7 @@ mongosh
 
 复制环境变量模板：
 ```bash
-cp .env.example .env
+cp .env .env
 ```
 
 编辑 `.env` 文件，填入实际配置：

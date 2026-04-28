@@ -1,13 +1,12 @@
 package com.fish.chat.core.service;
 
-import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fish.chat.common.exception.BusinessException;
-import com.fish.chat.core.dto.AuthResponse;
-import com.fish.chat.core.dto.LoginRequest;
-import com.fish.chat.core.entity.User;
-import com.fish.chat.core.mapper.mysql.UserMapper;
+import com.fish.chat.core.entity.po.UserPO;
+import com.fish.chat.core.entity.req.LoginRequest;
+import com.fish.chat.core.entity.resp.AuthResponse;
+import com.fish.chat.core.mapper.UserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +16,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * 认证服务单元测试
@@ -32,7 +32,7 @@ class AuthServiceTest {
     private AuthService authService;
     
     private LoginRequest loginRequest;
-    private User testUser;
+    private UserPO testUserPO;
     
     @BeforeEach
     void setUp() {
@@ -41,19 +41,19 @@ class AuthServiceTest {
                 .password("password123")
                 .build();
         
-        testUser = new User();
-        testUser.setId(1L);
-        testUser.setUsername("testuser");
-        testUser.setPassword(DigestUtil.sha256Hex("password123" + "salt123"));
-        testUser.setSalt("salt123");
-        testUser.setStatus(1);
-        testUser.setNickname("Test User");
+        testUserPO = new UserPO();
+        testUserPO.setId(1L);
+        testUserPO.setUsername("testuser");
+        testUserPO.setPassword(DigestUtil.sha256Hex("password123" + "salt123"));
+        testUserPO.setSalt("salt123");
+        testUserPO.setStatus(1);
+        testUserPO.setNickname("Test User");
     }
     
     @Test
     void testLogin_Success() {
         // Given
-        when(userMapper.selectOne(any(QueryWrapper.class))).thenReturn(testUser);
+        when(userMapper.selectOne(any(QueryWrapper.class))).thenReturn(testUserPO);
         
         // When
         AuthResponse response = authService.login(loginRequest);
@@ -79,9 +79,9 @@ class AuthServiceTest {
     @Test
     void testLogin_WrongPassword() {
         // Given
-        User wrongPasswordUser = new User();
-        wrongPasswordUser.setPassword("wronghash");
-        when(userMapper.selectOne(any(QueryWrapper.class))).thenReturn(wrongPasswordUser);
+        UserPO wrongPasswordUserPO = new UserPO();
+        wrongPasswordUserPO.setPassword("wronghash");
+        when(userMapper.selectOne(any(QueryWrapper.class))).thenReturn(wrongPasswordUserPO);
         
         // When & Then
         assertThrows(BusinessException.class, () -> {
@@ -92,8 +92,8 @@ class AuthServiceTest {
     @Test
     void testLogin_UserDisabled() {
         // Given
-        testUser.setStatus(0); // Disabled
-        when(userMapper.selectOne(any(QueryWrapper.class))).thenReturn(testUser);
+        testUserPO.setStatus(0); // Disabled
+        when(userMapper.selectOne(any(QueryWrapper.class))).thenReturn(testUserPO);
         
         // When & Then
         BusinessException exception = assertThrows(BusinessException.class, () -> {

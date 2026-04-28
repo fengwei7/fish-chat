@@ -1,9 +1,9 @@
 package com.fish.chat.bootstrap.controller;
 
 import com.fish.chat.common.result.Result;
-import com.fish.chat.core.dto.AuthResponse;
-import com.fish.chat.core.dto.LoginRequest;
-import com.fish.chat.core.dto.RegisterRequest;
+import com.fish.chat.core.entity.req.LoginRequest;
+import com.fish.chat.core.entity.req.RegisterRequest;
+import com.fish.chat.core.entity.resp.AuthResponse;
 import com.fish.chat.core.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;

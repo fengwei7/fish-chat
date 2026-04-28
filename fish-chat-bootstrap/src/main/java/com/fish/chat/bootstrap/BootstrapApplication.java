@@ -1,8 +1,10 @@
 package com.fish.chat.bootstrap;
 
+import com.fish.chat.common.properties.FileUploadProperties;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 
@@ -13,6 +15,7 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @MapperScan("com.fish.chat.core.mapper")
 @EnableMongoRepositories(basePackages = "com.fish.chat.core.repository")
 @EnableCaching
+@EnableConfigurationProperties(FileUploadProperties.class)
 public class BootstrapApplication {
     
     public static void main(String[] args) {

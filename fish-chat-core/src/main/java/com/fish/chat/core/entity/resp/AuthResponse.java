@@ -1,4 +1,4 @@
-package com.fish.chat.core.dto;
+package com.fish.chat.core.entity.resp;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

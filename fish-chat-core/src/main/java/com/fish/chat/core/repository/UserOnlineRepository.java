@@ -2,7 +2,7 @@ package com.fish.chat.core.repository;
 
 import com.alibaba.fastjson.JSON;
 import com.fish.chat.common.constants.AuthConstants;
-import com.fish.chat.core.dto.UserDTO;
+import com.fish.chat.core.entity.dto.UserDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;

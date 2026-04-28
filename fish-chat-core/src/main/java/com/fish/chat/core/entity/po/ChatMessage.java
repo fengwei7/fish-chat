@@ -1,6 +1,7 @@
-package com.fish.chat.core.entity;
+package com.fish.chat.core.entity.po;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -11,9 +12,10 @@ import java.io.Serializable;
 /**
  * MongoDB 聊天消息实体类
  */
+@EqualsAndHashCode()
 @Data
 @Document(collection = "chat_messages")
-public class MongoChatMessage implements Serializable {
+public class ChatMessage implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -21,7 +23,7 @@ public class MongoChatMessage implements Serializable {
      * 主键 ID
      */
     @Id
-    private String id;
+    private Long id;
 
     /**
      * 消息类型

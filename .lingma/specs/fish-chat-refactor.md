@@ -210,7 +210,7 @@ public class AuthController {
 ```java
 // ❌ 错误示例
 public Set<String> getOnlineUsers() {
-    return redisTemplate.keys("user:online:*");
+    return redisTemplate.keys("userPO:online:*");
 }
 
 // ✅ 正确做法：使用 scan
@@ -218,7 +218,7 @@ public Set<String> getOnlineUsers() {
     Set<String> keys = new HashSet<>();
     redisTemplate.execute((RedisCallback<Void>) connection -> {
         try (Cursor<byte[]> cursor = connection.scan(ScanOptions.scanOptions()
-                .match("user:online:*").count(100).build())) {
+                .match("userPO:online:*").count(100).build())) {
             while (cursor.hasNext()) {
                 keys.add(new String(cursor.next()));
             }
@@ -243,16 +243,16 @@ public class UserServiceImpl implements UserService {
         return userMapper.selectById(userId);
     }
     
-    @CacheEvict(value = "users", key = "#user.id")
-    public void updateUser(User user) {
-        userMapper.updateById(user);
+    @CacheEvict(value = "users", key = "#userPO.id")
+    public void updateUser(User userPO) {
+        userMapper.updateById(userPO);
     }
 }
 
 // WebSocket 连接时先查缓存
 public void afterConnectionEstablished(WebSocketSession session) {
     Long userId = (Long) session.getAttributes().get("userId");
-    User user = userService.getUserById(userId); // 自动缓存
+    User userPO = userService.getUserById(userId); // 自动缓存
     // ...
 }
 ```
@@ -741,7 +741,7 @@ curl -X POST http://localhost:8080/api/auth/login \
 ### 6. 性能验证
 ```bash
 # 使用 Apache Bench 进行压力测试
-ab -n 1000 -c 10 http://localhost:8080/api/user/info
+ab -n 1000 -c 10 http://localhost:8080/api/userPO/info
 ```
 
 ### 7. 集成测试

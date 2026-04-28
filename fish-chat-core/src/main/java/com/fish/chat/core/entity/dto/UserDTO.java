@@ -1,4 +1,4 @@
-package com.fish.chat.core.dto;
+package com.fish.chat.core.entity.dto;
 
 import lombok.Data;
 
@@ -13,9 +13,9 @@ public class UserDTO implements Serializable {
     private static final long serialVersionUID = 1L;
     
     /**
-     * 用户 ID
+     * 用户code
      */
-    private Long id;
+    private String code;
     
     /**
      * 用户名

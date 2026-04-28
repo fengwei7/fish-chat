@@ -1,9 +1,9 @@
 package com.fish.chat.bootstrap.config;
 
 import com.alibaba.fastjson.JSON;
-import com.fish.chat.core.dto.UserDTO;
-import com.fish.chat.core.entity.MongoChatMessage;
-import com.fish.chat.core.repository.MongoChatMessageRepository;
+import com.fish.chat.core.entity.dto.UserDTO;
+import com.fish.chat.core.entity.po.ChatMessage;
+import com.fish.chat.core.repository.ChatMessageRepository;
 import com.fish.chat.core.repository.UserOnlineRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -28,7 +28,7 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
     private UserOnlineRepository userOnlineRepository;
     
     @Autowired
-    private MongoChatMessageRepository mongoChatMessageRepository;
+    private ChatMessageRepository chatMessageRepository;
     
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
@@ -36,7 +36,6 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         
         // 保存用户到 Redis
         UserDTO userDTO = new UserDTO();
-        userDTO.setId(Long.valueOf(userId));
         userOnlineRepository.saveOnlineUser(userId, userDTO, 5);
         
         // 加入在线列表
@@ -106,13 +105,13 @@ public class ChatWebSocketHandler extends TextWebSocketHandler {
         }
         
         // 保存到 MongoDB
-        MongoChatMessage chatMessage = new MongoChatMessage();
+        ChatMessage chatMessage = new ChatMessage();
         chatMessage.setType("chat");
         chatMessage.setFrom(fromUserId);
         chatMessage.setTo(toUserId);
         chatMessage.setContent(content);
         chatMessage.setTimestamp(System.currentTimeMillis());
-        mongoChatMessageRepository.save(chatMessage);
+        chatMessageRepository.save(chatMessage);
     }
     
     /**

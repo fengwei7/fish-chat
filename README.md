@@ -75,7 +75,7 @@ cd fish-chat
 
 2. 配置环境变量（可选）
 ```bash
-cp .env.example .env
+cp .env .env
 # 编辑 .env 文件填入实际配置
 ```
 
@@ -185,7 +185,7 @@ curl -X POST http://localhost:8080/auth/login \
   -d '{"username":"user1","password":"password123"}'
 
 # 获取用户信息
-curl -X GET http://localhost:8080/user/info \
+curl -X GET http://localhost:8080/userPO/info \
   -H "satoken: {your-token}"
 ```
 

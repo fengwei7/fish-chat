@@ -118,7 +118,7 @@ registry.addMapping("/**")
 **重构前：**
 ```java
 public Set<String> getOnlineUsers() {
-    return redisTemplate.keys("user:online:*");  // 阻塞！
+    return redisTemplate.keys("userPO:online:*");  // 阻塞！
 }
 ```
 
