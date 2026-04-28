@@ -37,6 +37,7 @@
     </dependencies>
 
     <build>
+        <finalName>${project.artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -45,6 +46,7 @@
                 <configuration>
                     <mainClass>com.fish.chat.bootstrap.BootstrapApplication</mainClass>
                 </configuration>
+
                 <executions>
                     <execution>
                         <goals>
