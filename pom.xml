@@ -6,7 +6,6 @@
     <artifactId>fish-chat</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>fish-chat</name>
-    <description>Fish-Chat Instant Messaging Backend</description>
     <packaging>pom</packaging>
     
     <modules>
@@ -29,6 +28,7 @@
         <hutool.version>5.8.26</hutool.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <netty.version>4.1.100.Final</netty.version>
+        <fastjson.version>1.2.83</fastjson.version>
     </properties>
 
     <dependencyManagement>
@@ -139,6 +139,11 @@
                 <groupId>org.mapstruct</groupId>
                 <artifactId>mapstruct</artifactId>
                 <version>${mapstruct.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>fastjson</artifactId>
+                <version>${fastjson.version}</version>
             </dependency>
             
             <!-- Netty -->

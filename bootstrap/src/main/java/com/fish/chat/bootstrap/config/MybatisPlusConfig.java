@@ -1,6 +1,7 @@
 package com.fish.chat.bootstrap.config;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.lang.UUID;
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
@@ -42,10 +43,11 @@ public class MybatisPlusConfig {
             @Override
             public void insertFill(MetaObject metaObject) {
                 // 插入时自动填充
+                this.strictInsertFill(metaObject, "code", String.class, UUID.randomUUID().toString());
                 this.strictInsertFill(metaObject, "createTime", LocalDateTime.class, LocalDateTime.now());
                 this.strictInsertFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
-                this.strictInsertFill(metaObject, "creator", String.class, StpUtil.getLoginIdAsString());
-                this.strictInsertFill(metaObject, "updater", String.class, StpUtil.getLoginIdAsString());
+                this.strictInsertFill(metaObject, "creator", String.class, getLoginId());
+                this.strictInsertFill(metaObject, "updater", String.class, getLoginId());
                 this.strictInsertFill(metaObject, "deleted", Integer.class, 0);
 
             }
@@ -54,7 +56,11 @@ public class MybatisPlusConfig {
             public void updateFill(MetaObject metaObject) {
                 // 更新时自动填充
                 this.strictUpdateFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
-                this.strictUpdateFill(metaObject, "updater", String.class, StpUtil.getLoginIdAsString());
+                this.strictUpdateFill(metaObject, "updater", String.class, getLoginId());
+            }
+
+            private String getLoginId() {
+                return StpUtil.isLogin() ? StpUtil.getLoginIdAsString() : "-";
             }
         };
     }

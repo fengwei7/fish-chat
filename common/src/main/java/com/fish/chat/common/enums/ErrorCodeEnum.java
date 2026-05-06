@@ -24,7 +24,7 @@ public enum ErrorCodeEnum {
     /**
      * ========== 通用业务 从1编号 ==========
      */
-    PARAM_ERROR(1001, "参数校验失败"),
+    COMMON_FAILED(1001, "通用失败"),
     DATA_NOT_EXIST(1002, "数据不存在"),
     DATA_EXIST(1003, "数据已存在"),
     OPERATION_FAILED(1004, "操作失败"),

@@ -10,7 +10,6 @@
 
     <artifactId>bootstrap</artifactId>
     <name>fish-chat-bootstrap</name>
-    <description>启动模块 - Controller、配置、应用入口</description>
 
     <dependencies>
         <!-- 依赖 core 模块 -->

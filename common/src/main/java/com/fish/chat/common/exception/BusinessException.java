@@ -1,5 +1,6 @@
 package com.fish.chat.common.exception;
 
+import com.fish.chat.common.enums.ErrorCodeEnum;
 import lombok.Getter;
 
 /**
@@ -22,7 +23,7 @@ public class BusinessException extends RuntimeException {
     
     public BusinessException(String message) {
         super(message);
-        this.code = 500;
+        this.code = ErrorCodeEnum.COMMON_FAILED.getCode();
         this.message = message;
     }
     

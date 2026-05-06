@@ -32,3 +32,7 @@ spring:
     password:
     database: 0
     timeout: 3000
+# 开发环境打印SQL
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

@@ -1,9 +1,9 @@
 package com.fish.chat.core.controller;
 
 import com.fish.chat.common.result.Result;
+import com.fish.chat.core.entity.dto.AuthDTO;
 import com.fish.chat.core.entity.req.LoginRequest;
 import com.fish.chat.core.entity.req.RegisterRequest;
-import com.fish.chat.core.entity.resp.AuthResponse;
 import com.fish.chat.core.service.AuthService;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,8 +34,8 @@ public class AuthController {
      * 用户登录
      */
     @PostMapping("/login")
-    public Result<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse response = authService.login(request);
+    public Result<AuthDTO> login(@Valid @RequestBody LoginRequest request) {
+        AuthDTO response = authService.login(request);
         return Result.success(response);
     }
     

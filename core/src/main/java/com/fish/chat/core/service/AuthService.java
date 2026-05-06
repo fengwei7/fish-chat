@@ -4,10 +4,10 @@ import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.fish.chat.common.exception.BusinessException;
+import com.fish.chat.core.entity.dto.AuthDTO;
 import com.fish.chat.core.entity.po.UserPO;
 import com.fish.chat.core.entity.req.LoginRequest;
 import com.fish.chat.core.entity.req.RegisterRequest;
-import com.fish.chat.core.entity.resp.AuthResponse;
 import com.fish.chat.core.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,17 +41,17 @@ public class AuthService {
         String salt = RandomUtil.randomString(16);
         
         // 创建用户
-        UserPO newUserPO = new UserPO();
-        newUserPO.setUsername(request.getUsername());
+        UserPO userPO = new UserPO();
+        userPO.setUsername(request.getUsername());
         // 使用 SHA256 加密并加盐
-        newUserPO.setPassword(DigestUtil.sha256Hex(request.getPassword() + salt));
-        newUserPO.setSalt(salt);
-        newUserPO.setMobile(request.getMobile());
-        newUserPO.setEmail(request.getEmail());
-        newUserPO.setNickname(request.getNickname());
-        newUserPO.setStatus(1); // 默认正常状态
+        userPO.setPassword(DigestUtil.sha256Hex(request.getPassword() + salt));
+        userPO.setSalt(salt);
+        userPO.setMobile(request.getMobile());
+        userPO.setEmail(request.getEmail());
+        userPO.setNickname(request.getNickname());
+        userPO.setStatus(1); // 默认正常状态
         
-        userRepository.save(newUserPO);
+        userRepository.save(userPO);
         return true;
     }
     
@@ -60,7 +60,7 @@ public class AuthService {
      * @param request 登录请求
      * @return 认证响应
      */
-    public AuthResponse login(LoginRequest request) {
+    public AuthDTO login(LoginRequest request) {
         // 查询用户
         UserPO userPO = userRepository.findByUsername(request.getUsername());
         
@@ -83,9 +83,9 @@ public class AuthService {
         StpUtil.login(userPO.getId());
         
         // 构建响应
-        return AuthResponse.builder()
+        return AuthDTO.builder()
                 .token(StpUtil.getTokenValue())
-                .userId(userPO.getId())
+                .code(userPO.getCode())
                 .username(userPO.getUsername())
                 .nickname(userPO.getNickname())
                 .avatarUrl(userPO.getAvatarUrl())

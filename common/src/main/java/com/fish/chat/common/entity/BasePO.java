@@ -20,6 +20,7 @@ public class BasePO implements Serializable {
     /**
      * code
      */
+    @TableField(fill = FieldFill.INSERT)
     private String code;
 
     /**

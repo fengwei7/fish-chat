@@ -1,18 +1,14 @@
-package com.fish.chat.core.entity.resp;
+package com.fish.chat.core.entity.dto;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 认证响应 DTO
  */
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class AuthResponse {
+public class AuthDTO {
     
     /**
      * Token
@@ -20,9 +16,9 @@ public class AuthResponse {
     private String token;
     
     /**
-     * 用户 ID
+     * 用户 code
      */
-    private Long userId;
+    private String code;
     
     /**
      * 用户名

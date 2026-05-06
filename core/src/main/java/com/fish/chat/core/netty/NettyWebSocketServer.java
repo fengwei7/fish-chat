@@ -47,16 +47,16 @@ public class NettyWebSocketServer {
                     .childOption(ChannelOption.TCP_NODELAY, true);
 
             ChannelFuture future = bootstrap.bind().sync();
-            log.info("Netty WebSocket 服务器启动成功，端口: {}", port);
+            log.info("Netty 服务器启动成功，端口: {}", port);
 
             // 添加关闭钩子
             Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                log.info("正在关闭 Netty WebSocket 服务器...");
+                log.info("正在关闭 Netty 服务器...");
                 shutdown();
             }));
 
         } catch (Exception e) {
-            log.error("Netty WebSocket 服务器启动失败", e);
+            log.error("Netty 服务器启动失败", e);
             shutdown();
             throw e;
         }
@@ -70,6 +70,6 @@ public class NettyWebSocketServer {
         if (workerGroup != null && !workerGroup.isShutdown()) {
             workerGroup.shutdownGracefully();
         }
-        log.info("Netty WebSocket 服务器已关闭");
+        log.info("Netty closed");
     }
 }
