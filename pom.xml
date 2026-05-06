@@ -10,9 +10,9 @@
     <packaging>pom</packaging>
     
     <modules>
-        <module>fish-chat-common</module>
-        <module>fish-chat-core</module>
-        <module>fish-chat-bootstrap</module>
+        <module>common</module>
+        <module>core</module>
+        <module>bootstrap</module>
     </modules>
     
     <properties>
@@ -28,6 +28,7 @@
         <maven-compiler-plugin.version>3.11.0</maven-compiler-plugin.version>
         <hutool.version>5.8.26</hutool.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <netty.version>4.1.100.Final</netty.version>
     </properties>
 
     <dependencyManagement>
@@ -43,12 +44,12 @@
             <!-- Project modules -->
             <dependency>
                 <groupId>com.fish</groupId>
-                <artifactId>fish-chat-common</artifactId>
+                <artifactId>common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.fish</groupId>
-                <artifactId>fish-chat-core</artifactId>
+                <artifactId>core</artifactId>
                 <version>${project.version}</version>
             </dependency>
             
@@ -138,6 +139,13 @@
                 <groupId>org.mapstruct</groupId>
                 <artifactId>mapstruct</artifactId>
                 <version>${mapstruct.version}</version>
+            </dependency>
+            
+            <!-- Netty -->
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-all</artifactId>
+                <version>${netty.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -1,0 +1,42 @@
+# Fish-Chat 应用配置文件
+server:
+  port: 8080
+
+spring:
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+
+# Sa-Token 配置
+sa-token:
+  token-name: satoken
+  timeout: 2592000
+  active-timeout: -1
+  is-concurrent: true
+  is-share: false
+  token-style: uuid
+  is-log: true
+
+
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
+    lazy-loading-enabled: true
+    multiple-result-sets-enabled: true
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+  global-config:
+    db-config:
+      id-type: assign_id
+      table-underline: true
+      table-prefix: t_
+      logic-delete-field: deleted
+    enable-sql-runner: true
+
+# 文件上传配置
+file:
+  upload:
+    # 上传文件保存目录（支持相对路径或绝对路径）
+    dir: ./uploads
+    # 上传文件的访问 URL 前缀
+    access-path: /files/
