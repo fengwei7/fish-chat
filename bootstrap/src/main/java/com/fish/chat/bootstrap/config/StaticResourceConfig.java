@@ -6,6 +6,7 @@ import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.Resource;
+import java.nio.file.Paths;
 
 /**
  * 静态资源配置
@@ -31,7 +32,12 @@ public class StaticResourceConfig implements WebMvcConfigurer {
             accessPath = accessPath + "/";
         }
 
-        String uploadDir = fileUploadProperties.getDir();
+        // 将相对路径转换为绝对路径
+        String uploadDir = Paths.get(fileUploadProperties.getDir())
+                .toAbsolutePath()
+                .normalize()
+                .toString();
+        
         if (!uploadDir.endsWith("/") && !uploadDir.endsWith("\\")) {
             uploadDir = uploadDir + "/";
         }

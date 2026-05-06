@@ -68,8 +68,8 @@ public class FileUploadUtil {
         // 创建唯一文件名
         String uniqueFileName = UUID.randomUUID() + "." + extension;
 
-        // 确保上传目录存在
-        Path uploadPath = Paths.get(uploadDir);
+        // 确保上传目录存在（将相对路径转换为绝对路径）
+        Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         if (!Files.exists(uploadPath)) {
             Files.createDirectories(uploadPath);
         }

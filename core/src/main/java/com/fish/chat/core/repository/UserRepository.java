@@ -29,7 +29,27 @@ public class UserRepository extends BaseRepository<UserPO> {
      * @param username 用户名
      * @return 用户实体
      */
-    public UserPO findByUsername(String username) {
+    public UserPO selectByUsername(String username) {
         return userMapper.selectOne(Wrappers.<UserPO>lambdaQuery().eq(UserPO::getUsername, username));
+    }
+
+    /**
+     * 根据用户code查询用户
+     *
+     * @param code 用户code
+     * @return 用户实体
+     */
+    public UserPO selectByCode(String code) {
+        return userMapper.selectOne(Wrappers.<UserPO>lambdaQuery().eq(UserPO::getCode, code));
+    }
+
+    /**
+     * 更新用户信息
+     *
+     * @param userPO 用户实体
+     * @return 是否更新成功
+     */
+    public boolean updateById(UserPO userPO) {
+        return userMapper.updateById(userPO) > 0;
     }
 }

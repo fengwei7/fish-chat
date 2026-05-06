@@ -31,7 +31,7 @@ public class AuthService {
     @Transactional(rollbackFor = Exception.class)
     public boolean register(RegisterRequest request) {
         // 检查用户名是否存在
-        UserPO existingUserPO = userRepository.findByUsername(request.getUsername());
+        UserPO existingUserPO = userRepository.selectByUsername(request.getUsername());
         
         if (existingUserPO != null) {
             throw new BusinessException("用户名已存在");
@@ -62,7 +62,7 @@ public class AuthService {
      */
     public AuthDTO login(LoginRequest request) {
         // 查询用户
-        UserPO userPO = userRepository.findByUsername(request.getUsername());
+        UserPO userPO = userRepository.selectByUsername(request.getUsername());
         
         if (userPO == null) {
             throw new BusinessException("用户名或密码错误");
