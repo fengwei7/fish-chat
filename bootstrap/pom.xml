@@ -16,8 +16,7 @@
         <!-- 依赖 core 模块 -->
         <dependency>
             <groupId>com.fish</groupId>
-            <artifactId>fish-chat-core</artifactId>
-            <version>${project.version}</version>
+            <artifactId>core</artifactId>
         </dependency>
         
         <!-- Spring Boot DevTools -->
@@ -36,8 +35,8 @@
         </dependency>
 
         <dependency>
-            <groupId>com.fish</groupId>
-            <artifactId>core</artifactId>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
         </dependency>
     </dependencies>
 

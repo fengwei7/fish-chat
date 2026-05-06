@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Fish-Chat 应用启动类
@@ -16,12 +17,14 @@ import org.springframework.data.mongodb.repository.config.EnableMongoRepositorie
 @EnableMongoRepositories(basePackages = "com.fish.chat.core.repository")
 @EnableCaching
 @EnableConfigurationProperties(FileUploadProperties.class)
+@Slf4j
 public class BootstrapApplication {
     
     public static void main(String[] args) {
         SpringApplication.run(BootstrapApplication.class, args);
-        System.out.println("====================================");
-        System.out.println("Fish-Chat 启动成功！");
-        System.out.println("====================================");
+        log.info("\n" +
+                "====================================\n" +
+                "Fish-Chat 启动成功！\n" +
+                "====================================");
     }
 }

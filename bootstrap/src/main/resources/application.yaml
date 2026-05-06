@@ -2,6 +2,11 @@
 server:
   port: 8080
 
+# Netty WebSocket 配置
+netty:
+  websocket:
+    port: 8081
+
 spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
