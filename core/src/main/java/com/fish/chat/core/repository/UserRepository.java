@@ -8,6 +8,7 @@ import com.fish.chat.core.mapper.UserMapper;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 用户数据访问层
@@ -51,5 +52,16 @@ public class UserRepository extends BaseRepository<UserPO> {
      */
     public boolean updateById(UserPO userPO) {
         return userMapper.updateById(userPO) > 0;
+    }
+
+    /**
+     * 模糊搜索用户（用户名或昵称）
+     */
+    public List<UserPO> searchByKeyword(String keyword) {
+        return userMapper.selectList(Wrappers.<UserPO>lambdaQuery()
+                .like(UserPO::getUsername, keyword)
+                .or()
+                .like(UserPO::getNickname, keyword)
+                .last("LIMIT 20"));
     }
 }

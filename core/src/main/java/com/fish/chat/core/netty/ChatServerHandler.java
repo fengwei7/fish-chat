@@ -267,12 +267,16 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
         ChatMessage msg = new ChatMessage();
         msg.setType(body.getMsgType() != null ? body.getMsgType() : "TEXT");
         msg.setFrom(body.getSenderId());
-        msg.setTo(body.getRoomId()); // to 字段存 roomId
+        msg.setTo(body.getRoomId());
         msg.setContent(body.getContent());
         msg.setTimestamp(body.getTimestamp() != null ? body.getTimestamp() : System.currentTimeMillis());
+        msg.setRoomId(body.getRoomId());
+        msg.setRoomType(body.getRoomType());
+        msg.setFileName(body.getFileName());
+        msg.setFileSize(body.getFileSize());
 
         ChatMessage saved = chatMessageRepository.save(msg);
-        return saved.getId(); // MongoDB String _id
+        return saved.getId();
     }
 
     private void sendAck(ChannelHandlerContext ctx, String reqId) {

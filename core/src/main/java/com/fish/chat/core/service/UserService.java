@@ -30,4 +30,12 @@ public interface UserService {
      * @return 用户信息 DTO
      */
     UserDTO getUserByCode(String code);
+
+    /**
+     * 搜索用户（按用户名/昵称模糊匹配）
+     *
+     * @param keyword 关键词
+     * @return 用户列表
+     */
+    java.util.List<UserDTO> searchUsers(String keyword);
 }

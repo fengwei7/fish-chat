@@ -10,6 +10,8 @@ import com.fish.chat.core.service.UserService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 用户服务实现
@@ -57,6 +59,18 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException("用户不存在");
         }
         return toDTO(userPO);
+    }
+
+    @Override
+    public List<UserDTO> searchUsers(String keyword) {
+        List<UserPO> users = userRepository.searchByKeyword(keyword);
+        List<UserDTO> result = new ArrayList<>();
+        if (users != null) {
+            for (UserPO po : users) {
+                result.add(toDTO(po));
+            }
+        }
+        return result;
     }
 
     private UserPO getCurrentUserPO() {
