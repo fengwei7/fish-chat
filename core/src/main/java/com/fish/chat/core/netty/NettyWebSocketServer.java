@@ -1,5 +1,6 @@
 package com.fish.chat.core.netty;
 
+import com.fish.chat.core.chat.SessionManager;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
@@ -26,7 +27,10 @@ public class NettyWebSocketServer {
     private int port;
 
     @Resource
-    private NettyWebSocketInitializer nettyWebSocketInitializer;
+    private NettyWebSocketInitializer initializer;
+
+    @Resource
+    private SessionManager sessionManager;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
@@ -36,40 +40,37 @@ public class NettyWebSocketServer {
         bossGroup = new NioEventLoopGroup(1);
         workerGroup = new NioEventLoopGroup();
 
-        try {
-            ServerBootstrap bootstrap = new ServerBootstrap();
-            bootstrap.group(bossGroup, workerGroup)
-                    .channel(NioServerSocketChannel.class)
-                    .localAddress(new InetSocketAddress(port))
-                    .childHandler(nettyWebSocketInitializer)
-                    .option(ChannelOption.SO_BACKLOG, 128)
-                    .childOption(ChannelOption.SO_KEEPALIVE, true)
-                    .childOption(ChannelOption.TCP_NODELAY, true);
+        ServerBootstrap bootstrap = new ServerBootstrap();
+        bootstrap.group(bossGroup, workerGroup)
+                .channel(NioServerSocketChannel.class)
+                .localAddress(new InetSocketAddress(port))
+                .childHandler(initializer)
+                .option(ChannelOption.SO_BACKLOG, 128)
+                .childOption(ChannelOption.SO_KEEPALIVE, true)
+                .childOption(ChannelOption.TCP_NODELAY, true);
 
-            ChannelFuture future = bootstrap.bind().sync();
-            log.info("Netty 服务器启动成功，端口: {}", port);
+        ChannelFuture future = bootstrap.bind().sync();
+        log.info("========================================");
+        log.info("  Netty WebSocket 启动成功！端口: {}", port);
+        log.info("  连接地址: ws://localhost:{}/ws?token=xxx", port);
+        log.info("========================================");
 
-            // 添加关闭钩子
-            Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                log.info("正在关闭 Netty 服务器...");
-                shutdown();
-            }));
-
-        } catch (Exception e) {
-            log.error("Netty 服务器启动失败", e);
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            log.info("关闭 Netty 服务器...");
+            sessionManager.shutdown();
             shutdown();
-            throw e;
-        }
+        }));
     }
 
     @PreDestroy
     public void shutdown() {
+        sessionManager.shutdown();
         if (bossGroup != null && !bossGroup.isShutdown()) {
             bossGroup.shutdownGracefully();
         }
         if (workerGroup != null && !workerGroup.isShutdown()) {
             workerGroup.shutdownGracefully();
         }
-        log.info("Netty closed");
+        log.info("Netty 服务器已关闭");
     }
 }

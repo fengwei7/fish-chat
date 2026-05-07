@@ -3,43 +3,38 @@ package com.fish.chat.core.repository;
 import com.fish.chat.core.entity.po.ChatMessage;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 /**
  * MongoDB 聊天消息仓储
- * 不需要@Repository 注解，Spring Data 会自动创建 bean
  */
+@Repository
 public interface ChatMessageRepository extends MongoRepository<ChatMessage, String> {
-    
+
     /**
-     * 查询两个用户之间的聊天记录
-     * @param fromUser 发送方 ID
-     * @param toUser 接收方 ID
-     * @return 聊天记录列表
+     * 查询两用户私聊记录
      */
-    List<ChatMessage> findByFromAndTo(String fromUser, String toUser);
-    
+    List<ChatMessage> findByFromAndToAndRoomType(String from, String to, String roomType);
+
+    /**
+     * 查询房间消息历史（按时间倒序分页）
+     */
+    List<ChatMessage> findByRoomIdOrderByTimestampDesc(String roomId, Pageable pageable);
+
+    /**
+     * 查询用户在某个时间点之后收到的房间消息（用于同步）
+     */
+    List<ChatMessage> findByRoomIdAndTimestampGreaterThanOrderByTimestampAsc(String roomId, Long timestamp);
+
     /**
      * 查询用户发送的所有消息
-     * @param fromUser 发送方 ID
-     * @return 消息列表
      */
-    List<ChatMessage> findByFrom(String fromUser);
-    
+    List<ChatMessage> findByFromOrderByTimestampDesc(String from, Pageable pageable);
+
     /**
-     * 查询用户接收的所有消息
-     * @param toUser 接收方 ID
-     * @return 消息列表
+     * 按类型查询房间消息
      */
-    List<ChatMessage> findByTo(String toUser);
-    
-    /**
-     * 查询两个用户之间的聊天记录（分页）
-     * @param fromUser 发送方 ID
-     * @param toUser 接收方 ID
-     * @param pageable 分页参数
-     * @return 聊天记录列表
-     */
-    List<ChatMessage> findByFromAndToOrderByTimestampDesc(String fromUser, String toUser, Pageable pageable);
+    List<ChatMessage> findByRoomIdAndTypeOrderByTimestampDesc(String roomId, String type, Pageable pageable);
 }

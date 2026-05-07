@@ -1,9 +1,9 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/fish_chat?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://192.168.1.5:3306/fish_chat?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true
     username: root
-    password: 12345678
+    password: mysql_JRW3bf
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
       initial-size: 5
@@ -24,14 +24,15 @@ spring:
 
   data:
     mongodb:
-      uri: mongodb://localhost:27017/fishchat
+      uri: mongodb://mongo_Edj2dr:mongo_zKM5xP@192.168.1.5:27017/fishchat
 
   redis:
-    host: localhost
+    host: 192.168.1.5
     port: 6379
-    password:
+    password: redis_scCe5W
     database: 0
     timeout: 3000
+
 # 开发环境打印SQL
 mybatis-plus:
   configuration:
