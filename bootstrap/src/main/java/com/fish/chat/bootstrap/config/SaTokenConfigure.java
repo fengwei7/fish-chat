@@ -28,6 +28,8 @@ public class SaTokenConfigure implements WebMvcConfigurer {
                 .excludePathPatterns(
                     "/auth/login",
                     "/auth/register",
+                    "/auth/logout",
+                    "/error",
                     "/file/download/**",
                     "/**/*.html",
                     "/**/*.css",
@@ -49,6 +51,8 @@ public class SaTokenConfigure implements WebMvcConfigurer {
             .addExclude(
                 "/auth/login",
                 "/auth/register",
+                "/auth/logout",
+                "/error",
                 "/file/download/**",
                 "/**/*.html",
                 "/**/*.css",
