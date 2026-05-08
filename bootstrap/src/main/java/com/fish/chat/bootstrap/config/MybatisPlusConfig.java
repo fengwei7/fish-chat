@@ -43,7 +43,7 @@ public class MybatisPlusConfig {
             @Override
             public void insertFill(MetaObject metaObject) {
                 // 插入时自动填充
-//                this.strictInsertFill(metaObject, "code", String.class, UUID.randomUUID().toString());
+                this.strictInsertFill(metaObject, "code", String.class, UUID.randomUUID().toString());
                 this.strictInsertFill(metaObject, "createTime", LocalDateTime.class, LocalDateTime.now());
                 this.strictInsertFill(metaObject, "updateTime", LocalDateTime.class, LocalDateTime.now());
                 this.strictInsertFill(metaObject, "creator", String.class, getLoginId());

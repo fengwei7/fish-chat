@@ -37,7 +37,7 @@ public class AuthServiceImpl implements AuthService {
         UserPO userPO = new UserPO();
         userPO.setUsername(request.getUsername());
         userPO.setPassword(DigestUtil.sha256Hex(request.getPassword() + salt));
-        userPO.setCode(UUID.randomUUID().toString());
+//        userPO.setCode(UUID.randomUUID().toString());
         userPO.setSalt(salt);
         userPO.setMobile(request.getMobile());
         userPO.setEmail(request.getEmail());
