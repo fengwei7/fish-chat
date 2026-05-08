@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class SessionManager {
 
-    /** userId -> ChatSession */
+    /** userCode -> ChatSession */
     private final ConcurrentHashMap<String, ChatSession> sessions = new ConcurrentHashMap<>();
 
     @Resource
@@ -89,7 +89,7 @@ public class SessionManager {
         return sessions.size();
     }
 
-    public Set<String> getAllOnlineUserIds() {
+    public Set<String> getAllOnlineUserCodes() {
         return sessions.keySet();
     }
 

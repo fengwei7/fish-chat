@@ -30,7 +30,7 @@ import java.util.Map;
 @ChannelHandler.Sharable
 public class AuthHandshakeHandler extends ChannelInboundHandlerAdapter {
 
-    public static final AttributeKey<String> USER_ID_KEY = AttributeKey.valueOf("userId");
+    public static final AttributeKey<String> USER_CODE_KEY = AttributeKey.valueOf("userCode");
     public static final AttributeKey<String> USERNAME_KEY = AttributeKey.valueOf("username");
     public static final AttributeKey<String> AVATAR_KEY = AttributeKey.valueOf("avatarUrl");
 
@@ -74,7 +74,7 @@ public class AuthHandshakeHandler extends ChannelInboundHandlerAdapter {
                 }
 
                 // 保存用户信息到 Channel 属性
-                ctx.channel().attr(USER_ID_KEY).set(user.getCode());
+                ctx.channel().attr(USER_CODE_KEY).set(user.getCode());
                 ctx.channel().attr(USERNAME_KEY).set(user.getNickname() != null ? user.getNickname() : user.getUsername());
                 ctx.channel().attr(AVATAR_KEY).set(user.getAvatarUrl() != null ? user.getAvatarUrl() : "");
 

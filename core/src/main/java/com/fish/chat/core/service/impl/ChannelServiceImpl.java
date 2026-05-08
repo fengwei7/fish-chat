@@ -33,8 +33,8 @@ public class ChannelServiceImpl implements ChannelService {
     @Transactional
     @Override
     public ChannelDTO createChannel(String name, String avatar, String description) {
-        String userId = StpUtil.getLoginIdAsString();
-        UserPO owner = resolveUser(userId);
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO owner = resolveUser(userCode);
 
         ChannelPO channel = new ChannelPO();
         channel.setName(name);
@@ -46,7 +46,7 @@ public class ChannelServiceImpl implements ChannelService {
 
         ChannelMemberPO member = new ChannelMemberPO();
         member.setChannelId(channel.getId());
-        member.setUserId(owner.getId());
+        member.setUserCode(owner.getCode());
         member.setRole(2);
         member.setJoinTime(LocalDateTime.now());
         channelMemberMapper.insert(member);
@@ -67,19 +67,19 @@ public class ChannelServiceImpl implements ChannelService {
     @Transactional
     @Override
     public void subscribe(String channelCode) {
-        String userId = StpUtil.getLoginIdAsString();
-        UserPO user = resolveUser(userId);
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO user = resolveUser(userCode);
         ChannelPO channel = channelMapper.selectOne(Wrappers.<ChannelPO>lambdaQuery().eq(ChannelPO::getCode, channelCode));
         if (channel == null) throw new BusinessException("频道不存在");
 
         Long count = channelMemberMapper.selectCount(Wrappers.<ChannelMemberPO>lambdaQuery()
                 .eq(ChannelMemberPO::getChannelId, channel.getId())
-                .eq(ChannelMemberPO::getUserId, user.getId()));
+                .eq(ChannelMemberPO::getUserCode, user.getId()));
         if (count > 0) throw new BusinessException("已订阅该频道");
 
         ChannelMemberPO member = new ChannelMemberPO();
         member.setChannelId(channel.getId());
-        member.setUserId(user.getId());
+        member.setUserCode(user.getCode());
         member.setRole(0);
         member.setJoinTime(LocalDateTime.now());
         channelMemberMapper.insert(member);
@@ -88,22 +88,22 @@ public class ChannelServiceImpl implements ChannelService {
     @Transactional
     @Override
     public void unsubscribe(String channelCode) {
-        String userId = StpUtil.getLoginIdAsString();
-        UserPO user = resolveUser(userId);
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO user = resolveUser(userCode);
         ChannelPO channel = channelMapper.selectOne(Wrappers.<ChannelPO>lambdaQuery().eq(ChannelPO::getCode, channelCode));
         if (channel == null) throw new BusinessException("频道不存在");
 
         channelMemberMapper.delete(Wrappers.<ChannelMemberPO>lambdaQuery()
                 .eq(ChannelMemberPO::getChannelId, channel.getId())
-                .eq(ChannelMemberPO::getUserId, user.getId()));
+                .eq(ChannelMemberPO::getUserCode, user.getId()));
     }
 
     @Override
     public List<ChannelDTO> listMyChannels() {
-        String userId = StpUtil.getLoginIdAsString();
-        UserPO user = resolveUser(userId);
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO user = resolveUser(userCode);
         List<ChannelMemberPO> subs = channelMemberMapper.selectList(
-                Wrappers.<ChannelMemberPO>lambdaQuery().eq(ChannelMemberPO::getUserId, user.getId()));
+                Wrappers.<ChannelMemberPO>lambdaQuery().eq(ChannelMemberPO::getUserCode, user.getId()));
         List<ChannelDTO> result = new ArrayList<>();
         for (ChannelMemberPO sub : subs) {
             ChannelPO c = channelMapper.selectById(sub.getChannelId());

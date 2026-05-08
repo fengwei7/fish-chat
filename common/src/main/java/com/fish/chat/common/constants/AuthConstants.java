@@ -23,7 +23,7 @@ public final class AuthConstants {
     /**
      * 用户 ID Session 属性名称
      */
-    public static final String USER_ID_ATTR = "userId";
+    public static final String USER_CODE_ATTR = "userCode";
     
     /**
      * 用户名 Session 属性名称

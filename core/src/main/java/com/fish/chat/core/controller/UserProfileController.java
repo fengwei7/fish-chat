@@ -59,10 +59,10 @@ public class UserProfileController {
      */
     @GetMapping("/online")
     public Result<Map<String, Object>> getOnlineUsers() {
-        Set<String> onlineIds = sessionManager.getAllOnlineUserIds();
+        Set<String> onlineIds = sessionManager.getAllOnlineUserCodes();
         Map<String, Object> result = new HashMap<>();
         result.put("count", onlineIds.size());
-        result.put("userIds", new ArrayList<>(onlineIds));
+        result.put("userCodes", new ArrayList<>(onlineIds));
         return Result.success(result);
     }
 

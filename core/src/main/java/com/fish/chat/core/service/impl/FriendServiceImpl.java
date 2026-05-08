@@ -27,20 +27,20 @@ public class FriendServiceImpl implements FriendService {
     @Transactional
     @Override
     public void addFriend(String friendCode, String remark) {
-        String userId = StpUtil.getLoginIdAsString();
-        UserPO me = resolveUser(userId);
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO me = resolveUser(userCode);
         UserPO friend = userRepository.selectByCode(friendCode);
         if (friend == null) throw new BusinessException("用户不存在");
         if (me.getId().equals(friend.getId())) throw new BusinessException("不能添加自己为好友");
 
         Long count = friendMapper.selectCount(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserId, me.getId())
-                .eq(FriendPO::getFriendId, friend.getId()));
+                .eq(FriendPO::getUserCode, me.getId())
+                .eq(FriendPO::getFriendCode, friend.getId()));
         if (count > 0) throw new BusinessException("已发送好友请求");
 
         FriendPO po = new FriendPO();
-        po.setUserId(me.getId());
-        po.setFriendId(friend.getId());
+        po.setUserCode(me.getCode());
+        po.setFriendCode(friend.getCode());
         po.setRemark(remark);
         po.setStatus(0); // 待确认
         friendMapper.insert(po);
@@ -49,15 +49,15 @@ public class FriendServiceImpl implements FriendService {
     @Transactional
     @Override
     public void acceptFriend(String friendCode) {
-        String userId = StpUtil.getLoginIdAsString();
-        UserPO me = resolveUser(userId);
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO me = resolveUser(userCode);
         UserPO friend = userRepository.selectByCode(friendCode);
         if (friend == null) throw new BusinessException("用户不存在");
 
         // 更新对方发来的请求
         FriendPO po = friendMapper.selectOne(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserId, friend.getId())
-                .eq(FriendPO::getFriendId, me.getId())
+                .eq(FriendPO::getUserCode, friend.getId())
+                .eq(FriendPO::getFriendCode, me.getId())
                 .eq(FriendPO::getStatus, 0));
         if (po == null) throw new BusinessException("没有待确认的好友请求");
         po.setStatus(1);
@@ -65,8 +65,8 @@ public class FriendServiceImpl implements FriendService {
 
         // 反向添加
         FriendPO reverse = new FriendPO();
-        reverse.setUserId(me.getId());
-        reverse.setFriendId(friend.getId());
+        reverse.setUserCode(me.getCode());
+        reverse.setFriendCode(friend.getCode());
         reverse.setStatus(1);
         friendMapper.insert(reverse);
     }
@@ -74,29 +74,29 @@ public class FriendServiceImpl implements FriendService {
     @Transactional
     @Override
     public void removeFriend(String friendCode) {
-        String userId = StpUtil.getLoginIdAsString();
-        UserPO me = resolveUser(userId);
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO me = resolveUser(userCode);
         UserPO friend = userRepository.selectByCode(friendCode);
         if (friend == null) throw new BusinessException("用户不存在");
 
         friendMapper.delete(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserId, me.getId()).eq(FriendPO::getFriendId, friend.getId()));
+                .eq(FriendPO::getUserCode, me.getId()).eq(FriendPO::getFriendCode, friend.getId()));
         friendMapper.delete(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserId, friend.getId()).eq(FriendPO::getFriendId, me.getId()));
+                .eq(FriendPO::getUserCode, friend.getId()).eq(FriendPO::getFriendCode, me.getId()));
     }
 
     @Override
     public List<FriendDTO> listFriends() {
-        String userId = StpUtil.getLoginIdAsString();
-        UserPO me = resolveUser(userId);
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO me = resolveUser(userCode);
 
         List<FriendPO> friends = friendMapper.selectList(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserId, me.getId())
+                .eq(FriendPO::getUserCode, me.getId())
                 .eq(FriendPO::getStatus, 1));
 
         List<FriendDTO> result = new ArrayList<>();
         for (FriendPO f : friends) {
-            UserPO user = userRepository.selectById(String.valueOf(f.getFriendId()));
+            UserPO user = userRepository.selectById(String.valueOf(f.getFriendCode()));
             if (user != null) {
                 FriendDTO dto = new FriendDTO();
                 dto.setCode(user.getCode());

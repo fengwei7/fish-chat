@@ -35,8 +35,8 @@ public class GroupServiceImpl implements GroupService {
     @Transactional
     @Override
     public GroupDTO createGroup(String name, String avatar) {
-        String userId = StpUtil.getLoginIdAsString();
-        UserPO owner = resolveUser(userId);
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO owner = resolveUser(userCode);
 
         GroupPO group = new GroupPO();
         group.setName(name);
@@ -50,7 +50,7 @@ public class GroupServiceImpl implements GroupService {
         // 创建者自动加入
         GroupMemberPO member = new GroupMemberPO();
         member.setGroupId(group.getId());
-        member.setUserId(owner.getId());
+        member.setUserCode(owner.getCode());
         member.setRole(2); // 群主
         member.setJoinTime(LocalDateTime.now());
         groupMemberMapper.insert(member);
@@ -76,8 +76,8 @@ public class GroupServiceImpl implements GroupService {
     @Transactional
     @Override
     public void dismissGroup(String code) {
-        String userId = StpUtil.getLoginIdAsString();
-        UserPO current = resolveUser(userId);
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO current = resolveUser(userCode);
 
         GroupPO group = groupMapper.selectOne(Wrappers.<GroupPO>lambdaQuery().eq(GroupPO::getCode, code));
         if (group == null) throw new BusinessException("群组不存在");
@@ -99,12 +99,12 @@ public class GroupServiceImpl implements GroupService {
         // 检查是否已加入
         Long count = groupMemberMapper.selectCount(Wrappers.<GroupMemberPO>lambdaQuery()
                 .eq(GroupMemberPO::getGroupId, group.getId())
-                .eq(GroupMemberPO::getUserId, user.getId()));
+                .eq(GroupMemberPO::getUserCode, user.getId()));
         if (count > 0) throw new BusinessException("用户已在群中");
 
         GroupMemberPO member = new GroupMemberPO();
         member.setGroupId(group.getId());
-        member.setUserId(user.getId());
+        member.setUserCode(user.getCode());
         member.setRole(0);
         member.setJoinTime(LocalDateTime.now());
         groupMemberMapper.insert(member);
@@ -124,18 +124,18 @@ public class GroupServiceImpl implements GroupService {
 
         groupMemberMapper.delete(Wrappers.<GroupMemberPO>lambdaQuery()
                 .eq(GroupMemberPO::getGroupId, group.getId())
-                .eq(GroupMemberPO::getUserId, user.getId()));
+                .eq(GroupMemberPO::getUserCode, user.getId()));
 
         roomManager.removeMemberFromGroup(groupCode, userCode);
     }
 
     @Override
     public List<GroupDTO> listMyGroups() {
-        String userId = StpUtil.getLoginIdAsString();
-        UserPO user = resolveUser(userId);
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO user = resolveUser(userCode);
 
         List<GroupMemberPO> memberships = groupMemberMapper.selectList(
-                Wrappers.<GroupMemberPO>lambdaQuery().eq(GroupMemberPO::getUserId, user.getId()));
+                Wrappers.<GroupMemberPO>lambdaQuery().eq(GroupMemberPO::getUserCode, user.getId()));
 
         List<GroupDTO> result = new ArrayList<>();
         for (GroupMemberPO ms : memberships) {

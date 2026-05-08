@@ -64,7 +64,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("账户已被禁用");
         }
 
-        StpUtil.login(userPO.getId());
+        StpUtil.login(userPO.getCode());
 
         return AuthDTO.builder()
                 .token(StpUtil.getTokenValue())

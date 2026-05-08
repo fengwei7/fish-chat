@@ -45,22 +45,22 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame frame) {
-        String userId = ctx.channel().attr(AuthHandshakeHandler.USER_ID_KEY).get();
+        String userCode = ctx.channel().attr(AuthHandshakeHandler.USER_CODE_KEY).get();
 
-        if (userId == null) {
+        if (userCode == null) {
             log.warn("未认证的消息，关闭连接");
             ctx.close();
             return;
         }
 
         // 刷新活跃时间
-        ChatSession session = sessionManager.get(userId);
+        ChatSession session = sessionManager.get(userCode);
         if (session != null) {
             session.touch();
         }
 
         String text = frame.text();
-        log.debug("收到消息: userId={} text={}", userId, text);
+        log.debug("收到消息: userCode={} text={}", userCode, text);
 
         try {
             ChatMessagePacket packet = JSON.parseObject(text, ChatMessagePacket.class);
@@ -71,19 +71,19 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
 
             switch (packet.getCmd()) {
                 case "MSG":
-                    handleMessage(userId, packet, ctx);
+                    handleMessage(userCode, packet, ctx);
                     break;
                 case "HEARTBEAT":
-                    handleHeartbeat(userId, ctx);
+                    handleHeartbeat(userCode, ctx);
                     break;
                 case "SYNC":
-                    handleSync(userId, packet, ctx);
+                    handleSync(userCode, packet, ctx);
                     break;
                 default:
                     sendError(ctx, packet.getReqCode(), "未知命令: " + packet.getCmd());
             }
         } catch (Exception e) {
-            log.error("消息处理异常: userId={} msg={}", userId, text, e);
+            log.error("消息处理异常: userCode={} msg={}", userCode, text, e);
             sendError(ctx, null, "消息解析失败");
         }
     }
@@ -94,8 +94,8 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
         if (evt instanceof IdleStateEvent) {
             IdleStateEvent e = (IdleStateEvent) evt;
             if (e.state() == IdleState.READER_IDLE) {
-                String userId = ctx.channel().attr(AuthHandshakeHandler.USER_ID_KEY).get();
-                log.info("用户 {} 读超时，关闭连接", userId);
+                String userCode = ctx.channel().attr(AuthHandshakeHandler.USER_CODE_KEY).get();
+                log.info("用户 {} 读超时，关闭连接", userCode);
                 ctx.close();
             }
         }
@@ -104,17 +104,17 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        String userId = ctx.channel().attr(AuthHandshakeHandler.USER_ID_KEY).get();
-        if (userId != null) {
-            sessionManager.unregister(userId);
-            log.info("用户 {} 断开连接", userId);
+        String userCode = ctx.channel().attr(AuthHandshakeHandler.USER_CODE_KEY).get();
+        if (userCode != null) {
+            sessionManager.unregister(userCode);
+            log.info("用户 {} 断开连接", userCode);
         }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
-        String userId = ctx.channel().attr(AuthHandshakeHandler.USER_ID_KEY).get();
-        log.error("连接异常: userId={}", userId, cause);
+        String userCode = ctx.channel().attr(AuthHandshakeHandler.USER_CODE_KEY).get();
+        log.error("连接异常: userCode={}", userCode, cause);
         ctx.close();
     }
 
@@ -123,7 +123,7 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
     /**
      * 处理聊天消息（单聊/群聊/频道统一入口）
      */
-    private void handleMessage(String userId, ChatMessagePacket packet, ChannelHandlerContext ctx) {
+    private void handleMessage(String userCode, ChatMessagePacket packet, ChannelHandlerContext ctx) {
         ChatMessagePacket.Body body = packet.getBody();
         if (body == null || body.getRoomCode() == null || body.getContent() == null) {
             sendError(ctx, packet.getReqCode(), "消息格式错误");
@@ -134,16 +134,16 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
         String roomType = body.getRoomType();
 
         // 获取或创建房间
-        Room room = resolveRoom(roomCode, roomType, userId, body);
+        Room room = resolveRoom(roomCode, roomType, userCode, body);
         if (room == null) {
             sendError(ctx, packet.getReqCode(), "房间不存在或无权访问");
             return;
         }
 
         // 设置消息属性
-        body.setSenderCode(userId);
+        body.setSenderCode(userCode);
 
-        ChatSession session = sessionManager.get(userId);
+        ChatSession session = sessionManager.get(userCode);
         body.setSenderName(session != null ? session.getUsername() : "");
         body.setSenderAvatar(session != null ? session.getAvatarUrl() : "");
         body.setTimestamp(System.currentTimeMillis());
@@ -158,8 +158,8 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
         out.setReqCode(packet.getReqCode());
 
         // 广播到房间内所有在线成员
-        Set<String> memberIds = room.getMembers();
-        sessionManager.broadcastToRoom(memberIds, out, null); // 包括发送者自己（同步确认）
+        Set<String> memberCodes = room.getMembers();
+        sessionManager.broadcastToRoom(memberCodes, out, null); // 包括发送者自己（同步确认）
 
         // ACK
         sendAck(ctx, packet.getReqCode());
@@ -168,8 +168,8 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
     /**
      * 处理心跳
      */
-    private void handleHeartbeat(String userId, ChannelHandlerContext ctx) {
-        sessionManager.refreshOnlineStatus(userId);
+    private void handleHeartbeat(String userCode, ChannelHandlerContext ctx) {
+        sessionManager.refreshOnlineStatus(userCode);
         sendPacket(ctx, ChatMessagePacket.heartbeat());
     }
 
@@ -177,7 +177,7 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
      * 处理消息同步（断线重连后拉取未收消息）
      * body.extra.lastTimestamp — 最后收到的消息时间戳
      */
-    private void handleSync(String userId, ChatMessagePacket packet, ChannelHandlerContext ctx) {
+    private void handleSync(String userCode, ChatMessagePacket packet, ChannelHandlerContext ctx) {
         ChatMessagePacket.Body body = packet.getBody();
         Long lastTimestamp = null;
 
@@ -189,11 +189,11 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
         }
 
         // 获取用户所在的所有房间
-        ChatSession session = sessionManager.get(userId);
+        ChatSession session = sessionManager.get(userCode);
         if (session != null) {
             for (String roomCode : session.getJoinedRooms()) {
                 Room room = roomManager.getRoom(roomCode);
-                if (room != null && room.isMember(userId)) {
+                if (room != null && room.isMember(userCode)) {
                     // 查询每个房间的最新消息（一次发一条给用户提示）
                     // 实际中应该批量推送，这里简化处理
                     ChatMessagePacket notify = ChatMessagePacket.notify("SYNC-READY",

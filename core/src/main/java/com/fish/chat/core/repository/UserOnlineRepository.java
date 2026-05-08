@@ -25,63 +25,63 @@ public class UserOnlineRepository {
     /**
      * 保存在线用户到 Redis
      */
-    public void saveOnlineUser(String userId, UserDTO userDTO, long expireMinutes) {
-        redisUtil.set(buildKey(userId), toJson(userDTO), expireMinutes, TimeUnit.MINUTES);
+    public void saveOnlineUser(String userCode, UserDTO userDTO, long expireMinutes) {
+        redisUtil.set(buildKey(userCode), toJson(userDTO), expireMinutes, TimeUnit.MINUTES);
     }
 
     /**
      * 更新在线用户过期时间
      */
-    public void updateOnlineUserExpire(String userId, long expireMinutes) {
-        redisUtil.expire(buildKey(userId), expireMinutes, TimeUnit.MINUTES);
+    public void updateOnlineUserExpire(String userCode, long expireMinutes) {
+        redisUtil.expire(buildKey(userCode), expireMinutes, TimeUnit.MINUTES);
     }
 
     /**
      * 删除在线用户
      */
-    public void removeOnlineUser(String userId) {
-        redisUtil.deleteByKey(buildKey(userId));
+    public void removeOnlineUser(String userCode) {
+        redisUtil.deleteByKey(buildKey(userCode));
     }
 
     /**
      * 获取在线用户信息
      */
-    public UserDTO getOnlineUser(String userId) {
-        Object value = redisUtil.getByKey(buildKey(userId));
+    public UserDTO getOnlineUser(String userCode) {
+        Object value = redisUtil.getByKey(buildKey(userCode));
         return value == null ? null : parseUser((String) value);
     }
 
     /**
      * 检查用户是否在线
      */
-    public boolean isOnline(String userId) {
-        return redisUtil.hasKey(buildKey(userId));
+    public boolean isOnline(String userCode) {
+        return redisUtil.hasKey(buildKey(userCode));
     }
 
     /**
      * 获取所有在线用户 ID 列表（使用 SCAN 避免阻塞 Redis）
      */
-    public Set<String> getAllOnlineUserIds() {
+    public Set<String> getAllOnlineUserCodes() {
         Set<String> keys = redisUtil.scanKeys(buildKey("*"));
 
-        Set<String> userIds = new HashSet<>(keys.size());
+        Set<String> userCodes = new HashSet<>(keys.size());
         for (String key : keys) {
-            userIds.add(extractUserId(key));
+            userCodes.add(extractUserCode(key));
         }
-        return userIds;
+        return userCodes;
     }
 
     /**
      * 获取所有在线用户信息
      */
     public Map<String, UserDTO> getAllOnlineUsers() {
-        Set<String> userIds = getAllOnlineUserIds();
-        Map<String, UserDTO> users = new HashMap<>(Math.max(userIds.size(), 1));
+        Set<String> userCodes = getAllOnlineUserCodes();
+        Map<String, UserDTO> users = new HashMap<>(Math.max(userCodes.size(), 1));
 
-        for (String userId : userIds) {
-            UserDTO userDTO = getOnlineUser(userId);
+        for (String userCode : userCodes) {
+            UserDTO userDTO = getOnlineUser(userCode);
             if (userDTO != null) {
-                users.put(userId, userDTO);
+                users.put(userCode, userDTO);
             }
         }
         return users;
@@ -91,16 +91,16 @@ public class UserOnlineRepository {
      * 获取在线用户数量
      */
     public long getOnlineCount() {
-        return getAllOnlineUserIds().size();
+        return getAllOnlineUserCodes().size();
     }
 
     // ========== 私有辅助方法 ==========
 
-    private String buildKey(String userId) {
-        return AuthConstants.ONLINE_USER_PREFIX + userId;
+    private String buildKey(String userCode) {
+        return AuthConstants.ONLINE_USER_PREFIX + userCode;
     }
 
-    private String extractUserId(String key) {
+    private String extractUserCode(String key) {
         return key.substring(AuthConstants.ONLINE_USER_PREFIX.length());
     }
 
