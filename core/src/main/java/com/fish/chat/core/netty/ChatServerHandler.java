@@ -19,8 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -82,7 +80,7 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
                     handleSync(userId, packet, ctx);
                     break;
                 default:
-                    sendError(ctx, packet.getReqId(), "未知命令: " + packet.getCmd());
+                    sendError(ctx, packet.getReqCode(), "未知命令: " + packet.getCmd());
             }
         } catch (Exception e) {
             log.error("消息处理异常: userId={} msg={}", userId, text, e);
@@ -127,23 +125,23 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
      */
     private void handleMessage(String userId, ChatMessagePacket packet, ChannelHandlerContext ctx) {
         ChatMessagePacket.Body body = packet.getBody();
-        if (body == null || body.getRoomId() == null || body.getContent() == null) {
-            sendError(ctx, packet.getReqId(), "消息格式错误");
+        if (body == null || body.getRoomCode() == null || body.getContent() == null) {
+            sendError(ctx, packet.getReqCode(), "消息格式错误");
             return;
         }
 
-        String roomId = body.getRoomId();
+        String roomCode = body.getRoomCode();
         String roomType = body.getRoomType();
 
         // 获取或创建房间
-        Room room = resolveRoom(roomId, roomType, userId, body);
+        Room room = resolveRoom(roomCode, roomType, userId, body);
         if (room == null) {
-            sendError(ctx, packet.getReqId(), "房间不存在或无权访问");
+            sendError(ctx, packet.getReqCode(), "房间不存在或无权访问");
             return;
         }
 
         // 设置消息属性
-        body.setSenderId(userId);
+        body.setSenderCode(userId);
 
         ChatSession session = sessionManager.get(userId);
         body.setSenderName(session != null ? session.getUsername() : "");
@@ -157,14 +155,14 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
 
         // 构建下行包
         ChatMessagePacket out = ChatMessagePacket.msg(body);
-        out.setReqId(packet.getReqId());
+        out.setReqCode(packet.getReqCode());
 
         // 广播到房间内所有在线成员
         Set<String> memberIds = room.getMembers();
         sessionManager.broadcastToRoom(memberIds, out, null); // 包括发送者自己（同步确认）
 
         // ACK
-        sendAck(ctx, packet.getReqId());
+        sendAck(ctx, packet.getReqCode());
     }
 
     /**
@@ -193,19 +191,19 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
         // 获取用户所在的所有房间
         ChatSession session = sessionManager.get(userId);
         if (session != null) {
-            for (String roomId : session.getJoinedRooms()) {
-                Room room = roomManager.getRoom(roomId);
+            for (String roomCode : session.getJoinedRooms()) {
+                Room room = roomManager.getRoom(roomCode);
                 if (room != null && room.isMember(userId)) {
                     // 查询每个房间的最新消息（一次发一条给用户提示）
                     // 实际中应该批量推送，这里简化处理
                     ChatMessagePacket notify = ChatMessagePacket.notify("SYNC-READY",
-                            "房间 " + roomId + " 同步就绪，请拉取历史消息");
+                            "房间 " + roomCode + " 同步就绪，请拉取历史消息");
                     sendPacket(ctx, notify);
                 }
             }
         }
 
-        sendAck(ctx, packet.getReqId());
+        sendAck(ctx, packet.getReqCode());
     }
 
     // ==================== 辅助方法 ====================
@@ -213,37 +211,37 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
     /**
      * 解析/创建房间
      */
-    private Room resolveRoom(String roomId, String roomType, String userId, ChatMessagePacket.Body body) {
-        // 私聊：roomId 应该由客户端用 Room.buildPrivateRoomId() 生成
+    private Room resolveRoom(String roomCode, String roomType, String userCode, ChatMessagePacket.Body body) {
+        // 私聊：roomCode 应该由客户端用 Room.buildPrivateRoomCode() 生成
         // 或者传两个用户 code 让服务端生成
         if ("PRIVATE".equalsIgnoreCase(roomType)) {
-            // 解析 roomId 获取两个用户
-            String[] parts = roomId.split(":");
+            // 解析 roomCode 获取两个用户
+            String[] parts = roomCode.split(":");
             if (parts.length == 3 && "private".equals(parts[0])) {
                 String user1 = parts[1];
                 String user2 = parts[2];
                 Room room = roomManager.getOrCreatePrivateRoom(user1, user2);
-                if (!room.isMember(userId)) {
-                    room.addMember(userId);
+                if (!room.isMember(userCode)) {
+                    room.addMember(userCode);
                 }
                 return room;
             }
             // fallback: 从 body.extra 取 targetId 来创建
             if (body.getExtra() != null && body.getExtra().get("targetId") != null) {
                 String targetId = body.getExtra().get("targetId").toString();
-                Room room = roomManager.getOrCreatePrivateRoom(userId, targetId);
+                Room room = roomManager.getOrCreatePrivateRoom(userCode, targetId);
                 return room;
             }
             return null;
         }
 
         // 群聊/频道：直接取已有房间
-        Room room = roomManager.getRoom(roomId);
+        Room room = roomManager.getRoom(roomCode);
         if (room == null) {
             // 尝试从数据库加载
             // 这里需要注入 groupRepository / channelRepository
             // 暂时只支持内存中已有的房间（由 REST API 创建时加载）
-            log.warn("房间不存在: {}", roomId);
+            log.warn("房间不存在: {}", roomCode);
             return null;
         }
 
@@ -252,8 +250,8 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
             // TODO: 检查用户是否是频道管理员
         }
 
-        if (!room.isMember(userId)) {
-            log.warn("用户 {} 不在房间 {} 中", userId, roomId);
+        if (!room.isMember(userCode)) {
+            log.warn("用户 {} 不在房间 {} 中", userCode, roomCode);
             return null;
         }
 
@@ -266,11 +264,11 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
     private String saveToMongo(ChatMessagePacket.Body body) {
         ChatMessage msg = new ChatMessage();
         msg.setType(body.getMsgType() != null ? body.getMsgType() : "TEXT");
-        msg.setFrom(body.getSenderId());
-        msg.setTo(body.getRoomId());
+        msg.setFrom(body.getSenderCode());
+        msg.setTo(body.getRoomCode());
         msg.setContent(body.getContent());
         msg.setTimestamp(body.getTimestamp() != null ? body.getTimestamp() : System.currentTimeMillis());
-        msg.setRoomId(body.getRoomId());
+        msg.setRoomCode(body.getRoomCode());
         msg.setRoomType(body.getRoomType());
         msg.setFileName(body.getFileName());
         msg.setFileSize(body.getFileSize());

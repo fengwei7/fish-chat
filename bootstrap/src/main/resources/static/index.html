@@ -134,9 +134,9 @@
         <input type="checkbox" id="autoHeartbeat" checked> 自动心跳 (30s)
       </label>
     </div>
-    <div class="row" id="roomIdHint" style="margin-top:4px">
+    <div class="row" id="roomCodeHint" style="margin-top:4px">
       <span class="help">
-        <b>roomId 规则:</b>
+        <b>roomCode 规则:</b>
         PRIVATE → <code>private:alice:bob</code> (按字母序排序两个用户code)；
         GROUP → 群组code；
         CHANNEL → 频道code
@@ -330,13 +330,13 @@ function sendMessage() {
 
   if (!targetId || !content) { alert('请输入目标用户/群组和消息内容'); return; }
 
-  let roomId;
+  let roomCode;
   if (roomType === 'PRIVATE') {
-    // 按字母序排序两个用户 code 生成 roomId
+    // 按字母序排序两个用户 code 生成 roomCode
     const ids = [myCode, targetId].sort();
-    roomId = `private:${ids[0]}:${ids[1]}`;
+    roomCode = `private:${ids[0]}:${ids[1]}`;
     // extra.targetId 用于服务端查找
-    const body = { roomId, roomType, msgType, content, extra: { targetId } };
+    const body = { roomCode, roomType, msgType, content, extra: { targetId } };
     // 特殊处理 FILE/IMAGE
     if (msgType === 'IMAGE' || msgType === 'FILE') {
       body.fileName = content;
@@ -344,8 +344,8 @@ function sendMessage() {
     }
     sendRaw('MSG', body);
   } else {
-    roomId = targetId;
-    const body = { roomId, roomType, msgType, content };
+    roomCode = targetId;
+    const body = { roomCode, roomType, msgType, content };
     if (msgType === 'IMAGE' || msgType === 'FILE') {
       body.fileName = content;
       body.fileSize = 0;

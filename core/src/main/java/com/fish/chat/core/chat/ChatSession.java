@@ -13,7 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ChatSession {
 
     /** 用户 code */
-    private final String userId;
+    private final String userCode;
 
     /** 用户名 */
     private final String username;
@@ -33,8 +33,8 @@ public class ChatSession {
     /** 最后活跃时间 */
     private volatile long lastActiveTime;
 
-    public ChatSession(String userId, String username, String avatarUrl, Channel channel) {
-        this.userId = userId;
+    public ChatSession(String userCode, String username, String avatarUrl, Channel channel) {
+        this.userCode = userCode;
         this.username = username;
         this.avatarUrl = avatarUrl;
         this.channel = channel;
@@ -51,16 +51,16 @@ public class ChatSession {
         this.lastActiveTime = System.currentTimeMillis();
     }
 
-    public void joinRoom(String roomId) {
-        joinedRooms.add(roomId);
+    public void joinRoom(String roomCode) {
+        joinedRooms.add(roomCode);
     }
 
-    public void leaveRoom(String roomId) {
-        joinedRooms.remove(roomId);
+    public void leaveRoom(String roomCode) {
+        joinedRooms.remove(roomCode);
     }
 
-    public boolean isInRoom(String roomId) {
-        return joinedRooms.contains(roomId);
+    public boolean isInRoom(String roomCode) {
+        return joinedRooms.contains(roomCode);
     }
 
     /**

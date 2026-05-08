@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class RoomManager {
 
-    /** roomId -> Room（所有房间都在内存中，持久化房间从DB加载） */
+    /** roomCode -> Room（所有房间都在内存中，持久化房间从DB加载） */
     private final ConcurrentHashMap<String, Room> rooms = new ConcurrentHashMap<>();
 
     @Resource
@@ -27,12 +27,12 @@ public class RoomManager {
      * 获取或创建私聊房间
      */
     public Room getOrCreatePrivateRoom(String userCode1, String userCode2) {
-        String roomId = Room.buildPrivateRoomId(userCode1, userCode2);
-        return rooms.computeIfAbsent(roomId, id -> {
-            Room room = Room.createPrivate(roomId);
+        String roomCode = Room.buildPrivateRoomCode(userCode1, userCode2);
+        return rooms.computeIfAbsent(roomCode, id -> {
+            Room room = Room.createPrivate(roomCode);
             room.addMember(userCode1);
             room.addMember(userCode2);
-            log.info("创建私聊房间: {}", roomId);
+            log.info("创建私聊房间: {}", roomCode);
             return room;
         });
     }
@@ -40,11 +40,11 @@ public class RoomManager {
     /**
      * 获取或创建群聊房间（从DB加载成员）
      */
-    public Room getOrCreateGroupRoom(String groupCode, String groupName, String groupAvatar, Set<String> memberIds) {
-        String roomId = "group:" + groupCode;
-        return rooms.computeIfAbsent(roomId, id -> {
-            Room room = Room.createGroup(groupCode, groupName, groupAvatar, memberIds);
-            log.info("创建群聊房间: {}，成员: {}", roomId, memberIds.size());
+    public Room getOrCreateGroupRoom(String groupCode, String groupName, String groupAvatar, Set<String> memberCodes) {
+        String roomCode = "group:" + groupCode;
+        return rooms.computeIfAbsent(roomCode, id -> {
+            Room room = Room.createGroup(groupCode, groupName, groupAvatar, memberCodes);
+            log.info("创建群聊房间: {}，成员: {}", roomCode, memberCodes.size());
             return room;
         });
     }
@@ -52,20 +52,20 @@ public class RoomManager {
     /**
      * 获取或创建频道房间（从DB加载成员）
      */
-    public Room getOrCreateChannelRoom(String channelCode, String channelName, String channelAvatar, Set<String> memberIds) {
-        String roomId = "channel:" + channelCode;
-        return rooms.computeIfAbsent(roomId, id -> {
-            Room room = Room.createChannel(channelCode, channelName, channelAvatar, memberIds);
-            log.info("创建频道房间: {}，订阅者: {}", roomId, memberIds.size());
+    public Room getOrCreateChannelRoom(String channelCode, String channelName, String channelAvatar, Set<String> memberCodes) {
+        String roomCode = "channel:" + channelCode;
+        return rooms.computeIfAbsent(roomCode, id -> {
+            Room room = Room.createChannel(channelCode, channelName, channelAvatar, memberCodes);
+            log.info("创建频道房间: {}，订阅者: {}", roomCode, memberCodes.size());
             return room;
         });
     }
 
     /**
-     * 根据 roomId 获取房间
+     * 根据 roomCode 获取房间
      */
-    public Room getRoom(String roomId) {
-        return rooms.get(roomId);
+    public Room getRoom(String roomCode) {
+        return rooms.get(roomCode);
     }
 
     // ==================== 成员管理 ====================
@@ -73,14 +73,14 @@ public class RoomManager {
     /**
      * 用户加入房间
      */
-    public boolean joinRoom(String roomId, String userId) {
-        Room room = rooms.get(roomId);
+    public boolean joinRoom(String roomCode, String userCode) {
+        Room room = rooms.get(roomCode);
         if (room == null) return false;
-        boolean added = room.addMember(userId);
+        boolean added = room.addMember(userCode);
         if (added) {
             // 更新会话中的房间列表
-            if (sessionManager.get(userId) != null) {
-                sessionManager.get(userId).joinRoom(roomId);
+            if (sessionManager.get(userCode) != null) {
+                sessionManager.get(userCode).joinRoom(roomCode);
             }
         }
         return added;
@@ -89,12 +89,12 @@ public class RoomManager {
     /**
      * 用户离开房间
      */
-    public boolean leaveRoom(String roomId, String userId) {
-        Room room = rooms.get(roomId);
+    public boolean leaveRoom(String roomCode, String userCode) {
+        Room room = rooms.get(roomCode);
         if (room == null) return false;
-        boolean removed = room.removeMember(userId);
-        if (removed && sessionManager.get(userId) != null) {
-            sessionManager.get(userId).leaveRoom(roomId);
+        boolean removed = room.removeMember(userCode);
+        if (removed && sessionManager.get(userCode) != null) {
+            sessionManager.get(userCode).leaveRoom(roomCode);
         }
         return removed;
     }
@@ -102,13 +102,13 @@ public class RoomManager {
     /**
      * 向房间添加新成员（群聊加人时）
      */
-    public void addMemberToGroup(String groupCode, String userId) {
-        String roomId = "group:" + groupCode;
-        Room room = rooms.get(roomId);
+    public void addMemberToGroup(String groupCode, String userCode) {
+        String roomCode = "group:" + groupCode;
+        Room room = rooms.get(roomCode);
         if (room != null) {
-            room.addMember(userId);
-            if (sessionManager.get(userId) != null) {
-                sessionManager.get(userId).joinRoom(roomId);
+            room.addMember(userCode);
+            if (sessionManager.get(userCode) != null) {
+                sessionManager.get(userCode).joinRoom(roomCode);
             }
         }
     }
@@ -116,13 +116,13 @@ public class RoomManager {
     /**
      * 从房间移除成员（群聊踢人时）
      */
-    public void removeMemberFromGroup(String groupCode, String userId) {
-        String roomId = "group:" + groupCode;
-        Room room = rooms.get(roomId);
+    public void removeMemberFromGroup(String groupCode, String userCode) {
+        String roomCode = "group:" + groupCode;
+        Room room = rooms.get(roomCode);
         if (room != null) {
-            room.removeMember(userId);
-            if (sessionManager.get(userId) != null) {
-                sessionManager.get(userId).leaveRoom(roomId);
+            room.removeMember(userCode);
+            if (sessionManager.get(userCode) != null) {
+                sessionManager.get(userCode).leaveRoom(roomCode);
             }
         }
     }
@@ -140,7 +140,7 @@ public class RoomManager {
         rooms.entrySet().removeIf(entry -> {
             Room room = entry.getValue();
             if (room.getType() == RoomType.PRIVATE && room.memberCount() == 0) {
-                log.info("清理空私聊房间: {}", room.getRoomId());
+                log.info("清理空私聊房间: {}", room.getRoomCode());
                 return true;
             }
             return false;

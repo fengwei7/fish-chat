@@ -15,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Room {
 
     /** 房间唯一ID */
-    private final String roomId;
+    private final String roomCode;
 
     /** 房间类型 */
     private final RoomType type;
@@ -32,12 +32,12 @@ public class Room {
     /** 是否持久化到DB（群组/频道为true，私聊为false） */
     private final boolean persistent;
 
-    public Room(String roomId, RoomType type, String name) {
-        this(roomId, type, name, null, ConcurrentHashMap.newKeySet(), false);
+    public Room(String roomCode, RoomType type, String name) {
+        this(roomCode, type, name, null, ConcurrentHashMap.newKeySet(), false);
     }
 
-    public Room(String roomId, RoomType type, String name, String avatar, boolean persistent) {
-        this.roomId = roomId;
+    public Room(String roomCode, RoomType type, String name, String avatar, boolean persistent) {
+        this.roomCode = roomCode;
         this.type = type;
         this.name = name;
         this.avatar = avatar;
@@ -47,16 +47,16 @@ public class Room {
 
     // ==================== 成员管理 ====================
 
-    public boolean addMember(String userId) {
-        return members.add(userId);
+    public boolean addMember(String userCode) {
+        return members.add(userCode);
     }
 
-    public boolean removeMember(String userId) {
-        return members.remove(userId);
+    public boolean removeMember(String userCode) {
+        return members.remove(userCode);
     }
 
-    public boolean isMember(String userId) {
-        return members.contains(userId);
+    public boolean isMember(String userCode) {
+        return members.contains(userCode);
     }
 
     public int memberCount() {
@@ -77,18 +77,18 @@ public class Room {
     // ==================== 工厂方法 ====================
 
     /**
-     * 私聊房间 — roomId 由两个用户 code 按字典序拼接生成
+     * 私聊房间 — roomCode 由两个用户 code 按字典序拼接生成
      * 示例：private:abc123:def456
      */
-    public static String buildPrivateRoomId(String userCode1, String userCode2) {
+    public static String buildPrivateRoomCode(String userCode1, String userCode2) {
         if (userCode1.compareTo(userCode2) < 0) {
             return "private:" + userCode1 + ":" + userCode2;
         }
         return "private:" + userCode2 + ":" + userCode1;
     }
 
-    public static Room createPrivate(String roomId) {
-        return new Room(roomId, RoomType.PRIVATE, "", null, false);
+    public static Room createPrivate(String roomCode) {
+        return new Room(roomCode, RoomType.PRIVATE, "", null, false);
     }
 
     public static Room createGroup(String groupCode, String name, String avatar, Set<String> members) {

@@ -21,12 +21,12 @@ public interface ChatMessageRepository extends MongoRepository<ChatMessage, Stri
     /**
      * 查询房间消息历史（按时间倒序分页）
      */
-    List<ChatMessage> findByRoomIdOrderByTimestampDesc(String roomId, Pageable pageable);
+    List<ChatMessage> findByRoomCodeOrderByTimestampDesc(String roomCode, Pageable pageable);
 
     /**
      * 查询用户在某个时间点之后收到的房间消息（用于同步）
      */
-    List<ChatMessage> findByRoomIdAndTimestampGreaterThanOrderByTimestampAsc(String roomId, Long timestamp);
+    List<ChatMessage> findByRoomCodeAndTimestampGreaterThanOrderByTimestampAsc(String roomCode, Long timestamp);
 
     /**
      * 查询用户发送的所有消息
@@ -36,5 +36,5 @@ public interface ChatMessageRepository extends MongoRepository<ChatMessage, Stri
     /**
      * 按类型查询房间消息
      */
-    List<ChatMessage> findByRoomIdAndTypeOrderByTimestampDesc(String roomId, String type, Pageable pageable);
+    List<ChatMessage> findByRoomCodeAndTypeOrderByTimestampDesc(String roomCode, String type, Pageable pageable);
 }

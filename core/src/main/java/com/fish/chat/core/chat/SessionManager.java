@@ -38,50 +38,50 @@ public class SessionManager {
     /**
      * 注册新会话（断旧连新）
      */
-    public ChatSession register(String userId, String username, String avatarUrl, Channel channel) {
+    public ChatSession register(String userCode, String username, String avatarUrl, Channel channel) {
         // 如果已有连接，先踢掉旧连接
-        ChatSession old = sessions.get(userId);
+        ChatSession old = sessions.get(userCode);
         if (old != null && old.isActive()) {
-            log.info("用户 {} 已有连接，关闭旧连接", userId);
+            log.info("用户 {} 已有连接，关闭旧连接", userCode);
             old.sendText(JSON.toJSONString(ChatMessagePacket.notify("SYSTEM", "您的账号在其他设备登录")));
             old.close();
         }
 
-        ChatSession session = new ChatSession(userId, username, avatarUrl, channel);
-        sessions.put(userId, session);
+        ChatSession session = new ChatSession(userCode, username, avatarUrl, channel);
+        sessions.put(userCode, session);
 
         // 保存到 Redis（在线状态标记）
         UserDTO dto = new UserDTO();
-        dto.setCode(userId);
+        dto.setCode(userCode);
         dto.setUsername(username);
         dto.setAvatarUrl(avatarUrl);
         dto.setOnline(true);
-        redisUtil.set(buildOnlineKey(userId), JSON.toJSONString(dto), AuthConstants.ONLINE_USER_EXPIRE_MINUTES, TimeUnit.MINUTES);
+        redisUtil.set(buildOnlineKey(userCode), JSON.toJSONString(dto), AuthConstants.ONLINE_USER_EXPIRE_MINUTES, TimeUnit.MINUTES);
 
-        log.info("用户 {} 上线，当前在线：{}", userId, sessions.size());
+        log.info("用户 {} 上线，当前在线：{}", userCode, sessions.size());
         return session;
     }
 
     /**
      * 注销会话
      */
-    public void unregister(String userId) {
-        ChatSession session = sessions.remove(userId);
+    public void unregister(String userCode) {
+        ChatSession session = sessions.remove(userCode);
         if (session != null) {
             session.close();
-            redisUtil.deleteByKey(buildOnlineKey(userId));
-            log.info("用户 {} 下线，当前在线：{}", userId, sessions.size());
+            redisUtil.deleteByKey(buildOnlineKey(userCode));
+            log.info("用户 {} 下线，当前在线：{}", userCode, sessions.size());
         }
     }
 
     // ==================== 查询 ====================
 
-    public ChatSession get(String userId) {
-        return sessions.get(userId);
+    public ChatSession get(String userCode) {
+        return sessions.get(userCode);
     }
 
-    public boolean isOnline(String userId) {
-        ChatSession session = sessions.get(userId);
+    public boolean isOnline(String userCode) {
+        ChatSession session = sessions.get(userCode);
         return session != null && session.isActive();
     }
 
@@ -98,15 +98,15 @@ public class SessionManager {
     /**
      * 向指定用户发消息
      */
-    public void sendToUser(String userId, ChatMessagePacket packet) {
-        sendToUserRaw(userId, JSON.toJSONString(packet));
+    public void sendToUser(String userCode, ChatMessagePacket packet) {
+        sendToUserRaw(userCode, JSON.toJSONString(packet));
     }
 
     /**
      * 向指定用户发JSON字符串
      */
-    public void sendToUserRaw(String userId, String json) {
-        ChatSession session = sessions.get(userId);
+    public void sendToUserRaw(String userCode, String json) {
+        ChatSession session = sessions.get(userCode);
         if (session != null && session.isActive()) {
             session.sendText(json);
         }
@@ -115,20 +115,20 @@ public class SessionManager {
     /**
      * 向房间内所有在线成员广播（排除指定用户）
      */
-    public void broadcastToRoom(Set<String> memberIds, ChatMessagePacket packet, String excludeUserId) {
+    public void broadcastToRoom(Set<String> memberCodes, ChatMessagePacket packet, String excludeUserCode) {
         String json = JSON.toJSONString(packet);
-        broadcastToRoomRaw(memberIds, json, excludeUserId);
+        broadcastToRoomRaw(memberCodes, json, excludeUserCode);
     }
 
     /**
      * 向房间内所有在线成员广播JSON（排除指定用户）
      */
-    public void broadcastToRoomRaw(Set<String> memberIds, String json, String excludeUserId) {
-        for (String memberId : memberIds) {
-            if (excludeUserId != null && excludeUserId.equals(memberId)) {
+    public void broadcastToRoomRaw(Set<String> memberCodes, String json, String excludeUserCode) {
+        for (String memberCode : memberCodes) {
+            if (excludeUserCode != null && excludeUserCode.equals(memberCode)) {
                 continue;
             }
-            sendToUserRaw(memberId, json);
+            sendToUserRaw(memberCode, json);
         }
     }
 
@@ -147,15 +147,15 @@ public class SessionManager {
 
     // ==================== Redis 在线状态 ====================
 
-    public void refreshOnlineStatus(String userId) {
-        redisUtil.expire(buildOnlineKey(userId), AuthConstants.ONLINE_USER_EXPIRE_MINUTES, TimeUnit.MINUTES);
+    public void refreshOnlineStatus(String userCode) {
+        redisUtil.expire(buildOnlineKey(userCode), AuthConstants.ONLINE_USER_EXPIRE_MINUTES, TimeUnit.MINUTES);
     }
 
-    public boolean isOnlineInRedis(String userId) {
-        return redisUtil.hasKey(buildOnlineKey(userId));
+    public boolean isOnlineInRedis(String userCode) {
+        return redisUtil.hasKey(buildOnlineKey(userCode));
     }
 
-    private String buildOnlineKey(String userId) {
-        return AuthConstants.ONLINE_USER_PREFIX + userId;
+    private String buildOnlineKey(String userCode) {
+        return AuthConstants.ONLINE_USER_PREFIX + userCode;
     }
 }

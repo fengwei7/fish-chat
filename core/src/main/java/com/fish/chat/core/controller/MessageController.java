@@ -25,18 +25,18 @@ public class MessageController {
     /**
      * 拉取房间历史消息（分页）
      *
-     * @param roomId 房间ID
+     * @param roomCode 房间ID
      * @param page   页码（0-based）
      * @param size   每页数量（默认20）
      */
-    @GetMapping("/{roomId}")
+    @GetMapping("/{roomCode}")
     public Result<Map<String, Object>> getHistory(
-            @PathVariable String roomId,
+            @PathVariable String roomCode,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
 
-        List<ChatMessage> messages = messageRepository.findByRoomIdOrderByTimestampDesc(
-                roomId, PageRequest.of(page, size));
+        List<ChatMessage> messages = messageRepository.findByRoomCodeOrderByTimestampDesc(
+                roomCode, PageRequest.of(page, size));
 
         long total = messageRepository.count();
         Map<String, Object> result = new HashMap<>();
@@ -50,13 +50,13 @@ public class MessageController {
     /**
      * 同步指定时间点之后的消息（断线重连用）
      */
-    @GetMapping("/{roomId}/sync")
+    @GetMapping("/{roomCode}/sync")
     public Result<List<ChatMessage>> syncMessages(
-            @PathVariable String roomId,
+            @PathVariable String roomCode,
             @RequestParam long after) {
 
         List<ChatMessage> messages = messageRepository
-                .findByRoomIdAndTimestampGreaterThanOrderByTimestampAsc(roomId, after);
+                .findByRoomCodeAndTimestampGreaterThanOrderByTimestampAsc(roomCode, after);
         return Result.success(messages);
     }
 }

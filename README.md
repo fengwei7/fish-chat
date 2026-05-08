@@ -71,10 +71,10 @@ ws://localhost:8081/ws?token=your_sa_token
 
 ```json
 // 发送消息
-{"cmd":"MSG","reqId":"uuid","body":{"roomId":"room_xxx","roomType":"PRIVATE","msgType":"TEXT","content":"hello"}}
+{"cmd":"MSG","reqId":"uuid","body":{"roomCode":"room_xxx","roomType":"PRIVATE","msgType":"TEXT","content":"hello"}}
 
 // 接收消息
-{"cmd":"MSG","code":0,"reqId":"uuid","body":{"msgId":"mongo_id","senderId":"user_code","senderName":"name","roomId":"room_xxx","content":"hello","timestamp":17000000}}
+{"cmd":"MSG","code":0,"reqId":"uuid","body":{"msgId":"mongo_id","senderId":"user_code","senderName":"name","roomCode":"room_xxx","content":"hello","timestamp":17000000}}
 ```
 
 ## REST API
@@ -126,8 +126,8 @@ ws://localhost:8081/ws?token=your_sa_token
 ### 消息
 | 方法 | 路径 | 说明 |
 |------|------|------|
-| GET | /messages/{roomId} | 历史消息（分页） |
-| GET | /messages/{roomId}/sync?after= | 同步消息 |
+| GET | /messages/{roomCode} | 历史消息（分页） |
+| GET | /messages/{roomCode}/sync?after= | 同步消息 |
 
 ### 文件
 | 方法 | 路径 | 说明 |

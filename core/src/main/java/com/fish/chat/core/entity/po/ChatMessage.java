@@ -31,7 +31,7 @@ public class ChatMessage implements Serializable {
     @Indexed
     private String from;
 
-    /** 接收方（私聊=对方code，群聊/频道=roomId） */
+    /** 接收方（私聊=对方code，群聊/频道=roomCode） */
     @Field("to")
     @Indexed
     private String to;
@@ -46,9 +46,9 @@ public class ChatMessage implements Serializable {
     private Long timestamp;
 
     /** 房间ID */
-    @Field("roomId")
+    @Field("roomCode")
     @Indexed
-    private String roomId;
+    private String roomCode;
 
     /** 房间类型：PRIVATE / GROUP / CHANNEL */
     @Field("roomType")

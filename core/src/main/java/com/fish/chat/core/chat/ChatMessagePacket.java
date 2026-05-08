@@ -12,10 +12,10 @@ import java.util.Map;
  *
  * <pre>
  * 上行（客户端→服务端）：
- *   {"cmd":"MSG","reqId":"uuid","body":{"roomId":"room_xxx","roomType":"GROUP","msgType":"TEXT","content":"hello"}}
+ *   {"cmd":"MSG","reqId":"uuid","body":{"roomCode":"room_xxx","roomType":"GROUP","msgType":"TEXT","content":"hello"}}
  *
  * 下行（服务端→客户端）：
- *   {"cmd":"MSG","code":0,"reqId":"uuid","body":{"msgId":"xxx","senderId":"u1","roomId":"room_xxx","content":"hello","timestamp":17000000}}
+ *   {"cmd":"MSG","code":0,"reqId":"uuid","body":{"msgId":"xxx","senderId":"u1","roomCode":"room_xxx","content":"hello","timestamp":17000000}}
  * </pre>
  */
 @Data
@@ -31,7 +31,7 @@ public class ChatMessagePacket {
     private Integer code;
 
     /** 请求追踪ID（客户端生成，服务端回显） */
-    private String reqId;
+    private String reqCode;
 
     /** 消息体 */
     private Body body;
@@ -45,7 +45,7 @@ public class ChatMessagePacket {
         private String msgId;
 
         /** 发送者用户 code */
-        private String senderId;
+        private String senderCode;
 
         /** 发送者名称 */
         private String senderName;
@@ -54,7 +54,7 @@ public class ChatMessagePacket {
         private String senderAvatar;
 
         /** 目标房间ID */
-        private String roomId;
+        private String roomCode;
 
         /** 房间类型：PRIVATE / GROUP / CHANNEL */
         private String roomType;
@@ -84,12 +84,12 @@ public class ChatMessagePacket {
         return ChatMessagePacket.builder().cmd("MSG").code(0).body(body).build();
     }
 
-    public static ChatMessagePacket ack(String reqId) {
-        return ChatMessagePacket.builder().cmd("ACK").code(0).reqId(reqId).build();
+    public static ChatMessagePacket ack(String reqCode) {
+        return ChatMessagePacket.builder().cmd("ACK").code(0).reqCode(reqCode).build();
     }
 
-    public static ChatMessagePacket error(String reqId, String message) {
-        return ChatMessagePacket.builder().cmd("ERROR").code(1).reqId(reqId)
+    public static ChatMessagePacket error(String reqCode, String message) {
+        return ChatMessagePacket.builder().cmd("ERROR").code(1).reqCode(reqCode)
                 .body(Body.builder().content(message).build()).build();
     }
 
