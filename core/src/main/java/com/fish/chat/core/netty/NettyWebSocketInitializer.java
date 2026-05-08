@@ -37,9 +37,9 @@ public class NettyWebSocketInitializer extends ChannelInitializer<SocketChannel>
         pipeline.addLast("chunked-write", new ChunkedWriteHandler());
         // 3. HTTP 消息聚合（最大 64KB）
         pipeline.addLast("http-aggregator", new HttpObjectAggregator(65536));
-        // 4. WebSocket 协议升级（路径 /ws，最大帧 64KB）
+        // 4. WebSocket 协议升级（checkStartsWith=true 允许 URI 带 query string）
         pipeline.addLast("websocket-protocol",
-                new WebSocketServerProtocolHandler(WEBSOCKET_PATH, null, true, 65536));
+                new WebSocketServerProtocolHandler(WEBSOCKET_PATH, null, true, 65536, false, true));
         // 5. Token 认证（握手后验证）
         pipeline.addLast("auth-handler", authHandshakeHandler);
         // 6. 空闲检测：180秒无读关闭连接
