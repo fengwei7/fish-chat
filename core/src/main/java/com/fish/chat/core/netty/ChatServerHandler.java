@@ -6,7 +6,7 @@ import com.fish.chat.core.chat.ChatSession;
 import com.fish.chat.core.chat.SessionManager;
 import com.fish.chat.core.chat.room.Room;
 import com.fish.chat.core.chat.room.RoomManager;
-import com.fish.chat.core.chat.room.RoomType;
+import com.fish.chat.common.enums.RoomType;
 import com.fish.chat.core.entity.po.ChatMessage;
 import com.fish.chat.core.repository.ChatMessageRepository;
 import io.netty.channel.ChannelHandler;

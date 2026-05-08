@@ -1,5 +1,6 @@
 package com.fish.chat.core.chat.room;
 
+import com.fish.chat.common.enums.RoomType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -82,9 +83,9 @@ public class Room {
      */
     public static String buildPrivateRoomCode(String userCode1, String userCode2) {
         if (userCode1.compareTo(userCode2) < 0) {
-            return "private:" + userCode1 + ":" + userCode2;
+            return RoomType.PRIVATE.getValue() + ":" + userCode1 + ":" + userCode2;
         }
-        return "private:" + userCode2 + ":" + userCode1;
+        return RoomType.PRIVATE.getValue() + ":" + userCode2 + ":" + userCode1;
     }
 
     public static Room createPrivate(String roomCode) {
@@ -92,7 +93,7 @@ public class Room {
     }
 
     public static Room createGroup(String groupCode, String name, String avatar, Set<String> members) {
-        Room room = new Room("group:" + groupCode, RoomType.GROUP, name, avatar, true);
+        Room room = new Room(RoomType.GROUP.getValue() + ":" + groupCode, RoomType.GROUP, name, avatar, true);
         if (members != null) {
             room.members.addAll(members);
         }
@@ -100,7 +101,7 @@ public class Room {
     }
 
     public static Room createChannel(String channelCode, String name, String avatar, Set<String> members) {
-        Room room = new Room("channel:" + channelCode, RoomType.CHANNEL, name, avatar, true);
+        Room room = new Room(RoomType.CHANNEL.getValue() + ":" + channelCode, RoomType.CHANNEL, name, avatar, true);
         if (members != null) {
             room.members.addAll(members);
         }

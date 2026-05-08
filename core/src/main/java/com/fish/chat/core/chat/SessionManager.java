@@ -115,17 +115,17 @@ public class SessionManager {
     /**
      * 向房间内所有在线成员广播（排除指定用户）
      */
-    public void broadcastToRoom(Set<String> memberCodes, ChatMessagePacket packet, String excludeUserCode) {
+    public void broadcastToRoom(Set<String> memberCodes, ChatMessagePacket packet, Set<String> excludeUserCodes) {
         String json = JSON.toJSONString(packet);
-        broadcastToRoomRaw(memberCodes, json, excludeUserCode);
+        broadcastToRoomRaw(memberCodes, json, excludeUserCodes);
     }
 
     /**
      * 向房间内所有在线成员广播JSON（排除指定用户）
      */
-    public void broadcastToRoomRaw(Set<String> memberCodes, String json, String excludeUserCode) {
+    public void broadcastToRoomRaw(Set<String> memberCodes, String json, Set<String> excludeUserCodes) {
         for (String memberCode : memberCodes) {
-            if (excludeUserCode != null && excludeUserCode.equals(memberCode)) {
+            if (excludeUserCodes != null && excludeUserCodes.contains(memberCode)) {
                 continue;
             }
             sendToUserRaw(memberCode, json);

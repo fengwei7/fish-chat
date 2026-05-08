@@ -1,5 +1,6 @@
 package com.fish.chat.core.chat.room;
 
+import com.fish.chat.common.enums.RoomType;
 import com.fish.chat.core.chat.SessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -41,7 +42,7 @@ public class RoomManager {
      * 获取或创建群聊房间（从DB加载成员）
      */
     public Room getOrCreateGroupRoom(String groupCode, String groupName, String groupAvatar, Set<String> memberCodes) {
-        String roomCode = "group:" + groupCode;
+        String roomCode = RoomType.GROUP.getValue() + ":" + groupCode;
         return rooms.computeIfAbsent(roomCode, id -> {
             Room room = Room.createGroup(groupCode, groupName, groupAvatar, memberCodes);
             log.info("创建群聊房间: {}，成员: {}", roomCode, memberCodes.size());
@@ -53,7 +54,7 @@ public class RoomManager {
      * 获取或创建频道房间（从DB加载成员）
      */
     public Room getOrCreateChannelRoom(String channelCode, String channelName, String channelAvatar, Set<String> memberCodes) {
-        String roomCode = "channel:" + channelCode;
+        String roomCode = RoomType.CHANNEL.getValue() + ":" + channelCode;
         return rooms.computeIfAbsent(roomCode, id -> {
             Room room = Room.createChannel(channelCode, channelName, channelAvatar, memberCodes);
             log.info("创建频道房间: {}，订阅者: {}", roomCode, memberCodes.size());
@@ -103,7 +104,7 @@ public class RoomManager {
      * 向房间添加新成员（群聊加人时）
      */
     public void addMemberToGroup(String groupCode, String userCode) {
-        String roomCode = "group:" + groupCode;
+        String roomCode = RoomType.GROUP.getValue() + ":" + groupCode;
         Room room = rooms.get(roomCode);
         if (room != null) {
             room.addMember(userCode);
@@ -117,7 +118,7 @@ public class RoomManager {
      * 从房间移除成员（群聊踢人时）
      */
     public void removeMemberFromGroup(String groupCode, String userCode) {
-        String roomCode = "group:" + groupCode;
+        String roomCode = RoomType.GROUP.getValue() + ":" + groupCode;
         Room room = rooms.get(roomCode);
         if (room != null) {
             room.removeMember(userCode);
