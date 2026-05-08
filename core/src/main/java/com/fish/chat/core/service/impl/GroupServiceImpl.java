@@ -41,7 +41,7 @@ public class GroupServiceImpl implements GroupService {
         GroupPO group = new GroupPO();
         group.setName(name);
         group.setAvatar(avatar);
-        group.setOwnerId(owner.getId());
+        group.setOwnerCode(owner.getCode());
         group.setMaxMembers(200);
         group.setStatus(1);
         groupMapper.insert(group);
@@ -49,7 +49,7 @@ public class GroupServiceImpl implements GroupService {
 
         // 创建者自动加入
         GroupMemberPO member = new GroupMemberPO();
-        member.setGroupId(group.getId());
+        member.setGroupCode(group.getCode());
         member.setUserCode(owner.getCode());
         member.setRole(2); // 群主
         member.setJoinTime(LocalDateTime.now());
@@ -67,8 +67,8 @@ public class GroupServiceImpl implements GroupService {
         GroupPO group = groupMapper.selectOne(Wrappers.<GroupPO>lambdaQuery().eq(GroupPO::getCode, code));
         if (group == null) throw new BusinessException("群组不存在");
 
-        UserPO owner = userRepository.selectById(String.valueOf(group.getOwnerId()));
-        long count = groupMemberMapper.selectCount(Wrappers.<GroupMemberPO>lambdaQuery().eq(GroupMemberPO::getGroupId, group.getId()));
+        UserPO owner = userRepository.selectByCode(group.getOwnerCode());
+        long count = groupMemberMapper.selectCount(Wrappers.<GroupMemberPO>lambdaQuery().eq(GroupMemberPO::getGroupCode, group.getCode()));
 
         return toDTO(group, owner != null ? owner.getCode() : "", (int) count);
     }
@@ -81,7 +81,7 @@ public class GroupServiceImpl implements GroupService {
 
         GroupPO group = groupMapper.selectOne(Wrappers.<GroupPO>lambdaQuery().eq(GroupPO::getCode, code));
         if (group == null) throw new BusinessException("群组不存在");
-        if (!group.getOwnerId().equals(current.getId())) throw new BusinessException("只有群主可以解散群组");
+        if (!group.getOwnerCode().equals(current.getCode())) throw new BusinessException("只有群主可以解散群组");
 
         group.setStatus(0);
         groupMapper.updateById(group);
@@ -98,12 +98,12 @@ public class GroupServiceImpl implements GroupService {
 
         // 检查是否已加入
         Long count = groupMemberMapper.selectCount(Wrappers.<GroupMemberPO>lambdaQuery()
-                .eq(GroupMemberPO::getGroupId, group.getId())
-                .eq(GroupMemberPO::getUserCode, user.getId()));
+                .eq(GroupMemberPO::getGroupCode, group.getCode())
+                .eq(GroupMemberPO::getUserCode, user.getCode()));
         if (count > 0) throw new BusinessException("用户已在群中");
 
         GroupMemberPO member = new GroupMemberPO();
-        member.setGroupId(group.getId());
+        member.setGroupCode(group.getCode());
         member.setUserCode(user.getCode());
         member.setRole(0);
         member.setJoinTime(LocalDateTime.now());
@@ -123,8 +123,8 @@ public class GroupServiceImpl implements GroupService {
         if (user == null) throw new BusinessException("用户不存在");
 
         groupMemberMapper.delete(Wrappers.<GroupMemberPO>lambdaQuery()
-                .eq(GroupMemberPO::getGroupId, group.getId())
-                .eq(GroupMemberPO::getUserCode, user.getId()));
+                .eq(GroupMemberPO::getGroupCode, group.getCode())
+                .eq(GroupMemberPO::getUserCode, user.getCode()));
 
         roomManager.removeMemberFromGroup(groupCode, userCode);
     }
@@ -135,14 +135,14 @@ public class GroupServiceImpl implements GroupService {
         UserPO user = resolveUser(userCode);
 
         List<GroupMemberPO> memberships = groupMemberMapper.selectList(
-                Wrappers.<GroupMemberPO>lambdaQuery().eq(GroupMemberPO::getUserCode, user.getId()));
+                Wrappers.<GroupMemberPO>lambdaQuery().eq(GroupMemberPO::getUserCode, user.getCode()));
 
         List<GroupDTO> result = new ArrayList<>();
         for (GroupMemberPO ms : memberships) {
-            GroupPO group = groupMapper.selectById(ms.getGroupId());
+            GroupPO group = groupMapper.selectOne(Wrappers.<GroupPO>lambdaQuery().eq(GroupPO::getCode, ms.getGroupCode()));
             if (group != null && group.getStatus() == 1) {
-                UserPO owner = userRepository.selectById(String.valueOf(group.getOwnerId()));
-                long count = groupMemberMapper.selectCount(Wrappers.<GroupMemberPO>lambdaQuery().eq(GroupMemberPO::getGroupId, group.getId()));
+                UserPO owner = userRepository.selectByCode(group.getOwnerCode());
+                long count = groupMemberMapper.selectCount(Wrappers.<GroupMemberPO>lambdaQuery().eq(GroupMemberPO::getGroupCode, group.getCode()));
                 result.add(toDTO(group, owner != null ? owner.getCode() : "", (int) count));
             }
         }
@@ -158,9 +158,9 @@ public class GroupServiceImpl implements GroupService {
     }
 
     // --- helpers ---
-    private UserPO resolveUser(String loginId) {
-        UserPO user = userRepository.selectByCode(loginId);
-        if (user == null) user = userRepository.selectById(loginId);
+    private UserPO resolveUser(String loginCode) {
+        UserPO user = userRepository.selectByCode(loginCode);
+        if (user == null) user = userRepository.selectById(loginCode);
         if (user == null) throw new BusinessException("用户不存在");
         return user;
     }

@@ -11,6 +11,6 @@ import lombok.EqualsAndHashCode;
 public class ChannelPO extends BasePO {
     private String name;
     private String avatar;
-    private Long ownerId;
+    private String ownerCode;
     private String description;
 }

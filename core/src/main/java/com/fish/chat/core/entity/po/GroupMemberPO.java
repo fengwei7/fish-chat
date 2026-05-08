@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @TableName("t_group_member")
 public class GroupMemberPO {
     private Long id;
-    private Long groupId;
+    private String groupCode;
     private String userCode;
     private Integer role;
     private LocalDateTime joinTime;

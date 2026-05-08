@@ -39,16 +39,18 @@ CREATE TABLE IF NOT EXISTS t_group (
     code        VARCHAR(64)  NOT NULL COMMENT '群唯一标识',
     name        VARCHAR(128) NOT NULL COMMENT '群名称',
     avatar      VARCHAR(256) DEFAULT NULL COMMENT '群头像',
-    owner_id    BIGINT       NOT NULL COMMENT '群主用户ID',
+    owner_code  VARCHAR(64)  NOT NULL COMMENT '群主用户code',
     notice      VARCHAR(1024) DEFAULT NULL COMMENT '群公告',
     max_members INT          DEFAULT 200 COMMENT '最大成员数',
     status      INT          DEFAULT 1 COMMENT '状态：0-解散 1-正常',
     create_time DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    creator     VARCHAR(64)  DEFAULT NULL COMMENT '创建人',
+    updater     VARCHAR(64)  DEFAULT NULL COMMENT '更新人',
     deleted     INT          DEFAULT 0 COMMENT '逻辑删除',
     PRIMARY KEY (id),
     UNIQUE KEY uk_code (code),
-    INDEX idx_owner (owner_id)
+    INDEX idx_owner (owner_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='群组表';
 
 -- ----------------------------
@@ -56,13 +58,13 @@ CREATE TABLE IF NOT EXISTS t_group (
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS t_group_member (
     id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
-    group_id    BIGINT       NOT NULL COMMENT '群ID',
+    group_code  VARCHAR(64)  NOT NULL COMMENT '群code',
     user_code   VARCHAR(64)  NOT NULL COMMENT '用户标识',
     role        INT          DEFAULT 0 COMMENT '角色：0-成员 1-管理员 2-群主',
     join_time   DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '入群时间',
     deleted     INT          DEFAULT 0 COMMENT '逻辑删除',
     PRIMARY KEY (id),
-    UNIQUE KEY uk_group_user (group_id, user_code),
+    UNIQUE KEY uk_group_user (group_code, user_code),
     INDEX idx_user_code (user_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='群成员表';
 
@@ -74,15 +76,17 @@ CREATE TABLE IF NOT EXISTS t_channel (
     code        VARCHAR(64)  NOT NULL COMMENT '频道唯一标识',
     name        VARCHAR(128) NOT NULL COMMENT '频道名称',
     avatar      VARCHAR(256) DEFAULT NULL COMMENT '频道头像',
-    owner_id    BIGINT       NOT NULL COMMENT '创建者用户ID',
+    owner_code  VARCHAR(64)  NOT NULL COMMENT '创建者用户code',
     description VARCHAR(512) DEFAULT NULL COMMENT '频道描述',
     status      INT          DEFAULT 1 COMMENT '状态：0-关闭 1-正常',
     create_time DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    creator     VARCHAR(64)  DEFAULT NULL COMMENT '创建人',
+    updater     VARCHAR(64)  DEFAULT NULL COMMENT '更新人',
     deleted     INT          DEFAULT 0 COMMENT '逻辑删除',
     PRIMARY KEY (id),
     UNIQUE KEY uk_code (code),
-    INDEX idx_owner (owner_id)
+    INDEX idx_owner (owner_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='频道表';
 
 -- ----------------------------
@@ -90,13 +94,13 @@ CREATE TABLE IF NOT EXISTS t_channel (
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS t_channel_member (
     id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
-    channel_id  BIGINT       NOT NULL COMMENT '频道ID',
+    channel_code VARCHAR(64)  NOT NULL COMMENT '频道code',
     user_code   VARCHAR(64)  NOT NULL COMMENT '用户标识',
     role        INT          DEFAULT 0 COMMENT '角色：0-订阅者 1-管理员 2-创建者',
     join_time   DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '订阅时间',
     deleted     INT          DEFAULT 0 COMMENT '逻辑删除',
     PRIMARY KEY (id),
-    UNIQUE KEY uk_channel_user (channel_id, user_code),
+    UNIQUE KEY uk_channel_user (channel_code, user_code),
     INDEX idx_user_code (user_code)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='频道订阅表';
 

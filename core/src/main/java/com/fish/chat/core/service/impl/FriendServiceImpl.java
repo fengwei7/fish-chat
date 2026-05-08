@@ -34,8 +34,8 @@ public class FriendServiceImpl implements FriendService {
         if (me.getId().equals(friend.getId())) throw new BusinessException("不能添加自己为好友");
 
         Long count = friendMapper.selectCount(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserCode, me.getId())
-                .eq(FriendPO::getFriendCode, friend.getId()));
+                .eq(FriendPO::getUserCode, me.getCode())
+                .eq(FriendPO::getFriendCode, friend.getCode()));
         if (count > 0) throw new BusinessException("已发送好友请求");
 
         FriendPO po = new FriendPO();
@@ -56,8 +56,8 @@ public class FriendServiceImpl implements FriendService {
 
         // 更新对方发来的请求
         FriendPO po = friendMapper.selectOne(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserCode, friend.getId())
-                .eq(FriendPO::getFriendCode, me.getId())
+                .eq(FriendPO::getUserCode, friend.getCode())
+                .eq(FriendPO::getFriendCode, me.getCode())
                 .eq(FriendPO::getStatus, 0));
         if (po == null) throw new BusinessException("没有待确认的好友请求");
         po.setStatus(1);
@@ -80,9 +80,9 @@ public class FriendServiceImpl implements FriendService {
         if (friend == null) throw new BusinessException("用户不存在");
 
         friendMapper.delete(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserCode, me.getId()).eq(FriendPO::getFriendCode, friend.getId()));
+                .eq(FriendPO::getUserCode, me.getCode()).eq(FriendPO::getFriendCode, friend.getCode()));
         friendMapper.delete(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserCode, friend.getId()).eq(FriendPO::getFriendCode, me.getId()));
+                .eq(FriendPO::getUserCode, friend.getCode()).eq(FriendPO::getFriendCode, me.getCode()));
     }
 
     @Override
@@ -91,7 +91,7 @@ public class FriendServiceImpl implements FriendService {
         UserPO me = resolveUser(userCode);
 
         List<FriendPO> friends = friendMapper.selectList(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserCode, me.getId())
+                .eq(FriendPO::getUserCode, me.getCode())
                 .eq(FriendPO::getStatus, 1));
 
         List<FriendDTO> result = new ArrayList<>();

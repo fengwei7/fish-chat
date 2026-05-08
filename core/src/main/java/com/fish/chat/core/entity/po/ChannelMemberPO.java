@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @TableName("t_channel_member")
 public class ChannelMemberPO {
     private Long id;
-    private Long channelId;
+    private String channelCode;
     private String userCode;
     private Integer role;
     private LocalDateTime joinTime;

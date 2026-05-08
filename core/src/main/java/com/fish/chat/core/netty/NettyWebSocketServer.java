@@ -50,11 +50,7 @@ public class NettyWebSocketServer {
                 .childOption(ChannelOption.TCP_NODELAY, true);
 
         ChannelFuture future = bootstrap.bind().sync();
-        log.info("========================================");
-        log.info("  Netty WebSocket 启动成功！端口: {}", port);
-        log.info("  连接地址: ws://localhost:{}/ws?token=xxx", port);
-        log.info("========================================");
-
+        log.info("Netty WebSocket 启动成功！端口: {}", port);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             log.info("关闭 Netty 服务器...");
             sessionManager.shutdown();

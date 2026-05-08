@@ -40,12 +40,12 @@ public class ChannelServiceImpl implements ChannelService {
         channel.setName(name);
         channel.setAvatar(avatar);
         channel.setDescription(description);
-        channel.setOwnerId(owner.getId());
+        channel.setOwnerCode(owner.getCode());
         channel.setStatus(1);
         channelMapper.insert(channel);
 
         ChannelMemberPO member = new ChannelMemberPO();
-        member.setChannelId(channel.getId());
+        member.setChannelCode(channel.getCode());
         member.setUserCode(owner.getCode());
         member.setRole(2);
         member.setJoinTime(LocalDateTime.now());
@@ -59,8 +59,8 @@ public class ChannelServiceImpl implements ChannelService {
     public ChannelDTO getChannel(String code) {
         ChannelPO c = channelMapper.selectOne(Wrappers.<ChannelPO>lambdaQuery().eq(ChannelPO::getCode, code));
         if (c == null) throw new BusinessException("频道不存在");
-        UserPO owner = userRepository.selectById(String.valueOf(c.getOwnerId()));
-        long count = channelMemberMapper.selectCount(Wrappers.<ChannelMemberPO>lambdaQuery().eq(ChannelMemberPO::getChannelId, c.getId()));
+        UserPO owner = userRepository.selectByCode(c.getOwnerCode());
+        long count = channelMemberMapper.selectCount(Wrappers.<ChannelMemberPO>lambdaQuery().eq(ChannelMemberPO::getChannelCode, c.getCode()));
         return toDTO(c, owner != null ? owner.getCode() : "", (int) count);
     }
 
@@ -73,12 +73,12 @@ public class ChannelServiceImpl implements ChannelService {
         if (channel == null) throw new BusinessException("频道不存在");
 
         Long count = channelMemberMapper.selectCount(Wrappers.<ChannelMemberPO>lambdaQuery()
-                .eq(ChannelMemberPO::getChannelId, channel.getId())
-                .eq(ChannelMemberPO::getUserCode, user.getId()));
+                .eq(ChannelMemberPO::getChannelCode, channel.getCode())
+                .eq(ChannelMemberPO::getUserCode, user.getCode()));
         if (count > 0) throw new BusinessException("已订阅该频道");
 
         ChannelMemberPO member = new ChannelMemberPO();
-        member.setChannelId(channel.getId());
+        member.setChannelCode(channel.getCode());
         member.setUserCode(user.getCode());
         member.setRole(0);
         member.setJoinTime(LocalDateTime.now());
@@ -94,8 +94,8 @@ public class ChannelServiceImpl implements ChannelService {
         if (channel == null) throw new BusinessException("频道不存在");
 
         channelMemberMapper.delete(Wrappers.<ChannelMemberPO>lambdaQuery()
-                .eq(ChannelMemberPO::getChannelId, channel.getId())
-                .eq(ChannelMemberPO::getUserCode, user.getId()));
+                .eq(ChannelMemberPO::getChannelCode, channel.getCode())
+                .eq(ChannelMemberPO::getUserCode, user.getCode()));
     }
 
     @Override
@@ -103,13 +103,13 @@ public class ChannelServiceImpl implements ChannelService {
         String userCode = StpUtil.getLoginIdAsString();
         UserPO user = resolveUser(userCode);
         List<ChannelMemberPO> subs = channelMemberMapper.selectList(
-                Wrappers.<ChannelMemberPO>lambdaQuery().eq(ChannelMemberPO::getUserCode, user.getId()));
+                Wrappers.<ChannelMemberPO>lambdaQuery().eq(ChannelMemberPO::getUserCode, user.getCode()));
         List<ChannelDTO> result = new ArrayList<>();
         for (ChannelMemberPO sub : subs) {
-            ChannelPO c = channelMapper.selectById(sub.getChannelId());
+            ChannelPO c = channelMapper.selectOne(Wrappers.<ChannelPO>lambdaQuery().eq(ChannelPO::getCode, sub.getChannelCode()));
             if (c != null && c.getStatus() == 1) {
-                UserPO owner = userRepository.selectById(String.valueOf(c.getOwnerId()));
-                long count = channelMemberMapper.selectCount(Wrappers.<ChannelMemberPO>lambdaQuery().eq(ChannelMemberPO::getChannelId, c.getId()));
+                UserPO owner = userRepository.selectByCode(c.getOwnerCode());
+                long count = channelMemberMapper.selectCount(Wrappers.<ChannelMemberPO>lambdaQuery().eq(ChannelMemberPO::getChannelCode, c.getCode()));
                 result.add(toDTO(c, owner != null ? owner.getCode() : "", (int) count));
             }
         }

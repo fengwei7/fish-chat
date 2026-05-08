@@ -11,7 +11,7 @@ import lombok.EqualsAndHashCode;
 public class GroupPO extends BasePO {
     private String name;
     private String avatar;
-    private Long ownerId;
+    private String ownerCode;
     private String notice;
     private Integer maxMembers;
 }

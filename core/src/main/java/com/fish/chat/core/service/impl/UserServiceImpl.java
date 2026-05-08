@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
 
     private UserPO getCurrentUserPO() {
         String loginId = StpUtil.getLoginIdAsString();
-        UserPO userPO = userRepository.selectById(loginId);
+        UserPO userPO = userRepository.selectByCode(loginId);
         if (userPO == null) {
             throw new BusinessException("用户不存在");
         }
