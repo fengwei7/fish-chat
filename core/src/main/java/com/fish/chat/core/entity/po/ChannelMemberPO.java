@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 public class ChannelMemberPO {
     private Long id;
     private Long channelId;
-    @com.baomidou.mybatisplus.annotation.TableField("user_id")
     private String userCode;
     private Integer role;
     private LocalDateTime joinTime;

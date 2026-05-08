@@ -8,9 +8,7 @@ import java.time.LocalDateTime;
 @TableName("t_friend")
 public class FriendPO {
     private Long id;
-    @com.baomidou.mybatisplus.annotation.TableField("user_id")
     private String userCode;
-    @com.baomidou.mybatisplus.annotation.TableField("friend_id")
     private String friendCode;
     private String remark;
     private Integer status;
