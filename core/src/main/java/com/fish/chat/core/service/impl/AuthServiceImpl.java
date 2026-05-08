@@ -1,6 +1,7 @@
 package com.fish.chat.core.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.lang.UUID;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.crypto.digest.DigestUtil;
 import com.fish.chat.common.exception.BusinessException;
@@ -36,6 +37,7 @@ public class AuthServiceImpl implements AuthService {
         UserPO userPO = new UserPO();
         userPO.setUsername(request.getUsername());
         userPO.setPassword(DigestUtil.sha256Hex(request.getPassword() + salt));
+        userPO.setCode(UUID.randomUUID().toString());
         userPO.setSalt(salt);
         userPO.setMobile(request.getMobile());
         userPO.setEmail(request.getEmail());
