@@ -1,13 +1,12 @@
 package com.fish.chat.core.controller;
 
+import com.fish.chat.common.result.PageResult;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.entity.dto.FriendDTO;
 import com.fish.chat.core.service.FriendService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -30,19 +29,31 @@ public class FriendController {
         return Result.success("已添加好友", null);
     }
 
-    @DeleteMapping("/{friendCode}")
-    public Result<Void> remove(@PathVariable String friendCode) {
-        friendService.removeFriend(friendCode);
+    @PostMapping("/remove")
+    public Result<Void> remove(@RequestBody Map<String, String> req) {
+        friendService.removeFriend(req.get("friendCode"));
         return Result.success("好友已删除", null);
     }
 
     @GetMapping
-    public Result<List<FriendDTO>> list() {
-        return Result.success(friendService.listFriends());
+    public Result<PageResult<FriendDTO>> list(
+            @RequestParam(defaultValue = "0") int pageNum,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return Result.success(friendService.listFriends(pageNum, pageSize));
+    }
+
+    @GetMapping("/requests")
+    public Result<PageResult<FriendDTO>> requests(
+            @RequestParam(defaultValue = "0") int pageNum,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return Result.success(friendService.listFriendRequests(pageNum, pageSize));
     }
 
     @GetMapping("/search")
-    public Result<List<FriendDTO>> search(@RequestParam String keyword) {
-        return Result.success(friendService.searchUsers(keyword));
+    public Result<PageResult<FriendDTO>> search(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int pageNum,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return Result.success(friendService.searchUsers(keyword, pageNum, pageSize));
     }
 }

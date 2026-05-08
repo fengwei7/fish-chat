@@ -1,5 +1,6 @@
 package com.fish.chat.core.service;
 
+import com.fish.chat.common.result.PageResult;
 import com.fish.chat.core.entity.dto.UserDTO;
 import com.fish.chat.core.entity.req.UserUpdateRequest;
 
@@ -34,8 +35,10 @@ public interface UserService {
     /**
      * 搜索用户（按用户名/昵称模糊匹配）
      *
-     * @param keyword 关键词
-     * @return 用户列表
+     * @param keyword  关键词
+     * @param pageNum  页码
+     * @param pageSize 每页数量
+     * @return 分页结果
      */
-    java.util.List<UserDTO> searchUsers(String keyword);
+    PageResult<UserDTO> searchUsers(String keyword, int pageNum, int pageSize);
 }

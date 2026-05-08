@@ -3,12 +3,15 @@ package com.fish.chat.core.repository;
 import com.alibaba.fastjson.JSON;
 import com.fish.chat.common.constants.AuthConstants;
 import com.fish.chat.common.redisutils.RedisUtil;
+import com.fish.chat.common.result.PageResult;
 import com.fish.chat.core.entity.dto.UserDTO;
 import org.springframework.stereotype.Repository;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
@@ -92,6 +95,15 @@ public class UserOnlineRepository {
      */
     public long getOnlineCount() {
         return getAllOnlineUserCodes().size();
+    }
+
+    /**
+     * 分页获取在线用户 code 列表
+     */
+    public PageResult<String> getOnlineUserPage(int pageNum, int pageSize) {
+        Set<String> onlineIds = getAllOnlineUserCodes();
+        List<String> list = new ArrayList<>(onlineIds);
+        return PageResult.ofPage(list, pageNum, pageSize);
     }
 
     // ========== 私有辅助方法 ==========

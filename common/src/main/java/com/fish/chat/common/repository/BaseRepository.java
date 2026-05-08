@@ -1,8 +1,10 @@
 package com.fish.chat.common.repository;
 
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Constants;
 import com.fish.chat.common.entity.BasePO;
 import org.apache.ibatis.annotations.Param;
@@ -147,6 +149,41 @@ public abstract class BaseRepository<M extends BasePO> {
     public List<M> selectByMap(@Param(Constants.COLUMN_MAP) Map<String, Object> columnMap) {
         QueryWrapper<M> wrapper = buildWrapper(columnMap);
         return getBaseMapper().selectList(wrapper);
+    }
+
+    /**
+     * 分页查询
+     */
+    public <P extends IPage<M>> P selectPage(P page, Wrapper<M> queryWrapper) {
+        return getBaseMapper().selectPage(page, queryWrapper);
+    }
+
+    /**
+     * 根据条件统计数量
+     */
+    public long selectCount(Wrapper<M> queryWrapper) {
+        return getBaseMapper().selectCount(queryWrapper);
+    }
+
+    /**
+     * 根据 Wrapper 查询单条
+     */
+    public M selectOne(Wrapper<M> queryWrapper) {
+        return getBaseMapper().selectOne(queryWrapper);
+    }
+
+    /**
+     * 根据 ID 更新
+     */
+    public boolean updateById(M data) {
+        return getBaseMapper().updateById(data) > 0;
+    }
+
+    /**
+     * 根据 Wrapper 删除
+     */
+    public int delete(Wrapper<M> queryWrapper) {
+        return getBaseMapper().delete(queryWrapper);
     }
 
     /**

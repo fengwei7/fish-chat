@@ -2,14 +2,15 @@ package com.fish.chat.core.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fish.chat.common.exception.BusinessException;
+import com.fish.chat.common.result.PageResult;
 import com.fish.chat.core.chat.room.RoomManager;
 import com.fish.chat.core.entity.dto.ChannelDTO;
 import com.fish.chat.core.entity.po.ChannelMemberPO;
 import com.fish.chat.core.entity.po.ChannelPO;
 import com.fish.chat.core.entity.po.UserPO;
-import com.fish.chat.core.mapper.ChannelMapper;
-import com.fish.chat.core.mapper.ChannelMemberMapper;
+import com.fish.chat.core.repository.ChannelRepository;
 import com.fish.chat.core.repository.UserRepository;
 import com.fish.chat.core.service.ChannelService;
 import org.springframework.stereotype.Service;
@@ -19,14 +20,13 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class ChannelServiceImpl implements ChannelService {
 
-    @Resource private ChannelMapper channelMapper;
-    @Resource private ChannelMemberMapper channelMemberMapper;
+    @Resource private ChannelRepository channelRepository;
     @Resource private UserRepository userRepository;
     @Resource private RoomManager roomManager;
 
@@ -42,14 +42,14 @@ public class ChannelServiceImpl implements ChannelService {
         channel.setDescription(description);
         channel.setOwnerCode(owner.getCode());
         channel.setStatus(1);
-        channelMapper.insert(channel);
+        channelRepository.save(channel);
 
         ChannelMemberPO member = new ChannelMemberPO();
         member.setChannelCode(channel.getCode());
         member.setUserCode(owner.getCode());
         member.setRole(2);
         member.setJoinTime(LocalDateTime.now());
-        channelMemberMapper.insert(member);
+        channelRepository.insertMember(member);
 
         roomManager.getOrCreateChannelRoom(channel.getCode(), channel.getName(), channel.getAvatar(), java.util.Collections.singleton(owner.getCode()));
         return toDTO(channel, owner.getCode(), 1);
@@ -57,10 +57,10 @@ public class ChannelServiceImpl implements ChannelService {
 
     @Override
     public ChannelDTO getChannel(String code) {
-        ChannelPO c = channelMapper.selectOne(Wrappers.<ChannelPO>lambdaQuery().eq(ChannelPO::getCode, code));
+        ChannelPO c = channelRepository.selectByCode(code);
         if (c == null) throw new BusinessException("频道不存在");
         UserPO owner = userRepository.selectByCode(c.getOwnerCode());
-        long count = channelMemberMapper.selectCount(Wrappers.<ChannelMemberPO>lambdaQuery().eq(ChannelMemberPO::getChannelCode, c.getCode()));
+        long count = channelRepository.countMembers(c.getCode());
         return toDTO(c, owner != null ? owner.getCode() : "", (int) count);
     }
 
@@ -69,20 +69,19 @@ public class ChannelServiceImpl implements ChannelService {
     public void subscribe(String channelCode) {
         String userCode = StpUtil.getLoginIdAsString();
         UserPO user = resolveUser(userCode);
-        ChannelPO channel = channelMapper.selectOne(Wrappers.<ChannelPO>lambdaQuery().eq(ChannelPO::getCode, channelCode));
+        ChannelPO channel = channelRepository.selectByCode(channelCode);
         if (channel == null) throw new BusinessException("频道不存在");
 
-        Long count = channelMemberMapper.selectCount(Wrappers.<ChannelMemberPO>lambdaQuery()
-                .eq(ChannelMemberPO::getChannelCode, channel.getCode())
-                .eq(ChannelMemberPO::getUserCode, user.getCode()));
-        if (count > 0) throw new BusinessException("已订阅该频道");
+        if (channelRepository.isMember(channel.getCode(), user.getCode())) {
+            throw new BusinessException("已订阅该频道");
+        }
 
         ChannelMemberPO member = new ChannelMemberPO();
         member.setChannelCode(channel.getCode());
         member.setUserCode(user.getCode());
         member.setRole(0);
         member.setJoinTime(LocalDateTime.now());
-        channelMemberMapper.insert(member);
+        channelRepository.insertMember(member);
     }
 
     @Transactional
@@ -90,37 +89,52 @@ public class ChannelServiceImpl implements ChannelService {
     public void unsubscribe(String channelCode) {
         String userCode = StpUtil.getLoginIdAsString();
         UserPO user = resolveUser(userCode);
-        ChannelPO channel = channelMapper.selectOne(Wrappers.<ChannelPO>lambdaQuery().eq(ChannelPO::getCode, channelCode));
+        ChannelPO channel = channelRepository.selectByCode(channelCode);
         if (channel == null) throw new BusinessException("频道不存在");
 
-        channelMemberMapper.delete(Wrappers.<ChannelMemberPO>lambdaQuery()
-                .eq(ChannelMemberPO::getChannelCode, channel.getCode())
-                .eq(ChannelMemberPO::getUserCode, user.getCode()));
+        channelRepository.deleteMember(channel.getCode(), user.getCode());
     }
 
     @Override
-    public List<ChannelDTO> listMyChannels() {
+    public PageResult<ChannelDTO> listMyChannels(int pageNum, int pageSize) {
         String userCode = StpUtil.getLoginIdAsString();
         UserPO user = resolveUser(userCode);
-        List<ChannelMemberPO> subs = channelMemberMapper.selectList(
-                Wrappers.<ChannelMemberPO>lambdaQuery().eq(ChannelMemberPO::getUserCode, user.getCode()));
+
+        Page<ChannelMemberPO> memberPage = channelRepository.selectMemberPage(
+                user.getCode(), new Page<>(pageNum, pageSize));
+
+        List<String> channelCodes = memberPage.getRecords().stream()
+                .map(ChannelMemberPO::getChannelCode)
+                .collect(Collectors.toList());
+
+        if (channelCodes.isEmpty()) {
+            return PageResult.of(new ArrayList<>(), pageNum, pageSize, memberPage.getTotal());
+        }
+
+        List<ChannelPO> channels = channelRepository.selectByCodes(channelCodes);
+        Map<String, ChannelPO> channelMap = channels.stream()
+                .collect(Collectors.toMap(ChannelPO::getCode, c -> c));
+
         List<ChannelDTO> result = new ArrayList<>();
-        for (ChannelMemberPO sub : subs) {
-            ChannelPO c = channelMapper.selectOne(Wrappers.<ChannelPO>lambdaQuery().eq(ChannelPO::getCode, sub.getChannelCode()));
-            if (c != null && c.getStatus() == 1) {
+        for (ChannelMemberPO member : memberPage.getRecords()) {
+            ChannelPO c = channelMap.get(member.getChannelCode());
+            if (c != null) {
                 UserPO owner = userRepository.selectByCode(c.getOwnerCode());
-                long count = channelMemberMapper.selectCount(Wrappers.<ChannelMemberPO>lambdaQuery().eq(ChannelMemberPO::getChannelCode, c.getCode()));
+                long count = channelRepository.countMembers(c.getCode());
                 result.add(toDTO(c, owner != null ? owner.getCode() : "", (int) count));
             }
         }
-        return result;
+        return PageResult.of(result, pageNum, pageSize, memberPage.getTotal());
     }
 
     @Override
-    public List<ChannelDTO> searchChannels(String keyword) {
-        return channelMapper.selectList(Wrappers.<ChannelPO>lambdaQuery()
-                .like(ChannelPO::getName, keyword).eq(ChannelPO::getStatus, 1))
-                .stream().map(c -> toDTO(c, "", 0)).collect(Collectors.toList());
+    public PageResult<ChannelDTO> searchChannels(String keyword, int pageNum, int pageSize) {
+        Page<ChannelPO> pageParam = new Page<>(pageNum, pageSize);
+        Page<ChannelPO> pageResult = channelRepository.selectPage(pageParam, Wrappers.<ChannelPO>lambdaQuery()
+                .like(ChannelPO::getName, keyword).eq(ChannelPO::getStatus, 1));
+        List<ChannelDTO> list = pageResult.getRecords().stream()
+                .map(c -> toDTO(c, "", 0)).collect(Collectors.toList());
+        return PageResult.of(list, pageNum, pageSize, pageResult.getTotal());
     }
 
     private UserPO resolveUser(String loginId) {

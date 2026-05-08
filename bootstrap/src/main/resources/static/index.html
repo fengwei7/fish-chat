@@ -383,7 +383,7 @@
                     <template #append><el-button :icon="Search" @click="searchUsers"/></template>
                 </el-input>
             </el-form-item>
-            <div v-for="u in searchUserResults" :key="u.code" class="user-item" style="margin-bottom:8px;">
+            <div v-for="u in searchUserResults.users" :key="u.code" class="user-item" style="margin-bottom:8px;">
                 <div class="user-avatar">{{ (u.nickname||u.username)?.[0]||'?' }}</div>
                 <div class="user-info">
                     <div class="user-name">{{ u.nickname||u.username }}</div>
@@ -660,7 +660,10 @@ createApp({
 
         async function searchUsers() {
             if(!userSearchKeyword.value) return;
-            try { searchUserResults.value = await request('/user/search?keyword='+encodeURIComponent(userSearchKeyword.value)) || []; }
+            try {
+                searchUserResults.value = await request('/user/search?keyword='+encodeURIComponent(userSearchKeyword.value)) || [];
+                console.log(searchUserResults.value)
+            }
             catch(e) { ElMessage.error(e.message); }
         }
 

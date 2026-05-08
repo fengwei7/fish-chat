@@ -1,5 +1,6 @@
 package com.fish.chat.core.controller;
 
+import com.fish.chat.common.result.PageResult;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.entity.dto.GroupDTO;
 import com.fish.chat.core.entity.req.AddMemberRequest;
@@ -9,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/groups")
@@ -29,7 +30,7 @@ public class GroupController {
         return Result.success(groupService.getGroup(code));
     }
 
-    @DeleteMapping("/{code}")
+    @PostMapping("/{code}/dismiss")
     public Result<Void> dismiss(@PathVariable String code) {
         groupService.dismissGroup(code);
         return Result.success("群组已解散", null);
@@ -41,19 +42,24 @@ public class GroupController {
         return Result.success("成员已添加", null);
     }
 
-    @DeleteMapping("/{code}/members/{userCode}")
-    public Result<Void> removeMember(@PathVariable String code, @PathVariable String userCode) {
-        groupService.removeMember(code, userCode);
+    @PostMapping("/{code}/members/remove")
+    public Result<Void> removeMember(@PathVariable String code, @RequestBody Map<String, String> req) {
+        groupService.removeMember(code, req.get("userCode"));
         return Result.success("成员已移除", null);
     }
 
     @GetMapping("/my")
-    public Result<List<GroupDTO>> listMy() {
-        return Result.success(groupService.listMyGroups());
+    public Result<PageResult<GroupDTO>> listMy(
+            @RequestParam(defaultValue = "0") int pageNum,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return Result.success(groupService.listMyGroups(pageNum, pageSize));
     }
 
     @GetMapping("/search")
-    public Result<List<GroupDTO>> search(@RequestParam String keyword) {
-        return Result.success(groupService.searchGroups(keyword));
+    public Result<PageResult<GroupDTO>> search(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int pageNum,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return Result.success(groupService.searchGroups(keyword, pageNum, pageSize));
     }
 }

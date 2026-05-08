@@ -2,6 +2,7 @@ package com.fish.chat.core.repository;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fish.chat.common.repository.BaseRepository;
 import com.fish.chat.core.entity.po.UserPO;
 import com.fish.chat.core.mapper.UserMapper;
@@ -45,23 +46,30 @@ public class UserRepository extends BaseRepository<UserPO> {
     }
 
     /**
-     * 更新用户信息
-     *
-     * @param userPO 用户实体
-     * @return 是否更新成功
+     * 模糊搜索用户（用户名或昵称）分页
      */
-    public boolean updateById(UserPO userPO) {
-        return userMapper.updateById(userPO) > 0;
+    public Page<UserPO> searchByKeywordPage(String keyword, Page<UserPO> page) {
+        return userMapper.selectPage(page, Wrappers.<UserPO>lambdaQuery()
+                .like(UserPO::getUsername, keyword)
+                .or()
+                .like(UserPO::getNickname, keyword));
     }
 
     /**
-     * 模糊搜索用户（用户名或昵称）
+     * 精确匹配 code 或 username 分页查询
      */
-    public List<UserPO> searchByKeyword(String keyword) {
-        return userMapper.selectList(Wrappers.<UserPO>lambdaQuery()
-                .like(UserPO::getUsername, keyword)
+    public Page<UserPO> selectByCodeOrUsernamePage(String keyword, Page<UserPO> page) {
+        return userMapper.selectPage(page, Wrappers.<UserPO>lambdaQuery()
+                .eq(UserPO::getCode, keyword)
                 .or()
-                .like(UserPO::getNickname, keyword)
-                .last("LIMIT 20"));
+                .eq(UserPO::getUsername, keyword));
+    }
+
+    /**
+     * 根据 code 列表批量查询用户
+     */
+    public List<UserPO> selectByCodes(List<String> codes) {
+        return userMapper.selectList(Wrappers.<UserPO>lambdaQuery()
+                .in(UserPO::getCode, codes));
     }
 }

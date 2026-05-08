@@ -1,13 +1,12 @@
 package com.fish.chat.core.controller;
 
+import com.fish.chat.common.result.PageResult;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.entity.dto.ChannelDTO;
 import com.fish.chat.core.service.ChannelService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -35,19 +34,24 @@ public class ChannelController {
         return Result.success("订阅成功", null);
     }
 
-    @DeleteMapping("/{code}/subscribe")
+    @PostMapping("/{code}/unsubscribe")
     public Result<Void> unsubscribe(@PathVariable String code) {
         channelService.unsubscribe(code);
         return Result.success("取消订阅", null);
     }
 
     @GetMapping("/my")
-    public Result<List<ChannelDTO>> listMy() {
-        return Result.success(channelService.listMyChannels());
+    public Result<PageResult<ChannelDTO>> listMy(
+            @RequestParam(defaultValue = "0") int pageNum,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return Result.success(channelService.listMyChannels(pageNum, pageSize));
     }
 
     @GetMapping("/search")
-    public Result<List<ChannelDTO>> search(@RequestParam String keyword) {
-        return Result.success(channelService.searchChannels(keyword));
+    public Result<PageResult<ChannelDTO>> search(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int pageNum,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return Result.success(channelService.searchChannels(keyword, pageNum, pageSize));
     }
 }

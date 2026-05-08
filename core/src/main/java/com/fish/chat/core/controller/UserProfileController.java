@@ -1,15 +1,16 @@
 package com.fish.chat.core.controller;
 
+import com.fish.chat.common.result.PageResult;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.chat.SessionManager;
 import com.fish.chat.core.entity.dto.UserDTO;
 import com.fish.chat.core.entity.req.UserUpdateRequest;
+import com.fish.chat.core.repository.UserOnlineRepository;
 import com.fish.chat.core.service.UserService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
-import java.util.*;
 
 /**
  * 用户控制器
@@ -24,6 +25,9 @@ public class UserProfileController {
 
     @Resource
     private SessionManager sessionManager;
+
+    @Resource
+    private UserOnlineRepository userOnlineRepository;
 
     /**
      * 查看当前用户信息
@@ -58,26 +62,26 @@ public class UserProfileController {
      * 获取在线用户列表
      */
     @GetMapping("/online")
-    public Result<Map<String, Object>> getOnlineUsers() {
-        Set<String> onlineIds = sessionManager.getAllOnlineUserCodes();
-        Map<String, Object> result = new HashMap<>();
-        result.put("count", onlineIds.size());
-        result.put("userCodes", new ArrayList<>(onlineIds));
-        return Result.success(result);
+    public Result<PageResult<String>> getOnlineUsers(
+            @RequestParam(defaultValue = "0") int pageNum,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return Result.success(userOnlineRepository.getOnlineUserPage(pageNum, pageSize));
     }
 
     /**
      * 搜索用户（按用户名/昵称）
      */
     @GetMapping("/search")
-    public Result<Map<String, Object>> search(@RequestParam String keyword) {
-        List<UserDTO> users = userService.searchUsers(keyword);
-        for (UserDTO u : users) {
-            u.setOnline(sessionManager.isOnline(u.getCode()));
+    public Result<PageResult<UserDTO>> search(
+            @RequestParam String keyword,
+            @RequestParam(defaultValue = "0") int pageNum,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        PageResult<UserDTO> result = userService.searchUsers(keyword, pageNum, pageSize);
+        if (result.getData() != null) {
+            for (UserDTO u : result.getData()) {
+                u.setOnline(sessionManager.isOnline(u.getCode()));
+            }
         }
-        Map<String, Object> result = new HashMap<>();
-        result.put("count", users.size());
-        result.put("users", users);
         return Result.success(result);
     }
 }

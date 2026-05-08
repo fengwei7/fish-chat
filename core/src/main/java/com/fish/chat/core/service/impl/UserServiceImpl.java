@@ -1,7 +1,9 @@
 package com.fish.chat.core.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fish.chat.common.exception.BusinessException;
+import com.fish.chat.common.result.PageResult;
 import com.fish.chat.core.entity.dto.UserDTO;
 import com.fish.chat.core.entity.po.UserPO;
 import com.fish.chat.core.entity.req.UserUpdateRequest;
@@ -62,15 +64,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDTO> searchUsers(String keyword) {
-        List<UserPO> users = userRepository.searchByKeyword(keyword);
+    public PageResult<UserDTO> searchUsers(String keyword, int pageNum, int pageSize) {
+        Page<UserPO> userPage = userRepository.searchByKeywordPage(keyword, new Page<>(pageNum, pageSize));
         List<UserDTO> result = new ArrayList<>();
-        if (users != null) {
-            for (UserPO po : users) {
-                result.add(toDTO(po));
-            }
+        for (UserPO po : userPage.getRecords()) {
+            result.add(toDTO(po));
         }
-        return result;
+        return PageResult.of(result, pageNum, pageSize, userPage.getTotal());
     }
 
     private UserPO getCurrentUserPO() {
