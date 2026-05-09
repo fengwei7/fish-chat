@@ -27,17 +27,8 @@ public class SaTokenConfigure implements WebMvcConfigurer {
     
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 对所有跨域预检Options请求放行
-//        registry.addInterceptor(new HandlerInterceptor() {
-//            @Override
-//            public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-//                if (HttpMethod.OPTIONS.name().equalsIgnoreCase(request.getMethod())) {
-//                    response.setStatus(HttpServletResponse.SC_OK);
-//                    return false;
-//                }
-//                return true;
-//            }
-//        }).addPathPatterns("/**");
+        // 闲的没事儿别在后端做跨域，全是坑
+//        allowAllCorsOptionsRequests(registry);
 
         registry.addInterceptor(new SaInterceptor(handle -> StpUtil.checkLogin()))
                 .addPathPatterns("/**")
@@ -58,6 +49,19 @@ public class SaTokenConfigure implements WebMvcConfigurer {
                     "/static/**",
                     "/webjars/**"
                 );
+    }
+
+    private void allowAllCorsOptionsRequests(InterceptorRegistry registry){
+        registry.addInterceptor(new HandlerInterceptor() {
+            @Override
+            public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+                if (HttpMethod.OPTIONS.name().equalsIgnoreCase(request.getMethod())) {
+                    response.setStatus(HttpServletResponse.SC_OK);
+                    return false;
+                }
+                return true;
+            }
+        }).addPathPatterns("/**");
     }
     
     // 注意：不注册 SaServletFilter，只保留 SaInterceptor。
