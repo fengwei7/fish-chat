@@ -1,6 +1,6 @@
 package com.fish.chat.core.chat.room;
 
-import com.fish.chat.common.enums.RoomType;
+import com.fish.chat.core.enums.RoomType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 

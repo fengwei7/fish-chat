@@ -1,6 +1,6 @@
 package com.fish.chat.core.chat.room;
 
-import com.fish.chat.common.enums.RoomType;
+import com.fish.chat.core.enums.RoomType;
 import com.fish.chat.core.chat.SessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -45,7 +45,7 @@ public class RoomManager {
         String roomCode = RoomType.GROUP.getValue() + ":" + groupCode;
         return rooms.computeIfAbsent(roomCode, id -> {
             Room room = Room.createGroup(groupCode, groupName, groupAvatar, memberCodes);
-            log.info("创建群聊房间: {}，成员: {}", roomCode, memberCodes.size());
+            log.info("创建群聊房间: {}，成员: {}", roomCode, memberCodes != null ? memberCodes.size() : 0);
             return room;
         });
     }
@@ -57,7 +57,7 @@ public class RoomManager {
         String roomCode = RoomType.CHANNEL.getValue() + ":" + channelCode;
         return rooms.computeIfAbsent(roomCode, id -> {
             Room room = Room.createChannel(channelCode, channelName, channelAvatar, memberCodes);
-            log.info("创建频道房间: {}，订阅者: {}", roomCode, memberCodes.size());
+            log.info("创建频道房间: {}，订阅者: {}", roomCode, memberCodes != null ? memberCodes.size() : 0);
             return room;
         });
     }

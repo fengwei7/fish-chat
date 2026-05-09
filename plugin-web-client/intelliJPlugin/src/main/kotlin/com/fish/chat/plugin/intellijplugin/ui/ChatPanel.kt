@@ -10,8 +10,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -54,7 +56,7 @@ fun ChatPanel(state: AppState) {
 
     // 加载历史消息
     LaunchedEffect(roomCode) {
-        if (!historyLoaded && state.messages[roomCode] == null) {
+        if (!historyLoaded) {
             scope.launch {
                 withContext(Dispatchers.IO) {
                     val data = state.api.getHistory(roomCode, 0, 50)
@@ -66,8 +68,6 @@ fun ChatPanel(state: AppState) {
                 }
                 historyLoaded = true
             }
-        } else {
-            historyLoaded = true
         }
     }
 
@@ -99,12 +99,38 @@ fun ChatPanel(state: AppState) {
                     Text(conv.roomCode, fontSize = 10.sp, color = TimestampColor)
                 }
             }
-            Text(
-                if (state.ws.isConnected) "[ONLINE]" else "[OFFLINE]",
-                fontFamily = FontFamily.Monospace,
-                fontSize = 11.sp,
-                color = if (state.ws.isConnected) OnlineColor else OfflineColor
-            )
+            
+            // 显示对方用户在线状态（仅对私聊）
+            if (conv.type == RoomType.PRIVATE) {
+                // 解析私聊房间代码以获取对方用户code
+                val parts = conv.roomCode.split(":")
+                var otherUserCode = ""
+                if (parts.size == 3 && parts[0] == "private") {
+                    val myCode = state.currentUser.code ?: ""
+                    otherUserCode = if (parts[1] == myCode) parts[2] else parts[1]
+                }
+                
+                // 查找对方用户是否在线
+                val isOtherOnline = state.conversations.firstOrNull { 
+                    it.type == RoomType.PRIVATE && 
+                    (it.code == otherUserCode || it.roomCode == conv.roomCode) 
+                }?.online ?: false
+                
+                Text(
+                    if (isOtherOnline) "[ONLINE]" else "[OFFLINE]",
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
+                    color = if (isOtherOnline) OnlineColor else OfflineColor
+                )
+            } else {
+                // 对于群聊和频道，显示WebSocket连接状态
+                Text(
+                    if (state.ws.isConnected) "[ONLINE]" else "[OFFLINE]",
+                    fontFamily = FontFamily.Monospace,
+                    fontSize = 11.sp,
+                    color = if (state.ws.isConnected) OnlineColor else OfflineColor
+                )
+            }
         }
 
         // 分隔线
@@ -150,11 +176,59 @@ fun ChatPanel(state: AppState) {
                     .background(InputBg, RoundedCornerShape(4.dp))
                     .border(1.dp, InputBorder, RoundedCornerShape(4.dp))
                     .padding(8.dp)
+                    .onPreviewKeyEvent { event ->
+                        if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && !event.isShiftPressed) {
+                            if (inputText.isNotBlank()) {
+                                // 立即添加到本地消息列表
+                                val localMsg = ChatMessageDTO(
+                                    id = "temp_${System.currentTimeMillis()}",
+                                    type = "TEXT",
+                                    from = state.currentUser.code ?: "",
+                                    senderName = state.currentUser.nickname ?: state.currentUser.username ?: "",
+                                    senderAvatar = state.currentUser.avatarUrl ?: "",
+                                    roomCode = roomCode,
+                                    roomType = conv.type.name,
+                                    content = inputText.trim(),
+                                    timestamp = System.currentTimeMillis()
+                                )
+                                val list = state.messages.getOrPut(roomCode) { mutableListOf() }
+                                list.add(localMsg)
+
+                                // 发送消息到服务器
+                                state.ws.sendMessage(
+                                    roomCode = roomCode,
+                                    roomType = conv.type.name,
+                                    msgType = "TEXT",
+                                    content = inputText.trim()
+                                )
+                                inputText = ""
+                            }
+                            true
+                        } else {
+                            false
+                        }
+                    }
             )
             Spacer(Modifier.width(8.dp))
             OutlinedButton(
                 onClick = {
                     if (inputText.isNotBlank()) {
+                        // 立即添加到本地消息列表
+                        val localMsg = ChatMessageDTO(
+                            id = "temp_${System.currentTimeMillis()}",
+                            type = "TEXT",
+                            from = state.currentUser.code ?: "",
+                            senderName = state.currentUser.nickname ?: state.currentUser.username ?: "",
+                            senderAvatar = state.currentUser.avatarUrl ?: "",
+                            roomCode = roomCode,
+                            roomType = conv.type.name,
+                            content = inputText.trim(),
+                            timestamp = System.currentTimeMillis()
+                        )
+                        val list = state.messages.getOrPut(roomCode) { mutableListOf() }
+                        list.add(localMsg)
+
+                        // 发送消息到服务器
                         state.ws.sendMessage(
                             roomCode = roomCode,
                             roomType = conv.type.name,

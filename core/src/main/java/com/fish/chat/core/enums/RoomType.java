@@ -1,4 +1,4 @@
-package com.fish.chat.common.enums;
+package com.fish.chat.core.enums;
 
 import lombok.AllArgsConstructor;import lombok.Getter;
 

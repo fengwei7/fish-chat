@@ -6,9 +6,14 @@ import com.fish.chat.core.chat.ChatSession;
 import com.fish.chat.core.chat.SessionManager;
 import com.fish.chat.core.chat.room.Room;
 import com.fish.chat.core.chat.room.RoomManager;
-import com.fish.chat.common.enums.RoomType;
+import com.fish.chat.core.enums.RoomType;
 import com.fish.chat.core.entity.po.ChatMessage;
+import com.fish.chat.core.entity.po.GroupPO;
+import com.fish.chat.core.entity.po.ChannelPO;
+import com.fish.chat.core.enums.MessageType;
 import com.fish.chat.core.repository.ChatMessageRepository;
+import com.fish.chat.core.repository.GroupRepository;
+import com.fish.chat.core.repository.ChannelRepository;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -42,6 +47,12 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
 
     @Resource
     private ChatMessageRepository chatMessageRepository;
+
+    @Resource
+    private GroupRepository groupRepository;
+
+    @Resource
+    private ChannelRepository channelRepository;
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame frame) {
@@ -214,10 +225,10 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
     private Room resolveRoom(String roomCode, String roomType, String userCode, ChatMessagePacket.Body body) {
         // 私聊：roomCode 应该由客户端用 Room.buildPrivateRoomCode() 生成
         // 或者传两个用户 code 让服务端生成
-        if ("PRIVATE".equalsIgnoreCase(roomType)) {
+        if (RoomType.PRIVATE.getValue().equalsIgnoreCase(roomType)) {
             // 解析 roomCode 获取两个用户
             String[] parts = roomCode.split(":");
-            if (parts.length == 3 && "private".equals(parts[0])) {
+            if (parts.length == 3 && RoomType.PRIVATE.getValue().equals(parts[0])) {
                 String user1 = parts[1];
                 String user2 = parts[2];
                 Room room = roomManager.getOrCreatePrivateRoom(user1, user2);
@@ -239,10 +250,38 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
         Room room = roomManager.getRoom(roomCode);
         if (room == null) {
             // 尝试从数据库加载
-            // 这里需要注入 groupRepository / channelRepository
-            // 暂时只支持内存中已有的房间（由 REST API 创建时加载）
-            log.warn("房间不存在: {}", roomCode);
-            return null;
+            if (roomCode.startsWith(RoomType.GROUP.getValue() + ":")) {
+                String groupCode = roomCode.substring(RoomType.GROUP.getValue().length() + 1);
+                GroupPO group = groupRepository.selectByCode(groupCode);
+                if (group != null) {
+                    // 检查用户是否是群成员
+                    if (!groupRepository.isMember(groupCode, userCode)) {
+                        log.warn("用户 {} 不是群组 {} 的成员", userCode, groupCode);
+                        return null;
+                    }
+                    // 创建并缓存房间
+                    room = roomManager.getOrCreateGroupRoom(groupCode, group.getName(), group.getAvatar(), null);
+                    room.addMember(userCode);
+                }
+            } else if (roomCode.startsWith(RoomType.CHANNEL.getValue() + ":")) {
+                String channelCode = roomCode.substring(RoomType.CHANNEL.getValue().length() + 1);
+                ChannelPO channel = channelRepository.selectByCode(channelCode);
+                if (channel != null) {
+                    // 检查用户是否有权限访问频道
+                    if (!channelRepository.isMember(channelCode, userCode)) {
+                        log.warn("用户 {} 不是频道 {} 的订阅者", userCode, channelCode);
+                        return null;
+                    }
+                    // 创建并缓存房间
+                    room = roomManager.getOrCreateChannelRoom(channelCode, channel.getName(), channel.getAvatar(), null);
+                    room.addMember(userCode);
+                }
+            }
+            
+            if (room == null) {
+                log.warn("房间不存在: {}", roomCode);
+                return null;
+            }
         }
 
         // 检查权限（频道只允许管理员发言）
@@ -263,7 +302,7 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
      */
     private String saveToMongo(ChatMessagePacket.Body body) {
         ChatMessage msg = new ChatMessage();
-        msg.setType(body.getMsgType() != null ? body.getMsgType() : "TEXT");
+        msg.setType(body.getMsgType() != null ? body.getMsgType() : MessageType.TEXT.getValue());
         msg.setFrom(body.getSenderCode());
         msg.setTo(body.getRoomCode());
         msg.setContent(body.getContent());
