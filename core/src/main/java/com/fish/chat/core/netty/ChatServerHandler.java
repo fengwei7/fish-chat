@@ -217,7 +217,7 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
         if ("PRIVATE".equalsIgnoreCase(roomType)) {
             // 解析 roomCode 获取两个用户
             String[] parts = roomCode.split(":");
-            if (parts.length == 3 && "private".equals(parts[0])) {
+            if (parts.length == 3 && RoomType.PRIVATE.getValue().equals(parts[0])) {
                 String user1 = parts[1];
                 String user2 = parts[2];
                 Room room = roomManager.getOrCreatePrivateRoom(user1, user2);

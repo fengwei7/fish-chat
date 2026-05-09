@@ -35,15 +35,15 @@ data class AuthDTO(
 // ==================== 会话（统一模型） ====================
 
 enum class RoomType(val value: String) {
-    PRIVATE("private"),
-    GROUP("group"),
-    CHANNEL("channel");
+    PRIVATE("PRIVATE"),
+    GROUP("GROUP"),
+    CHANNEL("CHANNEL");
 
     companion object {
-        fun fromValue(value: String): RoomType = when (value.lowercase()) {
-            "private" -> PRIVATE
-            "group" -> GROUP
-            "channel" -> CHANNEL
+        fun fromValue(value: String): RoomType = when (value.uppercase()) {
+            "PRIVATE" -> PRIVATE
+            "GROUP" -> GROUP
+            "CHANNEL" -> CHANNEL
             else -> PRIVATE
         }
     }
@@ -145,9 +145,10 @@ data class WsBody(
 
 object RoomCodeBuilder {
     fun privateRoom(user1: String, user2: String): String {
-        return if (user1 < user2) "private:$user1:$user2" else "private:$user2:$user1"
+        val prefix = RoomType.PRIVATE.value
+        return if (user1 < user2) "$prefix:$user1:$user2" else "$prefix:$user2:$user1"
     }
 
-    fun groupRoom(groupCode: String): String = "group:$groupCode"
-    fun channelRoom(channelCode: String): String = "channel:$channelCode"
+    fun groupRoom(groupCode: String): String = "${RoomType.GROUP.value}:$groupCode"
+    fun channelRoom(channelCode: String): String = "${RoomType.CHANNEL.value}:$channelCode"
 }

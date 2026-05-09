@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -20,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import com.fish.chat.plugin.intellijplugin.AppState
 import com.fish.chat.plugin.intellijplugin.Screen
 import com.fish.chat.plugin.intellijplugin.model.ChatMessageDTO
+import com.fish.chat.plugin.intellijplugin.model.RoomType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -58,10 +60,8 @@ fun ChatPanel(state: AppState) {
             scope.launch {
                 withContext(Dispatchers.IO) {
                     val data = state.api.getHistory(roomCode, 0, 50)
-                    if (data != null) {
-                        val list = state.messages.getOrPut(roomCode) { mutableListOf() }
-                        list.clear()
-                        list.addAll(data.messages.reversed())
+                    if (data != null && data.messages.isNotEmpty()) {
+                        state.messages = state.messages + (roomCode to data.messages.reversed())
                     }
                 }
                 historyLoaded = true
@@ -99,11 +99,20 @@ fun ChatPanel(state: AppState) {
                     Text(conv.roomCode, fontSize = 10.sp, color = TimestampColor)
                 }
             }
+            val statusText: String
+            val statusColor: Color
+            if (conv.type == RoomType.PRIVATE) {
+                statusText = if (conv.online) "[ONLINE]" else "[OFFLINE]"
+                statusColor = if (conv.online) OnlineColor else OfflineColor
+            } else {
+                statusText = if (state.ws.isConnected) "[LINK]" else "[NO LINK]"
+                statusColor = if (state.ws.isConnected) OnlineColor else OfflineColor
+            }
             Text(
-                if (state.ws.isConnected) "[ONLINE]" else "[OFFLINE]",
+                statusText,
                 fontFamily = FontFamily.Monospace,
                 fontSize = 11.sp,
-                color = if (state.ws.isConnected) OnlineColor else OfflineColor
+                color = statusColor
             )
         }
 
@@ -150,6 +159,26 @@ fun ChatPanel(state: AppState) {
                     .background(InputBg, RoundedCornerShape(4.dp))
                     .border(1.dp, InputBorder, RoundedCornerShape(4.dp))
                     .padding(8.dp)
+                    .onPreviewKeyEvent { event ->
+                        if (event.type == KeyEventType.KeyDown && event.key == Key.Enter) {
+                            if (event.isShiftPressed) {
+                                // Shift+Enter: insert newline (don't consume)
+                                false
+                            } else {
+                                // Enter: send message
+                                if (inputText.isNotBlank() && state.ws.isConnected) {
+                                    state.ws.sendMessage(
+                                        roomCode = roomCode,
+                                        roomType = conv.type.value,
+                                        msgType = "TEXT",
+                                        content = inputText.trim()
+                                    )
+                                    inputText = ""
+                                }
+                                true // consume the event
+                            }
+                        } else false
+                    }
             )
             Spacer(Modifier.width(8.dp))
             OutlinedButton(
@@ -157,7 +186,7 @@ fun ChatPanel(state: AppState) {
                     if (inputText.isNotBlank()) {
                         state.ws.sendMessage(
                             roomCode = roomCode,
-                            roomType = conv.type.name,
+                            roomType = conv.type.value,
                             msgType = "TEXT",
                             content = inputText.trim()
                         )

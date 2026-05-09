@@ -47,7 +47,7 @@ class AppState {
     var currentUser by mutableStateOf(AuthDTO())
     var conversations by mutableStateOf<List<Conversation>>(emptyList())
     var currentConversation by mutableStateOf<Conversation?>(null)
-    var messages by mutableStateOf<MutableMap<String, MutableList<ChatMessageDTO>>>(mutableMapOf())
+    var messages by mutableStateOf<Map<String, List<ChatMessageDTO>>>(emptyMap())
     var error by mutableStateOf<String?>(null)
     var autoLoginChecked by mutableStateOf(false)
 
@@ -151,9 +151,14 @@ fun setupWsListener(state: AppState) {
         if (packet.cmd == "MSG" && packet.body != null) {
             val body = packet.body
             val rc = body.roomCode
-            val list = state.messages.getOrPut(rc) { mutableListOf() }
-            list.add(ChatMessageDTO(
-                id = body.msgId ?: "",
+            val msgId = body.msgId
+            val currentList = state.messages[rc] ?: emptyList()
+
+            // dedup by msgId (sender gets broadcast back to themselves)
+            if (msgId != null && currentList.any { it.id == msgId }) return@onMessage
+
+            val newMsg = ChatMessageDTO(
+                id = msgId ?: "",
                 type = body.msgType,
                 from = body.senderCode ?: "",
                 senderName = body.senderName ?: "",
@@ -162,7 +167,8 @@ fun setupWsListener(state: AppState) {
                 roomType = body.roomType,
                 content = body.content,
                 timestamp = body.timestamp ?: System.currentTimeMillis()
-            ))
+            )
+            state.messages = state.messages + (rc to (currentList + newMsg))
         }
     }
     state.ws.onDisconnected = { reason ->
