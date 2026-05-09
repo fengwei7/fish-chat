@@ -37,4 +37,9 @@ public interface ChatMessageRepository extends MongoRepository<ChatMessage, Stri
      * 按类型查询房间消息
      */
     List<ChatMessage> findByRoomCodeAndTypeOrderByTimestampDesc(String roomCode, String type, Pageable pageable);
+
+    /**
+     * 统计房间消息总数
+     */
+    long countByRoomCode(String roomCode);
 }

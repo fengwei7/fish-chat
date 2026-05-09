@@ -28,6 +28,11 @@ public class SaTokenConfigure implements WebMvcConfigurer {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // 闲的没事儿别在后端做跨域，全是坑
+        // 注意：不注册 SaServletFilter，只保留 SaInterceptor。
+        // 原因是 SaServletFilter 在 Filter 层执行，会先于 Spring CORS 处理拦截 OPTIONS 预检请求，
+        // 导致未登录时返回的 401 响应不带 CORS 头，浏览器报跨域错误。
+        // SaInterceptor 在 Spring MVC Interceptor 层执行，CorsInterceptor 会先添加 CORS 头，
+        // 因此无论认证成功或失败，响应都会包含正确的跨域头。
 //        allowAllCorsOptionsRequests(registry);
 
         registry.addInterceptor(new SaInterceptor(handle -> StpUtil.checkLogin()))
@@ -64,9 +69,5 @@ public class SaTokenConfigure implements WebMvcConfigurer {
         }).addPathPatterns("/**");
     }
     
-    // 注意：不注册 SaServletFilter，只保留 SaInterceptor。
-    // 原因是 SaServletFilter 在 Filter 层执行，会先于 Spring CORS 处理拦截 OPTIONS 预检请求，
-    // 导致未登录时返回的 401 响应不带 CORS 头，浏览器报跨域错误。
-    // SaInterceptor 在 Spring MVC Interceptor 层执行，CorsInterceptor 会先添加 CORS 头，
-    // 因此无论认证成功或失败，响应都会包含正确的跨域头。
+
 }

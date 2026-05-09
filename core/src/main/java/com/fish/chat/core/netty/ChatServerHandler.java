@@ -270,6 +270,8 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
         msg.setTimestamp(body.getTimestamp() != null ? body.getTimestamp() : System.currentTimeMillis());
         msg.setRoomCode(body.getRoomCode());
         msg.setRoomType(body.getRoomType());
+        msg.setSenderName(body.getSenderName());
+        msg.setSenderAvatar(body.getSenderAvatar());
         msg.setFileName(body.getFileName());
         msg.setFileSize(body.getFileSize());
 

@@ -54,6 +54,14 @@ public class ChatMessage implements Serializable {
     @Field("roomType")
     private String roomType;
 
+    /** 发送者昵称 */
+    @Field("senderName")
+    private String senderName;
+
+    /** 发送者头像 */
+    @Field("senderAvatar")
+    private String senderAvatar;
+
     /** 文件名（图片/文件消息时） */
     @Field("fileName")
     private String fileName;
