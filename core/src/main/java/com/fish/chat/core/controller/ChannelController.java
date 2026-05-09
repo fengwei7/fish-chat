@@ -11,7 +11,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/channels")
-@CrossOrigin
 public class ChannelController {
 
     @Resource

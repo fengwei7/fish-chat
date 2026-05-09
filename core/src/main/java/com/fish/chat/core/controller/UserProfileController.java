@@ -17,7 +17,6 @@ import javax.validation.Valid;
  */
 @RestController
 @RequestMapping("/user")
-@CrossOrigin
 public class UserProfileController {
 
     @Resource

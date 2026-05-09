@@ -11,7 +11,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/friends")
-@CrossOrigin
 public class FriendController {
 
     @Resource
