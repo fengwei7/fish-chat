@@ -119,7 +119,9 @@ class FishChatApiClient(
     // ---- Messages ----
 
     fun getHistory(roomCode: String, page: Int = 0, size: Int = 20): MessageHistoryData? {
-        val path = "/messages/$roomCode?page=$page&size=$size"
+        val encoded = java.net.URLEncoder.encode(roomCode, "UTF-8")
+            .replace("+", "%20")  // URLEncoder encodes space as +, keep it URL-safe
+        val path = "/messages/$encoded?page=$page&size=$size"
         logRequest("GET", path)
         val (status, respBody) = get(path)
         logResponse("GET", path, status, respBody)
