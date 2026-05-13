@@ -52,12 +52,15 @@ class AppState {
     var currentUser by mutableStateOf(AuthDTO())
     var conversations by mutableStateOf<List<Conversation>>(emptyList())
     var currentConversation by mutableStateOf<Conversation?>(null)
-    var messages = mutableStateMapOf<String, MutableList<ChatMessageDTO>>()
+    var messages by mutableStateOf<Map<String, List<ChatMessageDTO>>>(emptyMap())
+    private val msgLock = Any()
     var error by mutableStateOf<String?>(null)
     var autoLoginChecked by mutableStateOf(false)
 
     val api = FishChatApiClient()
     val ws get() = sharedWs
+
+    var wsUrl: String = "wss://fish-chat-wss.935577.xyz"
 
     private val props = PropertiesComponent.getInstance()
 
@@ -65,9 +68,17 @@ class AppState {
         val savedServer = props.getValue("fishchat.server", "http://localhost:8080")
         val savedToken = props.getValue("fishchat.token", "")
         api.serverUrl = savedServer
+        wsUrl = props.getValue("fishchat.wsUrl", "ws://localhost:8081")
         if (savedToken.isNotEmpty()) {
             api.token = savedToken
-            println("[FishChat] Loaded saved token: server=$savedServer token=${savedToken.take(16)}...")
+            currentUser = AuthDTO(
+                token = savedToken,
+                code = props.getValue("fishchat.userCode", ""),
+                username = props.getValue("fishchat.username", ""),
+                nickname = props.getValue("fishchat.nickname", ""),
+                avatarUrl = props.getValue("fishchat.avatarUrl", "")
+            )
+            println("[FishChat] Loaded saved token: server=$savedServer token=${savedToken.take(16)}... user=${currentUser.nickname ?: currentUser.username}")
             LOG.info("Loaded saved token: server=$savedServer token=${savedToken.take(16)}...")
         } else {
             println("[FishChat] No saved token found, will show login")
@@ -75,18 +86,150 @@ class AppState {
         }
     }
 
-    fun saveCredentials(server: String, token: String) {
+    fun saveCredentials(server: String, token: String, user: AuthDTO) {
         props.setValue("fishchat.server", server)
         props.setValue("fishchat.token", token)
-        println("[FishChat] Credentials saved: server=$server token=${token.take(16)}...")
+        props.setValue("fishchat.wsUrl", wsUrl)
+        props.setValue("fishchat.userCode", user.code ?: "")
+        props.setValue("fishchat.username", user.username ?: "")
+        props.setValue("fishchat.nickname", user.nickname ?: "")
+        props.setValue("fishchat.avatarUrl", user.avatarUrl ?: "")
+        println("[FishChat] Credentials saved: server=$server token=${token.take(16)}... user=${user.nickname ?: user.username}")
     }
 
     fun clearCredentials() {
         props.setValue("fishchat.token", "")
+        props.setValue("fishchat.userCode", "")
+        props.setValue("fishchat.username", "")
+        props.setValue("fishchat.nickname", "")
+        props.setValue("fishchat.avatarUrl", "")
         api.token = ""
         autoLoginToken = null
+        currentUser = AuthDTO()
         println("[FishChat] Credentials cleared")
         LOG.info("Credentials cleared")
+    }
+
+    fun addTempMessage(roomCode: String, msg: ChatMessageDTO) {
+        synchronized(msgLock) {
+            val cur = messages
+            val list = (cur[roomCode] ?: emptyList()).toMutableList()
+            list.add(msg)
+            messages = cur + (roomCode to list)
+        }
+    }
+
+    fun mergeHistory(roomCode: String, historyMsgs: List<ChatMessageDTO>) {
+        if (historyMsgs.isEmpty()) return
+        synchronized(msgLock) {
+            val cur = messages
+            val list = (cur[roomCode] ?: emptyList()).toMutableList()
+            val existingIds = list.mapNotNull { it.id }.toSet()
+            for (msg in historyMsgs) {
+                val msgId = msg.id ?: ""
+                if (msgId.isNotEmpty() && msgId in existingIds) continue
+                val tempIdx = list.indexOfLast {
+                    it.id?.startsWith("temp_") == true &&
+                        it.content == msg.content &&
+                        it.from == msg.from
+                }
+                if (tempIdx >= 0) list[tempIdx] = msg
+                else list.add(msg)
+            }
+            messages = cur + (roomCode to list)
+        }
+    }
+
+    fun clearMessages() {
+        synchronized(msgLock) {
+            messages = emptyMap()
+        }
+    }
+
+    fun handleWsMessage(body: WsBody) {
+        val rc = body.roomCode
+        val msgId = body.msgId
+        val myCode = currentUser.code ?: ""
+
+        synchronized(msgLock) {
+            val cur = messages
+            val list = (cur[rc] ?: emptyList()).toMutableList()
+
+            // dedup by msgId
+            if (msgId != null && list.any { it.id == msgId }) return
+
+            val now = System.currentTimeMillis()
+            var updated = false
+
+            // if it's my own message echoed back, try to replace temp
+            if (body.senderCode != null && body.senderCode == myCode) {
+                val tempIdx = list.indexOfLast {
+                    it.id?.startsWith("temp_") == true && it.content == body.content
+                }
+                if (tempIdx >= 0) {
+                    list[tempIdx] = ChatMessageDTO(
+                        id = msgId ?: list[tempIdx].id,
+                        type = body.msgType,
+                        from = body.senderCode ?: "",
+                        senderName = body.senderName ?: "",
+                        senderAvatar = body.senderAvatar ?: "",
+                        roomCode = rc,
+                        roomType = body.roomType,
+                        content = body.content,
+                        timestamp = body.timestamp ?: now
+                    )
+                    updated = true
+                } else {
+                    // fallback: match by sender + content + 10s window
+                    val recentIdx = list.indexOfLast {
+                        it.from == body.senderCode &&
+                            it.content == body.content &&
+                            (now - it.timestamp) < 10_000
+                    }
+                    if (recentIdx >= 0) {
+                        list[recentIdx] = list[recentIdx].copy(
+                            id = msgId ?: list[recentIdx].id,
+                            senderName = body.senderName ?: list[recentIdx].senderName,
+                            senderAvatar = body.senderAvatar ?: list[recentIdx].senderAvatar,
+                            timestamp = body.timestamp ?: list[recentIdx].timestamp
+                        )
+                        updated = true
+                    }
+                }
+            }
+
+            if (!updated) {
+                // dedup check before adding
+                val alreadyExists = (msgId != null && list.any { it.id == msgId }) ||
+                    list.any {
+                        it.from == body.senderCode &&
+                            it.content == body.content &&
+                            (now - it.timestamp) < 10_000
+                    }
+                if (!alreadyExists) {
+                    list.removeAll {
+                        it.id?.startsWith("temp_") == true &&
+                            it.from == body.senderCode &&
+                            it.content == body.content
+                    }
+                    list.add(
+                        ChatMessageDTO(
+                            id = msgId ?: "",
+                            type = body.msgType,
+                            from = body.senderCode ?: "",
+                            senderName = body.senderName ?: "",
+                            senderAvatar = body.senderAvatar ?: "",
+                            roomCode = rc,
+                            roomType = body.roomType,
+                            content = body.content,
+                            timestamp = body.timestamp ?: now
+                        )
+                    )
+                }
+            }
+
+            messages = cur + (rc to list)
+        }
     }
 }
 
@@ -160,67 +303,14 @@ fun FishChatApp() {
 }
 
 private fun connectWs(state: AppState) {
-    val host = state.api.serverUrl
-        .replace("http://", "")
-        .replace("https://", "")
-        .split(":")[0]
-    val wsUrl = "ws://$host:8081"
-    sharedWs.connect(wsUrl, state.api.token)
+    sharedWs.connect(state.wsUrl, state.api.token)
     bindWsListeners(state)
 }
 
 fun bindWsListeners(state: AppState) {
     sharedWs.onMessage = { packet ->
         if (packet.cmd == "MSG" && packet.body != null) {
-            val body = packet.body
-            val rc = body.roomCode
-            val msgId = body.msgId
-            val myCode = state.currentUser.code ?: ""
-            val list = state.messages.getOrPut(rc) { mutableListOf() }
-
-            // dedup by msgId
-            val isDup = msgId != null && list.any { it.id == msgId }
-
-            if (!isDup) {
-                // replace local temp message if this is our own message broadcast back
-                var handled = false
-                if (body.senderCode != null && body.senderCode == myCode) {
-                    val tempIdx = list.indexOfLast {
-                        it.id?.startsWith("temp_") == true && it.content == body.content
-                    }
-                    if (tempIdx >= 0) {
-                        list[tempIdx] = ChatMessageDTO(
-                            id = msgId ?: list[tempIdx].id,
-                            type = body.msgType,
-                            from = body.senderCode ?: "",
-                            senderName = body.senderName ?: "",
-                            senderAvatar = body.senderAvatar ?: "",
-                            roomCode = rc,
-                            roomType = body.roomType,
-                            content = body.content,
-                            timestamp = body.timestamp ?: System.currentTimeMillis()
-                        )
-                        state.messages[rc] = list
-                        handled = true
-                    }
-                }
-
-                if (!handled) {
-                    val newMsg = ChatMessageDTO(
-                        id = msgId ?: "",
-                        type = body.msgType,
-                        from = body.senderCode ?: "",
-                        senderName = body.senderName ?: "",
-                        senderAvatar = body.senderAvatar ?: "",
-                        roomCode = rc,
-                        roomType = body.roomType,
-                        content = body.content,
-                        timestamp = body.timestamp ?: System.currentTimeMillis()
-                    )
-                    list.add(newMsg)
-                    state.messages[rc] = list
-                }
-            }
+            state.handleWsMessage(packet.body)
         }
     }
     sharedWs.onErrorPacket = { packet ->

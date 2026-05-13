@@ -53,23 +53,19 @@ fun ChatPanel(state: AppState) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
 
+    val myCode = state.currentUser.code ?: ""
+    val myName = state.currentUser.nickname?.ifEmpty { state.currentUser.username ?: "" } ?: (state.currentUser.username ?: "")
     val messages = state.messages[roomCode] ?: emptyList()
 
-    // 加载历史消息
+    // 加载历史消息（HTTP 在 IO，合并在主线程避免与 sendMessage 竞态）
     LaunchedEffect(roomCode) {
         if (!historyLoaded) {
-            scope.launch {
-                withContext(Dispatchers.IO) {
-                    val data = state.api.getHistory(roomCode, 0, 50)
-                    if (data != null && data.messages.isNotEmpty()) {
-                        val list = state.messages.getOrPut(roomCode) { mutableListOf() }
-                        list.clear()
-                        list.addAll(data.messages.reversed())
-                        state.messages[roomCode] = list
-                    }
-                }
-                historyLoaded = true
+            val historyMsgs = withContext(Dispatchers.IO) {
+                val data = state.api.getHistory(roomCode, 0, 50)
+                data?.messages?.reversed() ?: emptyList()
             }
+            state.mergeHistory(roomCode, historyMsgs)
+            historyLoaded = true
         }
     }
 
@@ -89,16 +85,17 @@ fun ChatPanel(state: AppState) {
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedButton(onClick = {
                     state.screen = Screen.CHAT_LIST
                 }) {
                     Text("<")
                 }
                 Spacer(Modifier.width(8.dp))
-                Column {
+                Column(modifier = Modifier.weight(1f)) {
                     Text(conv.name, fontWeight = FontWeight.Bold)
-                    Text(conv.roomCode, fontSize = 10.sp, color = TimestampColor)
+                    val displayRoomCode = if (conv.roomCode.length > 30) conv.roomCode.take(30) + "..." else conv.roomCode
+                    Text(displayRoomCode, fontSize = 10.sp, color = TimestampColor)
                 }
             }
             
@@ -156,7 +153,7 @@ fun ChatPanel(state: AppState) {
                     }
                 }
             }
-            items(messages) { msg -> LogMessageItem(msg, state.currentUser.code ?: "") }
+            items(messages) { msg -> LogMessageItem(msg, myCode, myName) }
         }
 
         // 分隔线
@@ -211,21 +208,18 @@ private fun sendMessage(state: AppState, roomCode: String, roomType: String, con
         state.error = "WebSocket not connected"
         return
     }
-    val now = System.currentTimeMillis()
     val localMsg = ChatMessageDTO(
-        id = "temp_$now",
+        id = "temp_${System.currentTimeMillis()}",
         type = "TEXT",
         from = state.currentUser.code ?: "",
-        senderName = state.currentUser.nickname ?: state.currentUser.username ?: "",
+        senderName = state.currentUser.nickname?.ifEmpty { state.currentUser.username ?: "" } ?: (state.currentUser.username ?: ""),
         senderAvatar = state.currentUser.avatarUrl ?: "",
         roomCode = roomCode,
         roomType = roomType,
         content = content,
-        timestamp = now
+        timestamp = System.currentTimeMillis()
     )
-    val list = state.messages.getOrPut(roomCode) { mutableListOf() }
-    list.add(localMsg)
-    state.messages[roomCode] = list
+    state.addTempMessage(roomCode, localMsg)
 
     state.ws.sendMessage(
         roomCode = roomCode,
@@ -236,7 +230,7 @@ private fun sendMessage(state: AppState, roomCode: String, roomType: String, con
 }
 
 @Composable
-private fun LogMessageItem(msg: ChatMessageDTO, myCode: String) {
+private fun LogMessageItem(msg: ChatMessageDTO, myCode: String, myName: String) {
     val senderCode = msg.from ?: ""
     val senderName = msg.senderName ?: ""
     val msgType = msg.type ?: "TEXT"
@@ -249,7 +243,7 @@ private fun LogMessageItem(msg: ChatMessageDTO, myCode: String) {
 
     val (name, content, lineColor) = when {
         isSystem -> Triple("SYSTEM", msgContent, SystemMsgColor)
-        isMine -> Triple("you", msgContent, MyMsgColor)
+        isMine -> Triple(myName.ifEmpty { "you" }, msgContent, MyMsgColor)
         msgType == "IMAGE" -> Triple(
             senderName.ifEmpty { senderCode.take(8) },
             "[IMAGE]",

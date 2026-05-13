@@ -15,7 +15,7 @@ import java.time.Duration
 class ApiException(val code: Int, message: String) : Exception(message)
 
 class FishChatApiClient(
-    var serverUrl: String = "http://localhost:8080"
+    var serverUrl: String = "https://fish-chat-api.935577.xyz"
 ) {
     private val log = Logger.getInstance(FishChatApiClient::class.java)
     private val http = HttpClient.newBuilder()

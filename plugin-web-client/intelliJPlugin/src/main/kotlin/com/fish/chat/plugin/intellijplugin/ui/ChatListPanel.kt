@@ -89,7 +89,7 @@ fun ChatListPanel(state: AppState) {
                 state.ws.disconnect()
                 state.clearCredentials()
                 state.conversations = emptyList()
-                state.messages.clear()
+                state.clearMessages()
                 state.currentConversation = null
                 state.screen = Screen.LOGIN
             }) {

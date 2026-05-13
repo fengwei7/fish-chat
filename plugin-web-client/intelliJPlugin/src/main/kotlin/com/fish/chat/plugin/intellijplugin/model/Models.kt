@@ -104,9 +104,9 @@ data class UploadFileResponse(
 // ==================== 会话（统一模型） ====================
 
 enum class RoomType(val value: String) {
-    PRIVATE("PRIVATE"),
-    GROUP("GROUP"),
-    CHANNEL("CHANNEL");
+    PRIVATE("private"),
+    GROUP("group"),
+    CHANNEL("channel");
 
     companion object {
         fun fromValue(value: String): RoomType = when (value.uppercase()) {

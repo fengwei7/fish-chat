@@ -34,6 +34,7 @@ private val DimColor = Color(0xFF777777)
 @Composable
 fun LoginPanel(state: AppState) {
     var server by remember { mutableStateOf(state.api.serverUrl) }
+    var wsUrl by remember { mutableStateOf(state.wsUrl) }
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var connecting by remember { mutableStateOf(false) }
@@ -58,6 +59,20 @@ fun LoginPanel(state: AppState) {
         BasicTextField(
             value = server,
             onValueChange = { server = it },
+            textStyle = inputStyle,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(InputBg, RoundedCornerShape(4.dp))
+                .border(1.dp, InputBorder, RoundedCornerShape(4.dp))
+                .padding(8.dp)
+        )
+
+        Spacer(Modifier.height(12.dp))
+        Text("WebSocket URL", color = DimColor)
+        Spacer(Modifier.height(4.dp))
+        BasicTextField(
+            value = wsUrl,
+            onValueChange = { wsUrl = it },
             textStyle = inputStyle,
             modifier = Modifier
                 .fillMaxWidth()
@@ -103,17 +118,14 @@ fun LoginPanel(state: AppState) {
                     try {
                         withContext(Dispatchers.IO) {
                             state.api.serverUrl = server
+                            state.wsUrl = wsUrl
                             val auth = state.api.login(username, password)
                             val token = auth.token ?: ""
                             state.api.token = token
                             state.currentUser = auth
-                            state.saveCredentials(server, token)
+                            state.saveCredentials(server, token, auth)
 
-                            val wsHost = server
-                                .replace("http://", "")
-                                .replace("https://", "")
-                                .split(":")[0]
-                            state.ws.connect("ws://$wsHost:8081", token)
+                            state.ws.connect(wsUrl, token)
                             bindWsListeners(state)
                         }
                         state.screen = Screen.CHAT_LIST
