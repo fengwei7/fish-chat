@@ -1,5 +1,6 @@
 package com.fish.chat.core.controller;
 
+import com.fish.chat.common.constants.UrlConstants;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.entity.dto.AuthDTO;
 import com.fish.chat.core.entity.req.LoginRequest;
@@ -14,7 +15,7 @@ import javax.validation.Valid;
  * 认证控制器
  */
 @RestController
-@RequestMapping("/auth")
+@RequestMapping(UrlConstants.HTTP_URL_PREFIX + "/auth")
 public class AuthController {
 
     @Resource

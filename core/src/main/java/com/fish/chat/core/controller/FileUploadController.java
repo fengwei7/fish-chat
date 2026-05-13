@@ -1,5 +1,6 @@
 package com.fish.chat.core.controller;
 
+import com.fish.chat.common.constants.UrlConstants;
 import com.fish.chat.common.properties.FileUploadProperties;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.common.utils.FileUploadUtil;
@@ -22,7 +23,7 @@ import java.util.Map;
  * 文件控制器
  */
 @RestController
-@RequestMapping("/file")
+@RequestMapping(UrlConstants.HTTP_URL_PREFIX + "/file")
 public class FileUploadController {
 
     @Resource

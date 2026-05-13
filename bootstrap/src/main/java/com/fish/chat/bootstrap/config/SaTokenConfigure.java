@@ -4,6 +4,7 @@ import cn.dev33.satoken.context.SaTokenContext;
 import cn.dev33.satoken.context.SaTokenContextForThreadLocal;
 import cn.dev33.satoken.interceptor.SaInterceptor;
 import cn.dev33.satoken.stp.StpUtil;
+import com.fish.chat.common.constants.UrlConstants;
 import io.netty.handler.codec.http.HttpMethod;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -36,23 +37,11 @@ public class SaTokenConfigure implements WebMvcConfigurer {
 //        allowAllCorsOptionsRequests(registry);
 
         registry.addInterceptor(new SaInterceptor(handle -> StpUtil.checkLogin()))
-                .addPathPatterns("/**")
+                .addPathPatterns(UrlConstants.HTTP_URL_PREFIX + "/**")
                 .excludePathPatterns(
-                    "/auth/login",
-                    "/auth/register",
-                    "/auth/logout",
-                    "/error",
-                    "/file/download/**",
-                    "/**/*.html",
-                    "/**/*.css",
-                    "/**/*.js",
-                    "/**/*.png",
-                    "/**/*.jpg",
-                    "/**/*.jpeg",
-                    "/**/*.gif",
-                    "/**/*.ico",
-                    "/static/**",
-                    "/webjars/**"
+                    UrlConstants.HTTP_URL_PREFIX + "/auth/login",
+                    UrlConstants.HTTP_URL_PREFIX + "/auth/register",
+                    UrlConstants.HTTP_URL_PREFIX + "/auth/logout"
                 );
     }
 

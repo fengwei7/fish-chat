@@ -1,5 +1,6 @@
 package com.fish.chat.core.controller;
 
+import com.fish.chat.common.constants.UrlConstants;
 import com.fish.chat.common.result.PageResult;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.entity.dto.FriendDTO;
@@ -10,7 +11,7 @@ import javax.annotation.Resource;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/friends")
+@RequestMapping(UrlConstants.HTTP_URL_PREFIX + "/friends")
 public class FriendController {
 
     @Resource

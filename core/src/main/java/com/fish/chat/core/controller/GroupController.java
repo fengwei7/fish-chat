@@ -1,5 +1,6 @@
 package com.fish.chat.core.controller;
 
+import com.fish.chat.common.constants.UrlConstants;
 import com.fish.chat.common.result.PageResult;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.entity.dto.GroupDTO;
@@ -13,7 +14,7 @@ import javax.validation.Valid;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/groups")
+@RequestMapping(UrlConstants.HTTP_URL_PREFIX + "/groups")
 public class GroupController {
 
     @Resource

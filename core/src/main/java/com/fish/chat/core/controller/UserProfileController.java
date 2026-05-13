@@ -1,5 +1,6 @@
 package com.fish.chat.core.controller;
 
+import com.fish.chat.common.constants.UrlConstants;
 import com.fish.chat.common.result.PageResult;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.chat.SessionManager;
@@ -16,7 +17,7 @@ import javax.validation.Valid;
  * 用户控制器
  */
 @RestController
-@RequestMapping("/user")
+@RequestMapping(UrlConstants.HTTP_URL_PREFIX + "/user")
 public class UserProfileController {
 
     @Resource

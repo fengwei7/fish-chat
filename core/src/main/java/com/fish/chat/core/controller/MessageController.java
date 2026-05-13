@@ -1,5 +1,6 @@
 package com.fish.chat.core.controller;
 
+import com.fish.chat.common.constants.UrlConstants;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.entity.dto.ChatMessageDTO;
 import com.fish.chat.core.entity.po.ChatMessage;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
  * 消息历史控制器
  */
 @RestController
-@RequestMapping("/messages")
+@RequestMapping(UrlConstants.HTTP_URL_PREFIX + "/messages")
 public class MessageController {
 
     @Resource

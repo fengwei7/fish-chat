@@ -13,6 +13,8 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
 
+import static com.fish.chat.common.constants.UrlConstants.WS_URL_PREFIX;
+
 /**
  * Netty WebSocket Channel 初始化器
  */
@@ -39,7 +41,7 @@ public class NettyWebSocketInitializer extends ChannelInitializer<SocketChannel>
         pipeline.addLast("http-aggregator", new HttpObjectAggregator(65536));
         // 4. WebSocket 协议升级（checkStartsWith=true 允许 URI 带 query string）
         pipeline.addLast("websocket-protocol",
-                new WebSocketServerProtocolHandler(WEBSOCKET_PATH, null, true, 65536, false, true));
+                new WebSocketServerProtocolHandler(WS_URL_PREFIX + WEBSOCKET_PATH, null, true, 65536, false, true));
         // 5. Token 认证（握手后验证）
         pipeline.addLast("auth-handler", authHandshakeHandler);
         // 6. 空闲检测：180秒无读关闭连接

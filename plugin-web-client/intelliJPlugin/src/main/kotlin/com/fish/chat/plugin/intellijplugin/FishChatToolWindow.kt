@@ -60,15 +60,15 @@ class AppState {
     val api = FishChatApiClient()
     val ws get() = sharedWs
 
-    var wsUrl: String = "wss://fish-chat-wss.935577.xyz"
+    var wsUrl: String = "wss://fish-chat-wss.935577.xyz/ws-api"
 
     private val props = PropertiesComponent.getInstance()
 
     init {
-        val savedServer = props.getValue("fishchat.server", "https://fish-chat-api.935577.xyz")
+        val savedServer = props.getValue("fishchat.server", "https://fish-chat-api.935577.xyz/api")
         val savedToken = props.getValue("fishchat.token", "")
         api.serverUrl = savedServer
-        wsUrl = props.getValue("fishchat.wsUrl", "wss://fish-chat-wss.935577.xyz")
+        wsUrl = props.getValue("fishchat.wsUrl", "wss://fish-chat-wss.935577.xyz/ws-api")
         if (savedToken.isNotEmpty()) {
             api.token = savedToken
             currentUser = AuthDTO(
