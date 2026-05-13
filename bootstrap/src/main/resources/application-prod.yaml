@@ -1,14 +1,3 @@
-# Fish-Chat 应用配置文件
-server:
-  port: 9080
-
-# Netty WebSocket 配置
-netty:
-  websocket:
-    port: 9081
-
-# 数据库配置
-
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
