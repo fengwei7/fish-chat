@@ -78,15 +78,19 @@ fun ChatListPanel(state: AppState) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column {
-                Text("Fish Chat", fontWeight = FontWeight.Bold)
+//                Text("Fish Chat", fontWeight = FontWeight.Bold)
                 Text(
                     state.currentUser.nickname?.ifEmpty { state.currentUser.username ?: "" } ?: state.currentUser.username ?: "",
                     color = SubtitleColor
                 )
             }
             OutlinedButton(onClick = {
+                state.error = null
                 state.ws.disconnect()
                 state.clearCredentials()
+                state.conversations = emptyList()
+                state.messages.clear()
+                state.currentConversation = null
                 state.screen = Screen.LOGIN
             }) {
                 Text("Logout")

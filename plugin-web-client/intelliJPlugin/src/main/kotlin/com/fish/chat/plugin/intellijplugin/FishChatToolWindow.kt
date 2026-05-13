@@ -19,13 +19,18 @@ import com.intellij.openapi.diagnostic.Logger
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.wm.ToolWindow
 import com.intellij.openapi.wm.ToolWindowFactory
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.jetbrains.jewel.bridge.addComposeTab
 import org.jetbrains.jewel.ui.component.Text
 
 private val LOG = Logger.getInstance("FishChat")
+
+// WebSocket 单例 — 无论 ToolWindow 被 Jewel bridge 重复创建多少次，
+// 始终只有一个 WS 连接，避免重复建连导致互踢
+private val sharedWs = FishChatWebSocketClient()
+private var autoLoginToken: String? = null
 
 class FishChatToolWindowFactory : ToolWindowFactory {
     override fun shouldBeAvailable(project: Project) = true
@@ -47,12 +52,12 @@ class AppState {
     var currentUser by mutableStateOf(AuthDTO())
     var conversations by mutableStateOf<List<Conversation>>(emptyList())
     var currentConversation by mutableStateOf<Conversation?>(null)
-    var messages by mutableStateOf<Map<String, List<ChatMessageDTO>>>(emptyMap())
+    var messages = mutableStateMapOf<String, MutableList<ChatMessageDTO>>()
     var error by mutableStateOf<String?>(null)
     var autoLoginChecked by mutableStateOf(false)
 
     val api = FishChatApiClient()
-    val ws = FishChatWebSocketClient()
+    val ws get() = sharedWs
 
     private val props = PropertiesComponent.getInstance()
 
@@ -79,6 +84,7 @@ class AppState {
     fun clearCredentials() {
         props.setValue("fishchat.token", "")
         api.token = ""
+        autoLoginToken = null
         println("[FishChat] Credentials cleared")
         LOG.info("Credentials cleared")
     }
@@ -89,35 +95,42 @@ class AppState {
 @Composable
 fun FishChatApp() {
     val state = remember { AppState() }
-    val scope = rememberCoroutineScope()
 
-    // 自动登录检查
+    // 自动登录：只需一次，后续 composition 直接复用已有连接
     LaunchedEffect(Unit) {
         if (!state.autoLoginChecked && state.api.token.isNotEmpty()) {
             state.autoLoginChecked = true
-            println("[FishChat] Auto-login: attempting with saved token...")
-            LOG.info("Auto-login: attempting with saved token")
-            scope.launch {
-                try {
-                    withContext(Dispatchers.IO) {
-                        val host = state.api.serverUrl
-                            .replace("http://", "")
-                            .replace("https://", "")
-                            .split(":")[0]
-                        val wsUrl = "ws://$host:8081"
-                        println("[FishChat] Auto-login: connecting WS to $wsUrl")
-                        state.ws.connect(wsUrl, state.api.token)
-                        setupWsListener(state)
-                    }
-                    println("[FishChat] Auto-login: success, showing chat list")
-                    LOG.info("Auto-login success")
-                    state.screen = Screen.CHAT_LIST
-                } catch (e: Exception) {
-                    println("[FishChat] Auto-login FAILED: ${e.message}")
-                    LOG.warn("Auto-login failed", e)
-                    state.clearCredentials()
-                    state.screen = Screen.LOGIN
+
+            // 如果 WS 已经连着（第一个 composition 已经建连成功，第二个 composition 进来），
+            // 只需要重新绑定回调到当前 state，不重复建连
+            if (sharedWs.isConnected) {
+                bindWsListeners(state)
+                state.screen = Screen.CHAT_LIST
+                println("[FishChat] Auto-login: reuse existing WS connection")
+                return@LaunchedEffect
+            }
+
+            // 首次建连
+            autoLoginToken = state.api.token
+            println("[FishChat] Auto-login: connecting WS...")
+            LOG.info("Auto-login: connecting WS")
+            try {
+                withContext(Dispatchers.IO) {
+                    connectWs(state)
                 }
+                println("[FishChat] Auto-login: success")
+                LOG.info("Auto-login: success")
+                state.screen = Screen.CHAT_LIST
+            } catch (e: CancellationException) {
+                // Composition 被替换，WS 可能已经连上了
+        // 不重置 autoLoginToken，让后续 composition 复用连接
+                throw e
+            } catch (e: Exception) {
+                autoLoginToken = null
+                println("[FishChat] Auto-login FAILED: ${e.message}")
+                LOG.warn("Auto-login failed", e)
+                state.clearCredentials()
+                state.screen = Screen.LOGIN
             }
         }
     }
@@ -130,48 +143,97 @@ fun FishChatApp() {
         }
 
         // 错误提示
-        state.error?.let { err ->
-            println("[FishChat] ERROR displayed: $err")
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .fillMaxWidth()
-                    .background(Color(0xFF424242))
-                    .padding(12.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(err, fontSize = 12.sp)
-            }
-        }
+//        state.error?.let { err ->
+//            println("[FishChat] ERROR displayed: $err")
+//            Box(
+//                modifier = Modifier
+//                    .align(Alignment.BottomCenter)
+//                    .fillMaxWidth()
+//                    .background(Color(0xFF424242))
+//                    .padding(12.dp),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                Text(err, fontSize = 12.sp)
+//            }
+//        }
     }
 }
 
-fun setupWsListener(state: AppState) {
-    state.ws.onMessage = { packet ->
+private fun connectWs(state: AppState) {
+    val host = state.api.serverUrl
+        .replace("http://", "")
+        .replace("https://", "")
+        .split(":")[0]
+    val wsUrl = "ws://$host:8081"
+    sharedWs.connect(wsUrl, state.api.token)
+    bindWsListeners(state)
+}
+
+fun bindWsListeners(state: AppState) {
+    sharedWs.onMessage = { packet ->
         if (packet.cmd == "MSG" && packet.body != null) {
             val body = packet.body
             val rc = body.roomCode
             val msgId = body.msgId
-            val currentList = state.messages[rc] ?: emptyList()
+            val myCode = state.currentUser.code ?: ""
+            val list = state.messages.getOrPut(rc) { mutableListOf() }
 
-            // dedup by msgId (sender gets broadcast back to themselves)
-            if (msgId != null && currentList.any { it.id == msgId }) return@onMessage
+            // dedup by msgId
+            val isDup = msgId != null && list.any { it.id == msgId }
 
-            val newMsg = ChatMessageDTO(
-                id = msgId ?: "",
-                type = body.msgType,
-                from = body.senderCode ?: "",
-                senderName = body.senderName ?: "",
-                senderAvatar = body.senderAvatar ?: "",
-                roomCode = rc,
-                roomType = body.roomType,
-                content = body.content,
-                timestamp = body.timestamp ?: System.currentTimeMillis()
-            )
-            state.messages = state.messages + (rc to (currentList + newMsg))
+            if (!isDup) {
+                // replace local temp message if this is our own message broadcast back
+                var handled = false
+                if (body.senderCode != null && body.senderCode == myCode) {
+                    val tempIdx = list.indexOfLast {
+                        it.id?.startsWith("temp_") == true && it.content == body.content
+                    }
+                    if (tempIdx >= 0) {
+                        list[tempIdx] = ChatMessageDTO(
+                            id = msgId ?: list[tempIdx].id,
+                            type = body.msgType,
+                            from = body.senderCode ?: "",
+                            senderName = body.senderName ?: "",
+                            senderAvatar = body.senderAvatar ?: "",
+                            roomCode = rc,
+                            roomType = body.roomType,
+                            content = body.content,
+                            timestamp = body.timestamp ?: System.currentTimeMillis()
+                        )
+                        state.messages[rc] = list
+                        handled = true
+                    }
+                }
+
+                if (!handled) {
+                    val newMsg = ChatMessageDTO(
+                        id = msgId ?: "",
+                        type = body.msgType,
+                        from = body.senderCode ?: "",
+                        senderName = body.senderName ?: "",
+                        senderAvatar = body.senderAvatar ?: "",
+                        roomCode = rc,
+                        roomType = body.roomType,
+                        content = body.content,
+                        timestamp = body.timestamp ?: System.currentTimeMillis()
+                    )
+                    list.add(newMsg)
+                    state.messages[rc] = list
+                }
+            }
         }
     }
-    state.ws.onDisconnected = { reason ->
+    sharedWs.onErrorPacket = { packet ->
+        val errMsg = packet.body?.content ?: "Send failed"
+        state.error = errMsg
+    }
+    sharedWs.onDisconnected = { reason ->
         state.error = "WebSocket disconnected: $reason"
+    }
+    sharedWs.onNotify = { packet ->
+        val content = packet.body?.content ?: ""
+        if (content.isNotEmpty()) {
+            state.error = content
+        }
     }
 }

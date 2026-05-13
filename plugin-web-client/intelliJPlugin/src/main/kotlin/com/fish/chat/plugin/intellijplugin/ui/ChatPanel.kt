@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.sp
 import com.fish.chat.plugin.intellijplugin.AppState
 import com.fish.chat.plugin.intellijplugin.Screen
 import com.fish.chat.plugin.intellijplugin.model.ChatMessageDTO
+import com.fish.chat.plugin.intellijplugin.model.RoomType
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -60,10 +61,11 @@ fun ChatPanel(state: AppState) {
             scope.launch {
                 withContext(Dispatchers.IO) {
                     val data = state.api.getHistory(roomCode, 0, 50)
-                    if (data != null) {
+                    if (data != null && data.messages.isNotEmpty()) {
                         val list = state.messages.getOrPut(roomCode) { mutableListOf() }
                         list.clear()
                         list.addAll(data.messages.reversed())
+                        state.messages[roomCode] = list
                     }
                 }
                 historyLoaded = true
@@ -179,28 +181,7 @@ fun ChatPanel(state: AppState) {
                     .onPreviewKeyEvent { event ->
                         if (event.type == KeyEventType.KeyDown && event.key == Key.Enter && !event.isShiftPressed) {
                             if (inputText.isNotBlank()) {
-                                // 立即添加到本地消息列表
-                                val localMsg = ChatMessageDTO(
-                                    id = "temp_${System.currentTimeMillis()}",
-                                    type = "TEXT",
-                                    from = state.currentUser.code ?: "",
-                                    senderName = state.currentUser.nickname ?: state.currentUser.username ?: "",
-                                    senderAvatar = state.currentUser.avatarUrl ?: "",
-                                    roomCode = roomCode,
-                                    roomType = conv.type.name,
-                                    content = inputText.trim(),
-                                    timestamp = System.currentTimeMillis()
-                                )
-                                val list = state.messages.getOrPut(roomCode) { mutableListOf() }
-                                list.add(localMsg)
-
-                                // 发送消息到服务器
-                                state.ws.sendMessage(
-                                    roomCode = roomCode,
-                                    roomType = conv.type.name,
-                                    msgType = "TEXT",
-                                    content = inputText.trim()
-                                )
+                                sendMessage(state, roomCode, conv.type.name, inputText.trim())
                                 inputText = ""
                             }
                             true
@@ -213,28 +194,7 @@ fun ChatPanel(state: AppState) {
             OutlinedButton(
                 onClick = {
                     if (inputText.isNotBlank()) {
-                        // 立即添加到本地消息列表
-                        val localMsg = ChatMessageDTO(
-                            id = "temp_${System.currentTimeMillis()}",
-                            type = "TEXT",
-                            from = state.currentUser.code ?: "",
-                            senderName = state.currentUser.nickname ?: state.currentUser.username ?: "",
-                            senderAvatar = state.currentUser.avatarUrl ?: "",
-                            roomCode = roomCode,
-                            roomType = conv.type.name,
-                            content = inputText.trim(),
-                            timestamp = System.currentTimeMillis()
-                        )
-                        val list = state.messages.getOrPut(roomCode) { mutableListOf() }
-                        list.add(localMsg)
-
-                        // 发送消息到服务器
-                        state.ws.sendMessage(
-                            roomCode = roomCode,
-                            roomType = conv.type.name,
-                            msgType = "TEXT",
-                            content = inputText.trim()
-                        )
+                        sendMessage(state, roomCode, conv.type.name, inputText.trim())
                         inputText = ""
                     }
                 },
@@ -244,6 +204,35 @@ fun ChatPanel(state: AppState) {
             }
         }
     }
+}
+
+private fun sendMessage(state: AppState, roomCode: String, roomType: String, content: String) {
+    if (!state.ws.isConnected) {
+        state.error = "WebSocket not connected"
+        return
+    }
+    val now = System.currentTimeMillis()
+    val localMsg = ChatMessageDTO(
+        id = "temp_$now",
+        type = "TEXT",
+        from = state.currentUser.code ?: "",
+        senderName = state.currentUser.nickname ?: state.currentUser.username ?: "",
+        senderAvatar = state.currentUser.avatarUrl ?: "",
+        roomCode = roomCode,
+        roomType = roomType,
+        content = content,
+        timestamp = now
+    )
+    val list = state.messages.getOrPut(roomCode) { mutableListOf() }
+    list.add(localMsg)
+    state.messages[roomCode] = list
+
+    state.ws.sendMessage(
+        roomCode = roomCode,
+        roomType = roomType,
+        msgType = "TEXT",
+        content = content
+    )
 }
 
 @Composable

@@ -25,8 +25,12 @@ class FishChatWebSocketClient {
     var onMessage: ((WsPacket) -> Unit)? = null
     var onConnected: (() -> Unit)? = null
     var onDisconnected: ((String) -> Unit)? = null
+    var onAck: ((WsPacket) -> Unit)? = null
+    var onErrorPacket: ((WsPacket) -> Unit)? = null
+    var onNotify: ((WsPacket) -> Unit)? = null
     var isConnected: Boolean = false
         private set
+    private var isDisconnecting: Boolean = false
 
     fun connect(wsUrl: String, token: String) {
         val maskedToken = token.take(12) + "..."
@@ -34,7 +38,13 @@ class FishChatWebSocketClient {
         log.info(msg)
         println(msg)
 
+        // 如果已有连接，先主动断开
+        if (webSocket != null) {
+            disconnect()
+        }
+
         val uri = URI.create("$wsUrl/ws?token=$token")
+        isDisconnecting = false
 
         webSocket = http.newWebSocketBuilder()
             .buildAsync(uri, WebSocketListener())
@@ -45,10 +55,16 @@ class FishChatWebSocketClient {
         val msg = "[FishChat] WS disconnecting"
         log.info(msg)
         println(msg)
+        isDisconnecting = true
         stopHeartbeat()
-        webSocket?.sendClose(WebSocket.NORMAL_CLOSURE, "bye")?.join()
+        try {
+            webSocket?.sendClose(WebSocket.NORMAL_CLOSURE, "bye")?.join()
+        } catch (e: Exception) {
+            // ignore close errors
+        }
         webSocket = null
         isConnected = false
+        isDisconnecting = false
     }
 
     fun sendMessage(roomCode: String, roomType: String, msgType: String, content: String) {
@@ -69,6 +85,23 @@ class FishChatWebSocketClient {
 
     fun sendHeartbeat() {
         send(gson.toJson(WsPacket(cmd = "HEARTBEAT")))
+    }
+
+    fun sendSync(lastTimestamp: Long) {
+        val packet = WsPacket(
+            cmd = "SYNC",
+            reqCode = UUID.randomUUID().toString(),
+            body = WsBody(
+                roomCode = "",
+                roomType = "PRIVATE",
+                msgType = "TEXT",
+                content = "",
+                extra = mapOf("lastTimestamp" to lastTimestamp)
+            )
+        )
+        val json = gson.toJson(packet)
+        println("[FishChat] WS --> SYNC: $json")
+        send(json)
     }
 
     private fun send(text: String) {
@@ -111,13 +144,19 @@ class FishChatWebSocketClient {
                     when (packet.cmd) {
                         "MSG" -> onMessage?.invoke(packet)
                         "HEARTBEAT" -> { /* heartbeat ack */ }
-                        "ACK" -> { /* ack */ }
-                        "NOTIFY" -> onMessage?.invoke(packet)
+                        "ACK" -> {
+                            println("[FishChat] WS ACK: reqCode=${packet.reqCode}")
+                            onAck?.invoke(packet)
+                        }
+                        "NOTIFY" -> {
+                            println("[FishChat] WS NOTIFY: ${packet.body?.content}")
+                            onNotify?.invoke(packet)
+                        }
                         "ERROR" -> {
                             val err = "[FishChat] WS error: ${packet.body?.content}"
                             log.warn(err)
                             println(err)
-                            onMessage?.invoke(packet)
+                            onErrorPacket?.invoke(packet)
                         }
                     }
                 } catch (e: Exception) {
@@ -136,7 +175,9 @@ class FishChatWebSocketClient {
             log.info(msg)
             println(msg)
             stopHeartbeat()
-            onDisconnected?.invoke(reason)
+            if (!isDisconnecting) {
+                onDisconnected?.invoke(reason)
+            }
             return CompletableFuture.completedFuture(null)
         }
 
@@ -146,7 +187,9 @@ class FishChatWebSocketClient {
             println(msg)
             isConnected = false
             stopHeartbeat()
-            onDisconnected?.invoke(error.message ?: "Unknown error")
+            if (!isDisconnecting) {
+                onDisconnected?.invoke(error.message ?: "Unknown error")
+            }
         }
     }
 }

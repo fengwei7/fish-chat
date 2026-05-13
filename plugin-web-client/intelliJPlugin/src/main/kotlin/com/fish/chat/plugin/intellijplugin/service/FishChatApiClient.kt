@@ -9,6 +9,7 @@ import java.net.URI
 import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.nio.file.Path
 import java.time.Duration
 
 class ApiException(val code: Int, message: String) : Exception(message)
@@ -73,7 +74,7 @@ class FishChatApiClient(
         } catch (e: Exception) { null }
     }
 
-    // ---- Auth ----
+    // ==================== Auth ====================
 
     @Throws(ApiException::class)
     fun login(username: String, password: String): AuthDTO {
@@ -86,7 +87,73 @@ class FishChatApiClient(
             ?: throw ApiException(-1, "Login failed")
     }
 
-    // ---- Friends ----
+    @Throws(ApiException::class)
+    fun register(request: RegisterRequest): Boolean {
+        val path = "/auth/register"
+        val body = gson.toJson(request)
+        logRequest("POST", path)
+        val (status, respBody) = post(path, body)
+        logResponse("POST", path, status, respBody)
+        return parseResult<Boolean>(respBody, "POST", path) ?: false
+    }
+
+    @Throws(ApiException::class)
+    fun logout() {
+        val path = "/auth/logout"
+        logRequest("POST", path)
+        val (status, respBody) = post(path, "")
+        logResponse("POST", path, status, respBody)
+        parseResult<Any?>(respBody, "POST", path)
+    }
+
+    // ==================== User ====================
+
+    @Throws(ApiException::class)
+    fun getProfile(): UserDTO? {
+        val path = "/user/profile"
+        logRequest("GET", path)
+        val (status, respBody) = get(path)
+        logResponse("GET", path, status, respBody)
+        return parseResult<UserDTO>(respBody, "GET", path)
+    }
+
+    @Throws(ApiException::class)
+    fun updateProfile(request: UpdateProfileRequest): UserDTO? {
+        val path = "/user/profile"
+        val body = gson.toJson(request)
+        logRequest("POST", path)
+        val (status, respBody) = post(path, body)
+        logResponse("POST", path, status, respBody)
+        return parseResult<UserDTO>(respBody, "POST", path)
+    }
+
+    @Throws(ApiException::class)
+    fun getUserByCode(code: String): UserDTO? {
+        val path = "/user/$code"
+        logRequest("GET", path)
+        val (status, respBody) = get(path)
+        logResponse("GET", path, status, respBody)
+        return parseResult<UserDTO>(respBody, "GET", path)
+    }
+
+    fun getOnlineUsers(page: Int = 0, size: Int = 20): List<String> {
+        val path = "/user/online?pageNum=$page&pageSize=$size"
+        logRequest("GET", path)
+        val (status, respBody) = get(path)
+        logResponse("GET", path, status, respBody)
+        return parsePageResult(respBody, "GET", path)
+    }
+
+    fun searchUsers(keyword: String, page: Int = 0, size: Int = 20): List<UserDTO> {
+        val encoded = java.net.URLEncoder.encode(keyword, "UTF-8").replace("+", "%20")
+        val path = "/user/search?keyword=$encoded&pageNum=$page&pageSize=$size"
+        logRequest("GET", path)
+        val (status, respBody) = get(path)
+        logResponse("GET", path, status, respBody)
+        return parsePageResult(respBody, "GET", path)
+    }
+
+    // ==================== Friends ====================
 
     fun getFriends(page: Int = 0, size: Int = 100): List<FriendDTO> {
         val path = "/friends?pageNum=$page&pageSize=$size"
@@ -96,7 +163,102 @@ class FishChatApiClient(
         return parsePageResult(respBody, "GET", path)
     }
 
-    // ---- Groups ----
+    @Throws(ApiException::class)
+    fun addFriend(friendCode: String, remark: String? = null) {
+        val path = "/friends"
+        val body = gson.toJson(FriendRequest(friendCode, remark))
+        logRequest("POST", path)
+        val (status, respBody) = post(path, body)
+        logResponse("POST", path, status, respBody)
+        parseResult<Any?>(respBody, "POST", path)
+    }
+
+    @Throws(ApiException::class)
+    fun acceptFriend(friendCode: String) {
+        val path = "/friends/accept"
+        val body = gson.toJson(FriendAcceptRequest(friendCode))
+        logRequest("POST", path)
+        val (status, respBody) = post(path, body)
+        logResponse("POST", path, status, respBody)
+        parseResult<Any?>(respBody, "POST", path)
+    }
+
+    @Throws(ApiException::class)
+    fun removeFriend(friendCode: String) {
+        val path = "/friends/remove"
+        val body = gson.toJson(FriendRemoveRequest(friendCode))
+        logRequest("POST", path)
+        val (status, respBody) = post(path, body)
+        logResponse("POST", path, status, respBody)
+        parseResult<Any?>(respBody, "POST", path)
+    }
+
+    fun getFriendRequests(page: Int = 0, size: Int = 20): List<FriendDTO> {
+        val path = "/friends/requests?pageNum=$page&pageSize=$size"
+        logRequest("GET", path)
+        val (status, respBody) = get(path)
+        logResponse("GET", path, status, respBody)
+        return parsePageResult(respBody, "GET", path)
+    }
+
+    fun searchFriends(keyword: String, page: Int = 0, size: Int = 20): List<FriendDTO> {
+        val encoded = java.net.URLEncoder.encode(keyword, "UTF-8").replace("+", "%20")
+        val path = "/friends/search?keyword=$encoded&pageNum=$page&pageSize=$size"
+        logRequest("GET", path)
+        val (status, respBody) = get(path)
+        logResponse("GET", path, status, respBody)
+        return parsePageResult(respBody, "GET", path)
+    }
+
+    // ==================== Groups ====================
+
+    @Throws(ApiException::class)
+    fun createGroup(name: String, avatar: String? = null): GroupDTO? {
+        val path = "/groups"
+        val body = gson.toJson(CreateGroupRequest(name, avatar))
+        logRequest("POST", path)
+        val (status, respBody) = post(path, body)
+        logResponse("POST", path, status, respBody)
+        return parseResult<GroupDTO>(respBody, "POST", path)
+    }
+
+    @Throws(ApiException::class)
+    fun getGroup(code: String): GroupDTO? {
+        val path = "/groups/$code"
+        logRequest("GET", path)
+        val (status, respBody) = get(path)
+        logResponse("GET", path, status, respBody)
+        return parseResult<GroupDTO>(respBody, "GET", path)
+    }
+
+    @Throws(ApiException::class)
+    fun dismissGroup(code: String) {
+        val path = "/groups/$code/dismiss"
+        logRequest("POST", path)
+        val (status, respBody) = post(path, "")
+        logResponse("POST", path, status, respBody)
+        parseResult<Any?>(respBody, "POST", path)
+    }
+
+    @Throws(ApiException::class)
+    fun addGroupMember(groupCode: String, userCode: String) {
+        val path = "/groups/$groupCode/members"
+        val body = gson.toJson(GroupMemberRequest(userCode))
+        logRequest("POST", path)
+        val (status, respBody) = post(path, body)
+        logResponse("POST", path, status, respBody)
+        parseResult<Any?>(respBody, "POST", path)
+    }
+
+    @Throws(ApiException::class)
+    fun removeGroupMember(groupCode: String, userCode: String) {
+        val path = "/groups/$groupCode/members/remove"
+        val body = gson.toJson(GroupMemberRequest(userCode))
+        logRequest("POST", path)
+        val (status, respBody) = post(path, body)
+        logResponse("POST", path, status, respBody)
+        parseResult<Any?>(respBody, "POST", path)
+    }
 
     fun getMyGroups(page: Int = 0, size: Int = 100): List<GroupDTO> {
         val path = "/groups/my?pageNum=$page&pageSize=$size"
@@ -106,7 +268,53 @@ class FishChatApiClient(
         return parsePageResult(respBody, "GET", path)
     }
 
-    // ---- Channels ----
+    fun searchGroups(keyword: String, page: Int = 0, size: Int = 20): List<GroupDTO> {
+        val encoded = java.net.URLEncoder.encode(keyword, "UTF-8").replace("+", "%20")
+        val path = "/groups/search?keyword=$encoded&pageNum=$page&pageSize=$size"
+        logRequest("GET", path)
+        val (status, respBody) = get(path)
+        logResponse("GET", path, status, respBody)
+        return parsePageResult(respBody, "GET", path)
+    }
+
+    // ==================== Channels ====================
+
+    @Throws(ApiException::class)
+    fun createChannel(name: String, avatar: String? = null, description: String? = null): ChannelDTO? {
+        val path = "/channels"
+        val body = gson.toJson(CreateChannelRequest(name, avatar, description))
+        logRequest("POST", path)
+        val (status, respBody) = post(path, body)
+        logResponse("POST", path, status, respBody)
+        return parseResult<ChannelDTO>(respBody, "POST", path)
+    }
+
+    @Throws(ApiException::class)
+    fun getChannel(code: String): ChannelDTO? {
+        val path = "/channels/$code"
+        logRequest("GET", path)
+        val (status, respBody) = get(path)
+        logResponse("GET", path, status, respBody)
+        return parseResult<ChannelDTO>(respBody, "GET", path)
+    }
+
+    @Throws(ApiException::class)
+    fun subscribeChannel(code: String) {
+        val path = "/channels/$code/subscribe"
+        logRequest("POST", path)
+        val (status, respBody) = post(path, "")
+        logResponse("POST", path, status, respBody)
+        parseResult<Any?>(respBody, "POST", path)
+    }
+
+    @Throws(ApiException::class)
+    fun unsubscribeChannel(code: String) {
+        val path = "/channels/$code/unsubscribe"
+        logRequest("POST", path)
+        val (status, respBody) = post(path, "")
+        logResponse("POST", path, status, respBody)
+        parseResult<Any?>(respBody, "POST", path)
+    }
 
     fun getMyChannels(page: Int = 0, size: Int = 100): List<ChannelDTO> {
         val path = "/channels/my?pageNum=$page&pageSize=$size"
@@ -116,11 +324,20 @@ class FishChatApiClient(
         return parsePageResult(respBody, "GET", path)
     }
 
-    // ---- Messages ----
+    fun searchChannels(keyword: String, page: Int = 0, size: Int = 20): List<ChannelDTO> {
+        val encoded = java.net.URLEncoder.encode(keyword, "UTF-8").replace("+", "%20")
+        val path = "/channels/search?keyword=$encoded&pageNum=$page&pageSize=$size"
+        logRequest("GET", path)
+        val (status, respBody) = get(path)
+        logResponse("GET", path, status, respBody)
+        return parsePageResult(respBody, "GET", path)
+    }
+
+    // ==================== Messages ====================
 
     fun getHistory(roomCode: String, page: Int = 0, size: Int = 20): MessageHistoryData? {
         val encoded = java.net.URLEncoder.encode(roomCode, "UTF-8")
-            .replace("+", "%20")  // URLEncoder encodes space as +, keep it URL-safe
+            .replace("+", "%20")
         val path = "/messages/$encoded?page=$page&size=$size"
         logRequest("GET", path)
         val (status, respBody) = get(path)
@@ -130,7 +347,70 @@ class FishChatApiClient(
         } catch (e: ApiException) { null }
     }
 
-    // ---- HTTP helpers ----
+    fun syncMessages(roomCode: String, after: Long): List<ChatMessageDTO> {
+        val encoded = java.net.URLEncoder.encode(roomCode, "UTF-8")
+            .replace("+", "%20")
+        val path = "/messages/$encoded/sync?after=$after"
+        logRequest("GET", path)
+        val (status, respBody) = get(path)
+        logResponse("GET", path, status, respBody)
+        return try {
+            parseResult<List<ChatMessageDTO>>(respBody, "GET", path) ?: emptyList()
+        } catch (e: ApiException) { emptyList() }
+    }
+
+    // ==================== File ====================
+
+    @Throws(ApiException::class)
+    fun uploadFile(filePath: Path): UploadFileResponse? {
+        val path = "/file/upload"
+        val boundary = "----FishChatBoundary${System.currentTimeMillis()}"
+
+        val fileBytes = java.nio.file.Files.readAllBytes(filePath)
+        val fileName = filePath.fileName.toString()
+
+        val bodyBuilder = StringBuilder()
+        bodyBuilder.append("--$boundary\r\n")
+        bodyBuilder.append("Content-Disposition: form-data; name=\"file\"; filename=\"$fileName\"\r\n")
+        bodyBuilder.append("Content-Type: application/octet-stream\r\n\r\n")
+
+        val headerBytes = bodyBuilder.toString().toByteArray(Charsets.UTF_8)
+        val footerBytes = "\r\n--$boundary--\r\n".toByteArray(Charsets.UTF_8)
+
+        val bodyBytes = headerBytes + fileBytes + footerBytes
+
+        val req = HttpRequest.newBuilder()
+            .uri(URI.create(apiUrl(path)))
+            .header("Content-Type", "multipart/form-data; boundary=$boundary")
+            .header("fish-token", token)
+            .timeout(Duration.ofSeconds(60))
+            .POST(HttpRequest.BodyPublishers.ofByteArray(bodyBytes))
+            .build()
+
+        logRequest("POST", path)
+        val resp = http.send(req, HttpResponse.BodyHandlers.ofString())
+        val respBody = resp.body()
+        logResponse("POST", path, resp.statusCode(), respBody)
+
+        return parseResult<UploadFileResponse>(respBody, "POST", path)
+    }
+
+    fun downloadFile(fileName: String): ByteArray? {
+        val encoded = java.net.URLEncoder.encode(fileName, "UTF-8").replace("+", "%20")
+        val path = "/file/download/$encoded"
+        logRequest("GET", path)
+        val req = HttpRequest.newBuilder()
+            .uri(URI.create(apiUrl(path)))
+            .header("fish-token", token)
+            .timeout(Duration.ofSeconds(60))
+            .GET()
+            .build()
+        val resp = http.send(req, HttpResponse.BodyHandlers.ofByteArray())
+        logResponse("GET", path, resp.statusCode(), "<binary ${resp.body().size} bytes>")
+        return if (resp.statusCode() == 200) resp.body() else null
+    }
+
+    // ==================== HTTP helpers ====================
 
     private fun get(path: String): Pair<Int, String> {
         val req = HttpRequest.newBuilder()

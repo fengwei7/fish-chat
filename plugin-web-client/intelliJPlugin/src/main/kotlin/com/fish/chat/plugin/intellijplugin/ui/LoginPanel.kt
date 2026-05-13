@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.sp
 import com.fish.chat.plugin.intellijplugin.AppState
 import com.fish.chat.plugin.intellijplugin.Screen
 import com.fish.chat.plugin.intellijplugin.service.ApiException
-import com.fish.chat.plugin.intellijplugin.setupWsListener
+import com.fish.chat.plugin.intellijplugin.bindWsListeners
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -114,7 +114,7 @@ fun LoginPanel(state: AppState) {
                                 .replace("https://", "")
                                 .split(":")[0]
                             state.ws.connect("ws://$wsHost:8081", token)
-                            setupWsListener(state)
+                            bindWsListeners(state)
                         }
                         state.screen = Screen.CHAT_LIST
                     } catch (e: ApiException) {

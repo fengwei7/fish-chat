@@ -1,19 +1,18 @@
 package com.fish.chat.plugin.intellijplugin.model
 
-import com.google.gson.annotations.SerializedName
-
 // ==================== API 通用响应 ====================
 
 data class ApiResult<T>(
     val code: Int = 0,
     val message: String = "",
-    val data: T? = null
+    val data: T? = null,
+    val timestamp: Long = 0
 )
 
 data class PageResult<T>(
     val data: List<T> = emptyList(),
-    val pageNum: Int = 0,
-    val pageSize: Int = 0,
+    val pageNum: Long = 0,
+    val pageSize: Long = 0,
     val total: Long = 0
 )
 
@@ -24,12 +23,82 @@ data class LoginRequest(
     val password: String
 )
 
+data class RegisterRequest(
+    val username: String,
+    val password: String,
+    val email: String? = null,
+    val mobile: String? = null,
+    val nickname: String? = null
+)
+
 data class AuthDTO(
     val token: String? = null,
     val code: String? = null,
     val username: String? = null,
     val nickname: String? = null,
     val avatarUrl: String? = null
+)
+
+// ==================== 用户 ====================
+
+data class UserDTO(
+    val code: String? = null,
+    val username: String? = null,
+    val nickname: String? = null,
+    val avatarUrl: String? = null,
+    val profile: String? = null,
+    val email: String? = null,
+    val mobile: String? = null,
+    val online: Boolean = false
+)
+
+data class UpdateProfileRequest(
+    val nickname: String? = null,
+    val avatarUrl: String? = null,
+    val profile: String? = null,
+    val email: String? = null,
+    val mobile: String? = null
+)
+
+// ==================== 好友 ====================
+
+data class FriendRequest(
+    val friendCode: String,
+    val remark: String? = null
+)
+
+data class FriendAcceptRequest(
+    val friendCode: String
+)
+
+data class FriendRemoveRequest(
+    val friendCode: String
+)
+
+// ==================== 群组 ====================
+
+data class CreateGroupRequest(
+    val name: String,
+    val avatar: String? = null
+)
+
+data class GroupMemberRequest(
+    val userCode: String
+)
+
+// ==================== 频道 ====================
+
+data class CreateChannelRequest(
+    val name: String,
+    val avatar: String? = null,
+    val description: String? = null
+)
+
+// ==================== 文件 ====================
+
+data class UploadFileResponse(
+    val fileName: String? = null,
+    val accessUrl: String? = null
 )
 
 // ==================== 会话（统一模型） ====================
