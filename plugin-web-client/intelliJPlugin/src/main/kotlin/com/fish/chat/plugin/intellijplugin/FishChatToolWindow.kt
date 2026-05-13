@@ -65,10 +65,10 @@ class AppState {
     private val props = PropertiesComponent.getInstance()
 
     init {
-        val savedServer = props.getValue("fishchat.server", "http://localhost:8080")
+        val savedServer = props.getValue("fishchat.server", "https://fish-chat-api.935577.xyz")
         val savedToken = props.getValue("fishchat.token", "")
         api.serverUrl = savedServer
-        wsUrl = props.getValue("fishchat.wsUrl", "ws://localhost:8081")
+        wsUrl = props.getValue("fishchat.wsUrl", "wss://fish-chat-wss.935577.xyz")
         if (savedToken.isNotEmpty()) {
             api.token = savedToken
             currentUser = AuthDTO(
