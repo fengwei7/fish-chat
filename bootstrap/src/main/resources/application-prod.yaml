@@ -2,7 +2,7 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: ${DB_URL:jdbc:mysql://192.168.1.5:3306/fish_chat?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&allowPublicKeyRetrieval=true}
-    username: ${DB_USERNAME:fish-chat}
+    username: ${DB_USERNAME:fish_chat}
     password: ${DB_PASSWORD:bxD2M2DYR8yFSpme}
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
