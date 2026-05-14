@@ -24,7 +24,7 @@ spring:
 
   data:
     mongodb:
-      uri: ${MONGODB_URI:mongodb://mongo_Edj2dr:mongo_zKM5xP@192.168.1.5:27017/fishchat}
+      uri: ${MONGODB_URI:mongodb://fish_chat:BbJx2DWGF5BftbWp@192.168.1.5:27017/fish_chat}
 
   redis:
     host: ${REDIS_HOST:192.168.1.5}
