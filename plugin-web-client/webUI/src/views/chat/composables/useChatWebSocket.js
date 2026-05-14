@@ -23,7 +23,7 @@ export function useChatWebSocket(options = {}) {
     }
     if (ws.value) return
 
-    const url = `ws://localhost:8081/ws?token=${encodeURIComponent(token)}`
+    const url = `wss://fish-chat-wss.935577.xyz/ws?token=${encodeURIComponent(token)}`
     ws.value = new WebSocket(url)
 
     ws.value.onopen = () => {
