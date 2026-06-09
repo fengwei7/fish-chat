@@ -165,6 +165,25 @@ public class FriendServiceImpl implements FriendService {
         return PageResult.of(result, pageNum, pageSize, requestPage.getTotal());
     }
 
+    @Transactional
+    @Override
+    public void updateFriendRemark(String friendCode, String remark) {
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO me = resolveUser(userCode);
+        UserPO friend = userRepository.selectByCode(friendCode);
+        if (friend == null) throw new BusinessException("好友不存在");
+
+        // 更新好友备注
+        FriendPO po = friendRepository.selectOne(Wrappers.<FriendPO>lambdaQuery()
+                .eq(FriendPO::getUserCode, me.getCode())
+                .eq(FriendPO::getFriendCode, friend.getCode())
+                .eq(FriendPO::getStatus, FriendStatus.CONFIRMED.getValue()));
+        if (po == null) throw new BusinessException("好友不存在");
+        
+        po.setRemark(remark);
+        friendRepository.updateById(po);
+    }
+
     @Override
     public PageResult<FriendDTO> searchUsers(String keyword, int pageNum, int pageSize) {
         Page<UserPO> userPage = userRepository.selectByCodeOrUsernamePage(

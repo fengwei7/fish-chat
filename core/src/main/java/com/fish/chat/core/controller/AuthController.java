@@ -3,6 +3,7 @@ package com.fish.chat.core.controller;
 import com.fish.chat.common.constants.UrlConstants;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.entity.dto.AuthDTO;
+import com.fish.chat.core.entity.req.ChangePasswordRequest;
 import com.fish.chat.core.entity.req.LoginRequest;
 import com.fish.chat.core.entity.req.RegisterRequest;
 import com.fish.chat.core.service.AuthService;
@@ -46,5 +47,14 @@ public class AuthController {
     public Result<Void> logout() {
         authService.logout();
         return Result.success("登出成功", null);
+    }
+    
+    /**
+     * 修改密码
+     */
+    @PostMapping("/password")
+    public Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(request.getOldPassword(), request.getNewPassword());
+        return Result.success("密码修改成功，请重新登录", null);
     }
 }

@@ -74,6 +74,17 @@ public interface FriendService {
     void rejectFriend(String friendCode);
     
     /**
+     * 修改好友备注
+     * 
+     * 更新指定好友的备注名称
+     *
+     * @param friendCode 目标用户的用户code
+     * @param remark 好友备注（支持空字符串清空备注）
+     * @throws com.fish.chat.common.exception.BusinessException 当好友不存在时抛出
+     */
+    void updateFriendRemark(String friendCode, String remark);
+    
+    /**
      * 搜索用户（按code或用户名模糊匹配）
      *
      * @param keyword 搜索关键词

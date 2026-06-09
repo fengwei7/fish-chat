@@ -278,6 +278,40 @@ public class GroupServiceImpl implements GroupService {
         return toDTO(group, owner != null ? owner.getCode() : "", (int) count);
     }
 
+    @Transactional
+    @Override
+    public void setGroupAdmin(String groupCode, String userCode, boolean isAdmin) {
+        String currentUserCode = StpUtil.getLoginIdAsString();
+        UserPO current = resolveUser(currentUserCode);
+
+        GroupPO group = groupRepository.selectByCode(groupCode);
+        if (group == null) throw new BusinessException("群组不存在");
+
+        // 权限检查：仅群主可以设置管理员
+        if (!group.getOwnerCode().equals(currentUserCode)) {
+            throw new BusinessException("仅群主可设置管理员");
+        }
+
+        // 不能设置群主自己为管理员（已经是群主）
+        if (group.getOwnerCode().equals(userCode)) {
+            throw new BusinessException("不能设置群主为管理员");
+        }
+
+        // 查询目标用户是否为群成员
+        GroupMemberPO member = groupRepository.selectMember(groupCode, userCode);
+        if (member == null) {
+            throw new BusinessException("该用户不在群组中");
+        }
+
+        // 更新角色
+        if (isAdmin) {
+            member.setRole(MemberRole.ADMIN.getValue());
+        } else {
+            member.setRole(MemberRole.MEMBER.getValue());
+        }
+        groupRepository.updateMember(member);
+    }
+
     // --- helpers ---
     private UserPO resolveUser(String loginCode) {
         UserPO user = userRepository.selectByCode(loginCode);

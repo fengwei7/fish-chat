@@ -116,4 +116,16 @@ public interface GroupService {
      * @throws com.fish.chat.common.exception.BusinessException 当群组不存在或用户没有权限时抛出
      */
     GroupDTO updateGroup(String code, String name, String avatar, String notice);
+    
+    /**
+     * 设置群管理员
+     * 
+     * 仅群主可以执行此操作，可以将成员设置为管理员或取消管理员身份
+     *
+     * @param groupCode 群组唯一标识
+     * @param userCode 目标用户的用户code
+     * @param isAdmin true-设置为管理员，false-取消管理员身份
+     * @throws com.fish.chat.common.exception.BusinessException 当群组不存在或用户不是群主时抛出
+     */
+    void setGroupAdmin(String groupCode, String userCode, boolean isAdmin);
 }

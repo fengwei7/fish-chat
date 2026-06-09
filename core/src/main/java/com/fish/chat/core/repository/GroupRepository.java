@@ -111,4 +111,11 @@ public class GroupRepository extends BaseRepository<GroupPO> {
                         .eq(GroupMemberPO::getGroupCode, groupCode)
                         .eq(GroupMemberPO::getUserCode, userCode));
     }
+    
+    /**
+     * 更新群组成员信息
+     */
+    public void updateMember(GroupMemberPO member) {
+        groupMemberMapper.updateById(member);
+    }
 }

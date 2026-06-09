@@ -32,6 +32,12 @@ public class GroupController {
         return Result.success(groupService.getGroup(code));
     }
 
+    @GetMapping("/{code}/notice")
+    public Result<String> getNotice(@PathVariable String code) {
+        GroupDTO group = groupService.getGroup(code);
+        return Result.success(group.getNotice());
+    }
+
     @PostMapping("/update/{code}")
     public Result<GroupDTO> update(@PathVariable String code, @Valid @RequestBody UpdateGroupRequest req) {
         return Result.success(groupService.updateGroup(code, req.getName(), req.getAvatar(), req.getNotice()));
@@ -47,6 +53,12 @@ public class GroupController {
     public Result<Void> leave(@PathVariable String code) {
         groupService.leaveGroup(code);
         return Result.success("已退出群组", null);
+    }
+
+    @PostMapping("/{code}/admin/{userCode}")
+    public Result<Void> setAdmin(@PathVariable String code, @PathVariable String userCode, @RequestParam boolean isAdmin) {
+        groupService.setGroupAdmin(code, userCode, isAdmin);
+        return Result.success(isAdmin ? "已设置为管理员" : "已取消管理员身份", null);
     }
 
     @PostMapping("/{code}/members")
