@@ -13,7 +13,7 @@ spring:
 
 # Sa-Token 配置
 sa-token:
-  token-name: fish-token
+  token-name: token
   timeout: 2592000
   active-timeout: -1
   is-concurrent: true

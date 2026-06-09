@@ -244,4 +244,62 @@ public class RedisUtil {
             log.error("解锁异常", e);
         }
     }
+
+    // ==================== Redis Set 操作 ====================
+
+    /**
+     * 向 Set 中添加元素
+     */
+    public void addToSet(String setKey, String value) {
+        try {
+            redisTemplate.opsForSet().add(setKey, value);
+        } catch (Exception e) {
+            log.error("向Set添加元素失败: setKey={}, value={}", setKey, value, e);
+        }
+    }
+
+    /**
+     * 从 Set 中移除元素
+     */
+    public void removeFromSet(String setKey, String value) {
+        try {
+            redisTemplate.opsForSet().remove(setKey, value);
+        } catch (Exception e) {
+            log.error("从Set移除元素失败: setKey={}, value={}", setKey, value, e);
+        }
+    }
+
+    /**
+     * 获取 Set 中的所有元素
+     */
+    public Set<String> getSetMembers(String setKey) {
+        try {
+            Set<Object> members = redisTemplate.opsForSet().members(setKey);
+            if (members == null) {
+                return new HashSet<>();
+            }
+            Set<String> result = new HashSet<>();
+            for (Object member : members) {
+                if (member != null) {
+                    result.add(member.toString());
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("获取Set成员失败: setKey={}", setKey, e);
+            return new HashSet<>();
+        }
+    }
+
+    /**
+     * 判断元素是否在 Set 中
+     */
+    public boolean isMemberOfSet(String setKey, String value) {
+        try {
+            return Boolean.TRUE.equals(redisTemplate.opsForSet().isMember(setKey, value));
+        } catch (Exception e) {
+            log.error("判断Set成员失败: setKey={}, value={}", setKey, value, e);
+            return false;
+        }
+    }
 }
