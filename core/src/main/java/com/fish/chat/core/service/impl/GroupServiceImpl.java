@@ -53,7 +53,6 @@ public class GroupServiceImpl implements GroupService {
         member.setGroupCode(group.getCode());
         member.setUserCode(owner.getCode());
         member.setRole(MemberRole.OWNER.getValue());
-        member.setJoinTime(LocalDateTime.now());
         groupRepository.insertMember(member);
 
         // 加载到 RoomManager
@@ -106,7 +105,6 @@ public class GroupServiceImpl implements GroupService {
         member.setGroupCode(group.getCode());
         member.setUserCode(user.getCode());
         member.setRole(MemberRole.MEMBER.getValue());
-        member.setJoinTime(LocalDateTime.now());
         groupRepository.insertMember(member);
 
         // 更新 Room

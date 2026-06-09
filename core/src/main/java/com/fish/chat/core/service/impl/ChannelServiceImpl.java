@@ -52,7 +52,6 @@ public class ChannelServiceImpl implements ChannelService {
         member.setChannelCode(channel.getCode());
         member.setUserCode(owner.getCode());
         member.setRole(MemberRole.OWNER.getValue());
-        member.setJoinTime(LocalDateTime.now());
         channelRepository.insertMember(member);
 
         roomManager.getOrCreateChannelRoom(channel.getCode(), channel.getName(), channel.getAvatar(), java.util.Collections.singleton(owner.getCode()));
@@ -84,7 +83,6 @@ public class ChannelServiceImpl implements ChannelService {
         member.setChannelCode(channel.getCode());
         member.setUserCode(user.getCode());
         member.setRole(MemberRole.MEMBER.getValue());
-        member.setJoinTime(LocalDateTime.now());
         channelRepository.insertMember(member);
     }
 

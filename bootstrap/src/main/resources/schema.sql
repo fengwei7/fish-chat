@@ -9,7 +9,7 @@ USE fish_chat;
 -- 用户表
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS t_user (
-    id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    id          BIGINT       NOT NULL COMMENT '主键（雪花算法）',
     code        VARCHAR(64)  NOT NULL COMMENT '用户唯一标识',
     username    VARCHAR(64)  NOT NULL COMMENT '用户名',
     password    VARCHAR(256) NOT NULL COMMENT '密码（BCrypt加密）',
@@ -34,7 +34,7 @@ CREATE TABLE IF NOT EXISTS t_user (
 -- 群组表
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS t_group (
-    id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    id          BIGINT       NOT NULL COMMENT '主键（雪花算法）',
     code        VARCHAR(64)  NOT NULL COMMENT '群唯一标识',
     name        VARCHAR(128) NOT NULL COMMENT '群名称',
     avatar      VARCHAR(256) DEFAULT NULL COMMENT '群头像',
@@ -56,11 +56,15 @@ CREATE TABLE IF NOT EXISTS t_group (
 -- 群成员表
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS t_group_member (
-    id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    id          BIGINT       NOT NULL COMMENT '主键（雪花算法）',
     group_code  VARCHAR(64)  NOT NULL COMMENT '群code',
     user_code   VARCHAR(64)  NOT NULL COMMENT '用户标识',
     role        INT          DEFAULT 0 COMMENT '角色：0-成员 1-管理员 2-群主',
-    join_time   DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '入群时间',
+    status      INT          DEFAULT 1 COMMENT '状态：0-禁用 1-正常',
+    create_time DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间（入群时间）',
+    update_time DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    creator     VARCHAR(64)  DEFAULT NULL COMMENT '创建人',
+    updater     VARCHAR(64)  DEFAULT NULL COMMENT '更新人',
     deleted     INT          DEFAULT 0 COMMENT '逻辑删除',
     PRIMARY KEY (id),
     UNIQUE KEY uk_group_user (group_code, user_code),
@@ -92,11 +96,15 @@ CREATE TABLE IF NOT EXISTS t_channel (
 -- 频道订阅表
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS t_channel_member (
-    id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    id          BIGINT       NOT NULL COMMENT '主键（雪花算法）',
     channel_code VARCHAR(64)  NOT NULL COMMENT '频道code',
     user_code   VARCHAR(64)  NOT NULL COMMENT '用户标识',
     role        INT          DEFAULT 0 COMMENT '角色：0-订阅者 1-管理员 2-创建者',
-    join_time   DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '订阅时间',
+    status      INT          DEFAULT 1 COMMENT '状态：0-禁用 1-正常',
+    create_time DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间（订阅时间）',
+    update_time DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    creator     VARCHAR(64)  DEFAULT NULL COMMENT '创建人',
+    updater     VARCHAR(64)  DEFAULT NULL COMMENT '更新人',
     deleted     INT          DEFAULT 0 COMMENT '逻辑删除',
     PRIMARY KEY (id),
     UNIQUE KEY uk_channel_user (channel_code, user_code),
@@ -107,13 +115,15 @@ CREATE TABLE IF NOT EXISTS t_channel_member (
 -- 好友关系表
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS t_friend (
-    id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '主键',
+    id          BIGINT       NOT NULL COMMENT '主键（雪花算法）',
     user_code   VARCHAR(64)  NOT NULL COMMENT '用户标识',
     friend_code VARCHAR(64)  NOT NULL COMMENT '好友用户标识',
     remark      VARCHAR(64)  DEFAULT NULL COMMENT '备注名',
     status      INT          DEFAULT 1 COMMENT '状态：0-待确认 1-已确认 2-已拒绝',
     create_time DATETIME     DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME     DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    creator     VARCHAR(64)  DEFAULT NULL COMMENT '创建人',
+    updater     VARCHAR(64)  DEFAULT NULL COMMENT '更新人',
     deleted     INT          DEFAULT 0 COMMENT '逻辑删除',
     PRIMARY KEY (id),
     UNIQUE KEY uk_user_friend (user_code, friend_code),
