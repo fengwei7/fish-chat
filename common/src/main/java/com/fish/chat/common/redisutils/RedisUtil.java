@@ -143,27 +143,38 @@ public class RedisUtil {
     }
 
     /**
-     * 尝试获取分布式锁（带超时重试）
+     * 尝试获取分布式锁（带超时重试，使用循环避免栈溢出）
      *
      * @param key  锁key
      * @param uuid 线程唯一标识
-     * @param time 最大等待时间（毫秒）
+     * @param maxWaitTime 最大等待时间（毫秒）
      */
-    public boolean tryLock(String key, String uuid, long time) {
-        if (this.lock(key, uuid, time, TimeUnit.MILLISECONDS)) {
-            return true;
-        }
-        try {
-            Thread.sleep(10);
-            time -= 10;
-            if (time < 0) {
+    public boolean tryLock(String key, String uuid, long maxWaitTime) {
+        long startTime = System.currentTimeMillis();
+        long remainingTime = maxWaitTime;
+        
+        while (remainingTime > 0) {
+            // 尝试获取锁，锁过期时间至少为100ms
+            if (lock(key, uuid, Math.max(remainingTime, 100), TimeUnit.MILLISECONDS)) {
+                return true;
+            }
+            
+            try {
+                // 动态计算休眠时间，避免过度等待
+                long sleepTime = Math.min(50, remainingTime);
+                Thread.sleep(sleepTime);
+                
+                // 计算剩余等待时间
+                remainingTime = maxWaitTime - (System.currentTimeMillis() - startTime);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                log.error("获取锁被中断: {}", key);
                 return false;
             }
-        } catch (InterruptedException e) {
-            log.error("获取锁失败", e);
-            Thread.currentThread().interrupt();
         }
-        return tryLock(key, uuid, time);
+        
+        log.warn("获取锁超时: {}, 最大等待时间: {}ms", key, maxWaitTime);
+        return false;
     }
 
     /**

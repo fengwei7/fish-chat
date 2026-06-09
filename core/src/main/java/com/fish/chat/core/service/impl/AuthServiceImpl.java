@@ -2,8 +2,6 @@ package com.fish.chat.core.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.lang.UUID;
-import cn.hutool.core.util.RandomUtil;
-import cn.hutool.crypto.digest.DigestUtil;
 import com.fish.chat.common.exception.BusinessException;
 import com.fish.chat.core.entity.dto.AuthDTO;
 import com.fish.chat.core.entity.po.UserPO;
@@ -11,6 +9,7 @@ import com.fish.chat.core.entity.req.LoginRequest;
 import com.fish.chat.core.entity.req.RegisterRequest;
 import com.fish.chat.core.repository.UserRepository;
 import com.fish.chat.core.service.AuthService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +24,9 @@ public class AuthServiceImpl implements AuthService {
     @Resource
     private UserRepository userRepository;
 
+    @Resource
+    private BCryptPasswordEncoder passwordEncoder;
+
     @Transactional(rollbackFor = Exception.class)
     @Override
     public boolean register(RegisterRequest request) {
@@ -33,12 +35,11 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("用户名已存在");
         }
 
-        String salt = RandomUtil.randomString(16);
         UserPO userPO = new UserPO();
         userPO.setUsername(request.getUsername());
-        userPO.setPassword(DigestUtil.sha256Hex(request.getPassword() + salt));
+        // 使用 BCrypt 加密密码（自动生成 salt 并嵌入到哈希中）
+        userPO.setPassword(passwordEncoder.encode(request.getPassword()));
 //        userPO.setCode(UUID.randomUUID().toString());
-        userPO.setSalt(salt);
         userPO.setMobile(request.getMobile());
         userPO.setEmail(request.getEmail());
         userPO.setNickname(request.getNickname());
@@ -55,8 +56,8 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("用户名或密码错误");
         }
 
-        String inputPasswordHash = DigestUtil.sha256Hex(request.getPassword() + userPO.getSalt());
-        if (!userPO.getPassword().equals(inputPasswordHash)) {
+        // 使用 BCrypt 验证密码
+        if (!passwordEncoder.matches(request.getPassword(), userPO.getPassword())) {
             throw new BusinessException("用户名或密码错误");
         }
 

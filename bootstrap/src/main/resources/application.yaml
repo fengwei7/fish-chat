@@ -21,6 +21,13 @@ sa-token:
   token-style: uuid
   is-log: true
 
+# 安全配置
+security:
+  password:
+    # BCrypt 加密强度（范围 4-31，默认 10）
+    # 数值越大计算越慢，安全性越高
+    bcrypt-strength: 10
+
 
 
 mybatis-plus:
