@@ -29,7 +29,7 @@
         <hutool.version>5.8.26</hutool.version>
         <mapstruct.version>1.5.5.Final</mapstruct.version>
         <netty.version>4.1.100.Final</netty.version>
-        <fastjson.version>1.2.83</fastjson.version>
+        <fastjson2.version>2.0.43</fastjson2.version>
         <spring-security-crypto.version>5.8.16</spring-security-crypto.version>
         <redisson.version>3.25.0</redisson.version>
     </properties>
@@ -156,17 +156,17 @@
                 <artifactId>mapstruct</artifactId>
                 <version>${mapstruct.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.alibaba</groupId>
-                <artifactId>fastjson</artifactId>
-                <version>${fastjson.version}</version>
-            </dependency>
-            
             <!-- Netty -->
             <dependency>
                 <groupId>io.netty</groupId>
                 <artifactId>netty-all</artifactId>
                 <version>${netty.version}</version>
+            </dependency>
+            <!-- Fastjson2 (修复安全漏洞 CVE-2022-25845) -->
+            <dependency>
+                <groupId>com.alibaba.fastjson2</groupId>
+                <artifactId>fastjson2</artifactId>
+                <version>${fastjson2.version}</version>
             </dependency>
             
             <!-- Spring Security Crypto (for BCrypt) -->

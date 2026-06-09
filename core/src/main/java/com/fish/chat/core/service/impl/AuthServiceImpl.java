@@ -39,7 +39,7 @@ public class AuthServiceImpl implements AuthService {
         userPO.setUsername(request.getUsername());
         // 使用 BCrypt 加密密码（自动生成 salt 并嵌入到哈希中）
         userPO.setPassword(passwordEncoder.encode(request.getPassword()));
-//        userPO.setCode(UUID.randomUUID().toString());
+        userPO.setCode(UUID.randomUUID().toString());
         userPO.setMobile(request.getMobile());
         userPO.setEmail(request.getEmail());
         userPO.setNickname(request.getNickname());
