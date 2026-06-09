@@ -1,6 +1,6 @@
 package com.fish.chat.core.netty;
 
-import com.fish.chat.core.chat.ChatMessagePacket;
+import com.fish.chat.core.netty.chat.ChatMessagePacket;
 import com.fish.chat.core.entity.po.ChatMessage;
 import com.fish.chat.core.enums.MessageType;
 import com.fish.chat.core.repository.ChatMessageRepository;
@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;

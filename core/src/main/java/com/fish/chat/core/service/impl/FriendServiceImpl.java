@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fish.chat.common.exception.BusinessException;
 import com.fish.chat.common.result.PageResult;
-import com.fish.chat.core.chat.SessionManager;
+import com.fish.chat.core.netty.chat.SessionManager;
 import com.fish.chat.core.entity.dto.FriendDTO;
 import com.fish.chat.core.entity.po.FriendPO;
 import com.fish.chat.core.entity.po.UserPO;

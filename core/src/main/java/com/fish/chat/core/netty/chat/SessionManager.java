@@ -1,4 +1,4 @@
-package com.fish.chat.core.chat;
+package com.fish.chat.core.netty.chat;
 
 import com.alibaba.fastjson2.JSON;
 import com.fish.chat.common.constants.AuthConstants;
@@ -9,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.Map;
 import java.util.Set;

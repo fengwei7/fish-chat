@@ -1,4 +1,4 @@
-package com.fish.chat.core.chat;
+package com.fish.chat.core.netty.chat;
 
 import io.netty.channel.Channel;
 import lombok.Data;

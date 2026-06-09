@@ -1,9 +1,8 @@
 package com.fish.chat.bootstrap.config;
 
-import com.fish.chat.core.chat.SessionManager;
+import com.fish.chat.core.netty.chat.SessionManager;
 import com.fish.chat.core.netty.MessageBatchWriter;
 import com.fish.chat.core.netty.NettyWebSocketServer;
-import com.fish.chat.core.service.ConversationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fish.chat.common.exception.BusinessException;
 import com.fish.chat.common.result.PageResult;
-import com.fish.chat.core.chat.room.RoomManager;
+import com.fish.chat.core.netty.chat.room.RoomManager;
 import com.fish.chat.core.entity.dto.ChannelDTO;
 import com.fish.chat.core.entity.po.ChannelMemberPO;
 import com.fish.chat.core.entity.po.ChannelPO;
@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

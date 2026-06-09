@@ -1,11 +1,11 @@
 package com.fish.chat.core.netty;
 
 import com.alibaba.fastjson2.JSON;
-import com.fish.chat.core.chat.ChatMessagePacket;
-import com.fish.chat.core.chat.ChatSession;
-import com.fish.chat.core.chat.SessionManager;
-import com.fish.chat.core.chat.room.Room;
-import com.fish.chat.core.chat.room.RoomManager;
+import com.fish.chat.core.netty.chat.ChatMessagePacket;
+import com.fish.chat.core.netty.chat.ChatSession;
+import com.fish.chat.core.netty.chat.SessionManager;
+import com.fish.chat.core.netty.chat.room.Room;
+import com.fish.chat.core.netty.chat.room.RoomManager;
 import com.fish.chat.core.enums.RoomType;
 import com.fish.chat.core.entity.po.ChatMessage;
 import com.fish.chat.core.entity.po.GroupPO;

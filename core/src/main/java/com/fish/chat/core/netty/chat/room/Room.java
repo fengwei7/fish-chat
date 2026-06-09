@@ -1,4 +1,4 @@
-package com.fish.chat.core.chat.room;
+package com.fish.chat.core.netty.chat.room;
 
 import com.fish.chat.core.enums.RoomType;
 import lombok.AllArgsConstructor;

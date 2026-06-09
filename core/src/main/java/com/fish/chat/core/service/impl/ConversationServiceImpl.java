@@ -2,7 +2,7 @@ package com.fish.chat.core.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.fish.chat.common.redisutils.RedisUtil;
-import com.fish.chat.core.chat.SessionManager;
+import com.fish.chat.core.netty.chat.SessionManager;
 import com.fish.chat.core.entity.dto.ConversationDTO;
 import com.fish.chat.core.entity.po.ChatMessage;
 import com.fish.chat.core.entity.po.GroupPO;

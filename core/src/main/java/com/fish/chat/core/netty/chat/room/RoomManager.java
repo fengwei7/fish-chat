@@ -1,7 +1,7 @@
-package com.fish.chat.core.chat.room;
+package com.fish.chat.core.netty.chat.room;
 
 import com.fish.chat.core.enums.RoomType;
-import com.fish.chat.core.chat.SessionManager;
+import com.fish.chat.core.netty.chat.SessionManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

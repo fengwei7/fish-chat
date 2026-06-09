@@ -1,4 +1,4 @@
-package com.fish.chat.core.controller;
+package com.fish.chat.core.controller.system;
 
 import com.fish.chat.common.result.Result;
 import lombok.Data;

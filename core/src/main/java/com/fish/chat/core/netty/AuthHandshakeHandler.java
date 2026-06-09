@@ -2,14 +2,12 @@ package com.fish.chat.core.netty;
 
 import cn.dev33.satoken.stp.StpUtil;
 import com.fish.chat.common.constants.AuthConstants;
-import com.fish.chat.core.chat.SessionManager;
+import com.fish.chat.core.netty.chat.SessionManager;
 import com.fish.chat.core.entity.po.UserPO;
 import com.fish.chat.core.repository.UserRepository;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
-import io.netty.handler.codec.http.FullHttpRequest;
-import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.util.AttributeKey;

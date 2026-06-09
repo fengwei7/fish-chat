@@ -3,7 +3,7 @@ package com.fish.chat.core.controller;
 import com.fish.chat.common.constants.UrlConstants;
 import com.fish.chat.common.result.PageResult;
 import com.fish.chat.common.result.Result;
-import com.fish.chat.core.chat.SessionManager;
+import com.fish.chat.core.netty.chat.SessionManager;
 import com.fish.chat.core.entity.dto.UserDTO;
 import com.fish.chat.core.entity.req.UserUpdateRequest;
 import com.fish.chat.core.repository.UserOnlineRepository;
