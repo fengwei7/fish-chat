@@ -12,6 +12,7 @@
 - **消息类型**：文本、图片、文件，消息历史分页查询与断线同步
 - **文件传输**：支持图片/文件上传与下载
 - **多端在线**：基于 Sa-Token 的统一认证，Redis 会话共享
+- **分布式锁**：基于 Redisson 实现并发安全控制
 
 ## 技术栈
 
@@ -29,8 +30,10 @@
 | Redis | 7.x |
 | Druid | 1.2.20 |
 | Hutool | 5.8.26 |
-| FastJSON | 1.2.83 |
+| FastJSON2 | 2.0.43 |
 | Lombok | 1.18.30 |
+| Redisson | 3.25.0 |
+| MapStruct | 1.5.5.Final |
 
 ### 前端
 
@@ -42,6 +45,7 @@
 | Vue Router | 4.5.1 |
 | Pinia | 3.0.3 |
 | Axios | 1.15.2 |
+| Pinia PersistedState | 4.4.1 |
 
 ## 项目架构
 
@@ -118,7 +122,7 @@ java -jar bootstrap/target/bootstrap.jar
 ### 4. 启动前端
 
 ```bash
-cd webUI
+cd plugin-web-client/webUI
 pnpm install
 pnpm dev
 ```
@@ -130,3 +134,58 @@ pnpm dev
 ```bash
 docker-compose up -d
 ```
+## 核心架构特点
+
+- **分层架构**：bootstrap(启动) -> core(核心业务) -> common(公共组件)
+- **数据访问**：Repository 模式封装 MyBatis-Plus 和 MongoDB 操作
+- **会话管理**：基于 Netty 的 WebSocket 长连接，支持心跳保活和断线重连
+- **认证授权**：Sa-Token 统一认证，支持多端登录和 Redis 会话共享
+- **分布式锁**：Redisson 实现并发安全控制
+- **枚举管理**：业务状态统一使用枚举，避免魔法字符串
+- **统一响应**：所有 API 返回统一的 Result 格式
+- **异常处理**：全局异常处理器，统一错误码和错误信息
+
+## 环境变量配置
+
+项目支持通过 `.env` 文件或环境变量配置：
+
+```bash
+# 数据库配置
+DB_HOST=localhost
+DB_PORT=3306
+DB_NAME=fish_chat
+DB_USERNAME=root
+DB_PASSWORD=your_password
+
+# Redis 配置
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+
+# MongoDB 配置
+MONGO_HOST=localhost
+MONGO_PORT=27017
+MONGO_DB=fish_chat
+MONGO_USERNAME=
+MONGO_PASSWORD=
+
+# 应用配置
+SPRING_PROFILES_ACTIVE=dev
+```
+
+## 开发指南
+
+### 代码规范
+
+- 遵循阿里巴巴 Java 开发手册
+- 使用 Lombok 简化 POJO 代码
+- 使用 MapStruct 进行对象映射
+- 统一使用枚举管理业务状态
+- Repository 层封装所有数据访问操作
+
+### 模块职责
+
+- **bootstrap**: 应用启动入口、全局配置(CORS、Sa-Token、静态资源)
+- **core**: 业务逻辑实现、Netty WebSocket 服务器、REST API 控制器
+- **common**: 通用工具类、统一返回结果、异常处理、Redis 封装
+- **webUI**: Vue 3 前端应用
