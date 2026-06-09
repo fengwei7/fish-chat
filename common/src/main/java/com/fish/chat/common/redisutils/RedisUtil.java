@@ -1,27 +1,49 @@
 package com.fish.chat.common.redisutils;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ByteArrayResource;
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.scripting.support.ResourceScriptSource;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Redis 工具类（含分布式锁）
+ * Redis 工具类
+ * 
+ * 分布式锁使用 Redisson 实现，支持：
+ * 1. WatchDog 自动续期（默认 30 秒）
+ * 2. 可重入锁
+ * 3. 公平锁、读写锁等
+ * 4. 原子性保证
+ * 
+ * 使用示例：
+ * <pre>
+ * // 示例 1：带 WatchDog 自动续期
+ * RLock lock = redisUtil.lock("myLock", uuid);
+ * try {
+ *     // 业务逻辑
+ * } finally {
+ *     redisUtil.release(lock);
+ * }
+ * 
+ * // 示例 2：指定超时时间
+ * boolean success = redisUtil.tryLock("myLock", uuid, 5000, 30000);
+ * if (success) {
+ *     try {
+ *         // 业务逻辑
+ *     } finally {
+ *         redisUtil.release("myLock", uuid);
+ *     }
+ * }
+ * </pre>
  */
 @Slf4j
 @Component
@@ -29,18 +51,9 @@ public class RedisUtil {
 
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
-
-    private DefaultRedisScript<List> releaseLockScript;
-
-    @PostConstruct
-    public void init() {
-        String luaStr = "if redis.call('get',KEYS[1]) == ARGV[1] then return redis.call('del',KEYS[1]) else return 0 end";
-        ByteArrayResource resource = new ByteArrayResource(luaStr.getBytes());
-
-        releaseLockScript = new DefaultRedisScript<>();
-        releaseLockScript.setResultType(List.class);
-        releaseLockScript.setScriptSource(new ResourceScriptSource(resource));
-    }
+    
+    @Resource
+    private RedissonClient redissonClient;
 
 
     /**
@@ -143,82 +156,92 @@ public class RedisUtil {
     }
 
     /**
-     * 尝试获取分布式锁（带超时重试，使用循环避免栈溢出）
+     * 尝试获取分布式锁（使用 Redisson 实现）
      *
      * @param key  锁key
-     * @param uuid 线程唯一标识
-     * @param maxWaitTime 最大等待时间（毫秒）
+     * @param uuid 线程唯一标识（Redisson 不需要，保留用于兼容）
+     * @param waitTime 最大等待时间（毫秒）
+     * @param leaseTime 锁自动释放时间（毫秒），-1 表示启用 WatchDog 自动续期
      */
-    public boolean tryLock(String key, String uuid, long maxWaitTime) {
-        long startTime = System.currentTimeMillis();
-        long remainingTime = maxWaitTime;
-        
-        while (remainingTime > 0) {
-            // 尝试获取锁，锁过期时间至少为100ms
-            if (lock(key, uuid, Math.max(remainingTime, 100), TimeUnit.MILLISECONDS)) {
-                return true;
+    public boolean tryLock(String key, String uuid, long waitTime, long leaseTime) {
+        RLock lock = redissonClient.getLock(key);
+        try {
+            // 尝试获取锁，等待 waitTime，锁过期时间 leaseTime
+            // 如果 leaseTime 为 -1，则启用 WatchDog 自动续期（默认 30 秒）
+            boolean success = lock.tryLock(waitTime, leaseTime, TimeUnit.MILLISECONDS);
+            if (success) {
+                log.info("获取锁成功: {}", key);
+            } else {
+                log.warn("获取锁超时: {}, 等待时间: {}ms", key, waitTime);
             }
-            
-            try {
-                // 动态计算休眠时间，避免过度等待
-                long sleepTime = Math.min(50, remainingTime);
-                Thread.sleep(sleepTime);
-                
-                // 计算剩余等待时间
-                remainingTime = maxWaitTime - (System.currentTimeMillis() - startTime);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                log.error("获取锁被中断: {}", key);
-                return false;
-            }
+            return success;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            log.error("获取锁被中断: {}", key);
+            return false;
         }
-        
-        log.warn("获取锁超时: {}, 最大等待时间: {}ms", key, maxWaitTime);
-        return false;
     }
-
+    
     /**
-     * 获取分布式锁（可重入）
+     * 获取分布式锁（带 WatchDog 自动续期）
+     * 注意：使用此方法时，必须手动调用 release() 释放锁
      *
      * @param lockKey  锁key
-     * @param uuid     线程唯一标识
+     * @param uuid     线程唯一标识（Redisson 不需要，保留用于兼容）
+     */
+    public RLock lock(String lockKey, String uuid) {
+        RLock lock = redissonClient.getLock(lockKey);
+        lock.lock(); // 默认启用 WatchDog，30 秒自动续期
+        log.info("新加锁: {}, redisKey: {}", true, lockKey);
+        return lock;
+    }
+    
+    /**
+     * 获取分布式锁（指定过期时间）
+     *
+     * @param lockKey  锁key
+     * @param uuid     线程唯一标识（Redisson 不需要，保留用于兼容）
      * @param timeout  锁过期时间
      * @param timeUnit 时间单位
      */
-    public boolean lock(String lockKey, String uuid, long timeout, TimeUnit timeUnit) {
-        Object currentLock = redisTemplate.opsForValue().get(lockKey);
-        if (StringUtils.isEmpty(currentLock)) {
-            boolean result = Boolean.TRUE.equals(redisTemplate.opsForValue().setIfAbsent(lockKey, uuid, timeout, timeUnit));
-            log.info("新加锁: {}, redisKey: {}", result, lockKey);
-            return result;
-        } else {
-            if (currentLock.equals(uuid)) {
-                redisTemplate.opsForValue().set(lockKey, uuid, timeout, timeUnit);
-                log.info("重入锁: true, redisKey: {}", lockKey);
-                return true;
-            } else {
-                log.info("重入锁: false, redisKey: {}", lockKey);
-                return false;
-            }
-        }
+    public RLock lock(String lockKey, String uuid, long timeout, TimeUnit timeUnit) {
+        RLock lock = redissonClient.getLock(lockKey);
+        lock.lock(timeout, timeUnit);
+        log.info("新加锁: true, redisKey: {}", lockKey);
+        return lock;
     }
 
     /**
-     * 释放分布式锁（Lua脚本保证原子性）
+     * 释放分布式锁（使用 Redisson）
      *
      * @param lockKey 锁key
-     * @param uuid    线程唯一标识
+     * @param uuid    线程唯一标识（Redisson 不需要，保留用于兼容）
      */
     public void release(String lockKey, String uuid) {
         try {
-            List<Long> execute = redisTemplate.execute(releaseLockScript, Collections.singletonList(lockKey), uuid);
-            boolean result = execute != null && !execute.isEmpty() && execute.get(0).equals(1L);
-            log.info("解锁结果: {}, redisKey: {}", result, lockKey);
-            if (!result) {
-                log.info("解锁失败: {}", lockKey);
+            RLock lock = redissonClient.getLock(lockKey);
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+                log.info("解锁成功: {}", lockKey);
+            } else {
+                log.warn("解锁失败，当前线程未持有锁: {}", lockKey);
             }
         } catch (Exception e) {
             log.error("解锁异常, key: {}, uuid: {}", lockKey, uuid, e);
+        }
+    }
+    
+    /**
+     * 释放分布式锁（使用 RLock 对象）
+     */
+    public void release(RLock lock) {
+        try {
+            if (lock != null && lock.isHeldByCurrentThread()) {
+                lock.unlock();
+                log.info("解锁成功: {}", lock.getName());
+            }
+        } catch (Exception e) {
+            log.error("解锁异常", e);
         }
     }
 }

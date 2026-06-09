@@ -31,6 +31,7 @@
         <netty.version>4.1.100.Final</netty.version>
         <fastjson.version>1.2.83</fastjson.version>
         <spring-security-crypto.version>5.8.16</spring-security-crypto.version>
+        <redisson.version>3.25.0</redisson.version>
     </properties>
 
     <dependencyManagement>
@@ -173,6 +174,13 @@
                 <groupId>org.springframework.security</groupId>
                 <artifactId>spring-security-crypto</artifactId>
                 <version>${spring-security-crypto.version}</version>
+            </dependency>
+            
+            <!-- Redisson (分布式锁) -->
+            <dependency>
+                <groupId>org.redisson</groupId>
+                <artifactId>redisson-spring-boot-starter</artifactId>
+                <version>${redisson.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
