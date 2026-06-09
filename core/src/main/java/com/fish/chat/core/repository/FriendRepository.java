@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fish.chat.core.entity.po.FriendPO;
+import com.fish.chat.core.enums.FriendStatus;
 import com.fish.chat.core.mapper.FriendMapper;
 import org.springframework.stereotype.Repository;
 
@@ -32,7 +33,7 @@ public class FriendRepository {
         return friendMapper.selectPage(page,
                 Wrappers.<FriendPO>lambdaQuery()
                         .eq(FriendPO::getUserCode, userCode)
-                        .eq(FriendPO::getStatus, 1));
+                        .eq(FriendPO::getStatus, FriendStatus.CONFIRMED.getValue()));
     }
 
     /**
@@ -42,7 +43,7 @@ public class FriendRepository {
         return friendMapper.selectPage(page,
                 Wrappers.<FriendPO>lambdaQuery()
                         .eq(FriendPO::getFriendCode, friendCode)
-                        .eq(FriendPO::getStatus, 0));
+                        .eq(FriendPO::getStatus, FriendStatus.PENDING.getValue()));
     }
 
     /**

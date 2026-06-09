@@ -9,6 +9,7 @@ import com.fish.chat.core.chat.SessionManager;
 import com.fish.chat.core.entity.dto.FriendDTO;
 import com.fish.chat.core.entity.po.FriendPO;
 import com.fish.chat.core.entity.po.UserPO;
+import com.fish.chat.core.enums.FriendStatus;
 import com.fish.chat.core.repository.FriendRepository;
 import com.fish.chat.core.repository.UserRepository;
 import com.fish.chat.core.service.FriendService;
@@ -46,7 +47,7 @@ public class FriendServiceImpl implements FriendService {
         po.setUserCode(me.getCode());
         po.setFriendCode(friend.getCode());
         po.setRemark(remark);
-        po.setStatus(0); // 待确认
+        po.setStatus(FriendStatus.PENDING.getValue());
         friendRepository.save(po);
     }
 
@@ -62,16 +63,16 @@ public class FriendServiceImpl implements FriendService {
         FriendPO po = friendRepository.selectOne(Wrappers.<FriendPO>lambdaQuery()
                 .eq(FriendPO::getUserCode, friend.getCode())
                 .eq(FriendPO::getFriendCode, me.getCode())
-                .eq(FriendPO::getStatus, 0));
+                .eq(FriendPO::getStatus, FriendStatus.PENDING.getValue()));
         if (po == null) throw new BusinessException("没有待确认的好友请求");
-        po.setStatus(1);
+        po.setStatus(FriendStatus.CONFIRMED.getValue());
         friendRepository.updateById(po);
 
         // 反向添加
         FriendPO reverse = new FriendPO();
         reverse.setUserCode(me.getCode());
         reverse.setFriendCode(friend.getCode());
-        reverse.setStatus(1);
+        reverse.setStatus(FriendStatus.CONFIRMED.getValue());
         friendRepository.save(reverse);
     }
 
@@ -119,7 +120,7 @@ public class FriendServiceImpl implements FriendService {
                 dto.setNickname(user.getNickname());
                 dto.setAvatarUrl(user.getAvatarUrl());
                 dto.setRemark(f.getRemark());
-                dto.setStatus(1);
+                dto.setStatus(FriendStatus.CONFIRMED.getValue());
                 dto.setOnline(sessionManager.isOnline(user.getCode()));
                 result.add(dto);
             }
@@ -157,7 +158,7 @@ public class FriendServiceImpl implements FriendService {
                 dto.setNickname(user.getNickname());
                 dto.setAvatarUrl(user.getAvatarUrl());
                 dto.setRemark(req.getRemark());
-                dto.setStatus(0);
+                dto.setStatus(FriendStatus.PENDING.getValue());
                 dto.setOnline(sessionManager.isOnline(user.getCode()));
                 result.add(dto);
             }

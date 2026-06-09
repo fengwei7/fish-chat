@@ -36,9 +36,14 @@ public final class AuthConstants {
     public static final String ONLINE_USER_PREFIX = "user:online:";
     
     /**
+     * Redis 在线用户 Set Key（用于统一管理所有在线用户）
+     */
+    public static final String ONLINE_USERS_SET = "fish-chat:online:users";
+    
+    /**
      * 在线用户过期时间（分钟）
      */
-    public static final long ONLINE_USER_EXPIRE_MINUTES = 1L;
+    public static final long ONLINE_USER_EXPIRE_MINUTES = 30L;
     
     private AuthConstants() {
         // 防止实例化

@@ -12,9 +12,9 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = false)
 public class BasePO implements Serializable {
     /**
-     * ID
+     * ID（雪花算法自动生成）
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Long id;
 
     /**

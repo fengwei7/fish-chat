@@ -1,5 +1,6 @@
 package com.fish.chat.common.exception;
 
+import cn.dev33.satoken.exception.NotLoginException;
 import com.fish.chat.common.result.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,16 @@ import javax.validation.ConstraintViolationException;
 public class GlobalExceptionHandler {
     
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    
+    /**
+     * 处理 Sa-Token 未登录异常
+     */
+    @ExceptionHandler(NotLoginException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public Result<Void> handleNotLoginException(NotLoginException e) {
+        log.warn("未登录异常：{}", e.getMessage());
+        return Result.error(401, "未登录或登录已过期");
+    }
     
     /**
      * 处理业务异常

@@ -18,14 +18,9 @@ public class UserPO extends BasePO {
     private String username;
 
     /**
-     * 密码（SHA256+ 盐值加密）
+     * 密码（BCrypt 加密，salt 已嵌入哈希值）
      */
     private String password;
-
-    /**
-     * 密码盐值
-     */
-    private String salt;
 
     /**
      * 昵称

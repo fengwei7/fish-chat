@@ -94,10 +94,16 @@
             <artifactId>hutool-all</artifactId>
         </dependency>
         
-        <!-- Fastjson -->
+        <!-- Fastjson2 -->
         <dependency>
-            <groupId>com.alibaba</groupId>
-            <artifactId>fastjson</artifactId>
+            <groupId>com.alibaba.fastjson2</groupId>
+            <artifactId>fastjson2</artifactId>
+        </dependency>
+        
+        <!-- Spring Security Crypto (for BCrypt password encoding) -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
         </dependency>
         
         <!-- Lombok -->

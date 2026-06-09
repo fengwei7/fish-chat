@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fish.chat.common.repository.BaseRepository;
 import com.fish.chat.core.entity.po.ChannelMemberPO;
 import com.fish.chat.core.entity.po.ChannelPO;
+import com.fish.chat.core.enums.CommonStatus;
+import com.fish.chat.core.enums.MemberRole;
 import com.fish.chat.core.mapper.ChannelMapper;
 import com.fish.chat.core.mapper.ChannelMemberMapper;
 import org.springframework.stereotype.Repository;
@@ -47,7 +49,7 @@ public class ChannelRepository extends BaseRepository<ChannelPO> {
         return channelMapper.selectList(
                 Wrappers.<ChannelPO>lambdaQuery()
                         .in(ChannelPO::getCode, codes)
-                        .eq(ChannelPO::getStatus, 1));
+                        .eq(ChannelPO::getStatus, CommonStatus.NORMAL.getValue()));
     }
 
     /**
@@ -78,6 +80,28 @@ public class ChannelRepository extends BaseRepository<ChannelPO> {
     }
 
     /**
+     * 检查用户是否是频道管理员（role = ADMIN）
+     */
+    public boolean isAdmin(String channelCode, String userCode) {
+        return channelMemberMapper.selectCount(
+                Wrappers.<ChannelMemberPO>lambdaQuery()
+                        .eq(ChannelMemberPO::getChannelCode, channelCode)
+                        .eq(ChannelMemberPO::getUserCode, userCode)
+                        .eq(ChannelMemberPO::getRole, MemberRole.ADMIN.getValue())) > 0;
+    }
+
+    /**
+     * 检查用户是否是频道创建者（role = OWNER）
+     */
+    public boolean isOwner(String channelCode, String userCode) {
+        return channelMemberMapper.selectCount(
+                Wrappers.<ChannelMemberPO>lambdaQuery()
+                        .eq(ChannelMemberPO::getChannelCode, channelCode)
+                        .eq(ChannelMemberPO::getUserCode, userCode)
+                        .eq(ChannelMemberPO::getRole, MemberRole.OWNER.getValue())) > 0;
+    }
+
+    /**
      * 插入频道成员
      */
     public void insertMember(ChannelMemberPO member) {
@@ -91,5 +115,41 @@ public class ChannelRepository extends BaseRepository<ChannelPO> {
         channelMemberMapper.delete(Wrappers.<ChannelMemberPO>lambdaQuery()
                 .eq(ChannelMemberPO::getChannelCode, channelCode)
                 .eq(ChannelMemberPO::getUserCode, userCode));
+    }
+
+    /**
+     * 更新成员角色
+     */
+    public void updateMemberRole(String channelCode, String userCode, Integer role) {
+        ChannelMemberPO member = new ChannelMemberPO();
+        member.setRole(role);
+        channelMemberMapper.update(member, Wrappers.<ChannelMemberPO>lambdaQuery()
+                .eq(ChannelMemberPO::getChannelCode, channelCode)
+                .eq(ChannelMemberPO::getUserCode, userCode));
+    }
+
+    /**
+     * 带条件检查的成员角色更新（用于原子性操作）
+     * @return 影响的行数
+     */
+    public int updateMemberRoleWithCheck(String channelCode, String userCode, Integer newRole, Integer expectedOldRole) {
+        ChannelMemberPO member = new ChannelMemberPO();
+        member.setRole(newRole);
+        return channelMemberMapper.update(member, Wrappers.<ChannelMemberPO>lambdaQuery()
+                .eq(ChannelMemberPO::getChannelCode, channelCode)
+                .eq(ChannelMemberPO::getUserCode, userCode)
+                .eq(ChannelMemberPO::getRole, expectedOldRole));
+    }
+
+    /**
+     * 查询成员角色
+     */
+    public Integer getMemberRole(String channelCode, String userCode) {
+        ChannelMemberPO member = channelMemberMapper.selectOne(
+                Wrappers.<ChannelMemberPO>lambdaQuery()
+                        .eq(ChannelMemberPO::getChannelCode, channelCode)
+                        .eq(ChannelMemberPO::getUserCode, userCode)
+                        .last("LIMIT 1"));
+        return member != null ? member.getRole() : null;
     }
 }
