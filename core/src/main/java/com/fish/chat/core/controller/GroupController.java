@@ -4,8 +4,10 @@ import com.fish.chat.common.constants.UrlConstants;
 import com.fish.chat.common.result.PageResult;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.entity.dto.GroupDTO;
+import com.fish.chat.core.entity.dto.GroupMemberDTO;
 import com.fish.chat.core.entity.req.AddMemberRequest;
 import com.fish.chat.core.entity.req.CreateGroupRequest;
+import com.fish.chat.core.entity.req.UpdateGroupRequest;
 import com.fish.chat.core.service.GroupService;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,10 +32,21 @@ public class GroupController {
         return Result.success(groupService.getGroup(code));
     }
 
+    @PostMapping("/update/{code}")
+    public Result<GroupDTO> update(@PathVariable String code, @Valid @RequestBody UpdateGroupRequest req) {
+        return Result.success(groupService.updateGroup(code, req.getName(), req.getAvatar(), req.getNotice()));
+    }
+
     @PostMapping("/{code}/dismiss")
     public Result<Void> dismiss(@PathVariable String code) {
         groupService.dismissGroup(code);
         return Result.success("群组已解散", null);
+    }
+
+    @PostMapping("/{code}/leave")
+    public Result<Void> leave(@PathVariable String code) {
+        groupService.leaveGroup(code);
+        return Result.success("已退出群组", null);
     }
 
     @PostMapping("/{code}/members")
@@ -61,5 +74,13 @@ public class GroupController {
             @RequestParam(defaultValue = "0") int pageNum,
             @RequestParam(defaultValue = "20") int pageSize) {
         return Result.success(groupService.searchGroups(keyword, pageNum, pageSize));
+    }
+
+    @GetMapping("/{code}/members")
+    public Result<PageResult<GroupMemberDTO>> listMembers(
+            @PathVariable String code,
+            @RequestParam(defaultValue = "0") int pageNum,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        return Result.success(groupService.listGroupMembers(code, pageNum, pageSize));
     }
 }

@@ -92,4 +92,23 @@ public class GroupRepository extends BaseRepository<GroupPO> {
                 .eq(GroupMemberPO::getGroupCode, groupCode)
                 .eq(GroupMemberPO::getUserCode, userCode));
     }
+    
+    /**
+     * 分页查询群组的成员列表
+     */
+    public Page<GroupMemberPO> selectGroupMemberPage(String groupCode, Page<GroupMemberPO> page) {
+        return groupMemberMapper.selectPage(page,
+                Wrappers.<GroupMemberPO>lambdaQuery()
+                        .eq(GroupMemberPO::getGroupCode, groupCode));
+    }
+    
+    /**
+     * 查询用户在群组中的成员信息
+     */
+    public GroupMemberPO selectMember(String groupCode, String userCode) {
+        return groupMemberMapper.selectOne(
+                Wrappers.<GroupMemberPO>lambdaQuery()
+                        .eq(GroupMemberPO::getGroupCode, groupCode)
+                        .eq(GroupMemberPO::getUserCode, userCode));
+    }
 }

@@ -2,6 +2,7 @@ package com.fish.chat.core.service;
 
 import com.fish.chat.common.result.PageResult;
 import com.fish.chat.core.entity.dto.GroupDTO;
+import com.fish.chat.core.entity.dto.GroupMemberDTO;
 
 /**
  * 群组服务接口
@@ -73,6 +74,16 @@ public interface GroupService {
     PageResult<GroupDTO> listMyGroups(int pageNum, int pageSize);
     
     /**
+     * 退出群组
+     * 
+     * 非群主可以退出群组，群主不能退出（只能转让或解散）
+     *
+     * @param groupCode 群组唯一标识
+     * @throws com.fish.chat.common.exception.BusinessException 当群组不存在或用户是群主时抛出
+     */
+    void leaveGroup(String groupCode);
+    
+    /**
      * 搜索群组（按名称模糊匹配）
      *
      * @param keyword 搜索关键词
@@ -81,4 +92,28 @@ public interface GroupService {
      * @return 分页的群组搜索结果
      */
     PageResult<GroupDTO> searchGroups(String keyword, int pageNum, int pageSize);
+    
+    /**
+     * 获取群组成员列表（分页）
+     *
+     * @param groupCode 群组唯一标识
+     * @param pageNum 页码，从0开始
+     * @param pageSize 每页数量
+     * @return 分页的群组成员列表，包含用户信息和角色
+     */
+    PageResult<GroupMemberDTO> listGroupMembers(String groupCode, int pageNum, int pageSize);
+    
+    /**
+     * 修改群组信息
+     * 
+     * 仅群主或管理员可以执行此操作，支持选择性更新非空字段
+     *
+     * @param code 群组唯一标识
+     * @param name 群组名称（可选）
+     * @param avatar 群组头像URL（可选）
+     * @param notice 群组公告（可选）
+     * @return 更新后的群组信息DTO
+     * @throws com.fish.chat.common.exception.BusinessException 当群组不存在或用户没有权限时抛出
+     */
+    GroupDTO updateGroup(String code, String name, String avatar, String notice);
 }

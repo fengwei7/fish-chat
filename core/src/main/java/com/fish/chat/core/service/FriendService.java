@@ -64,6 +64,16 @@ public interface FriendService {
     PageResult<FriendDTO> listFriendRequests(int pageNum, int pageSize);
     
     /**
+     * 拒绝好友申请
+     * 
+     * 将好友请求状态更新为已拒绝
+     *
+     * @param friendCode 发送好友请求的用户的用户code
+     * @throws com.fish.chat.common.exception.BusinessException 当用户不存在或没有待确认的请求时抛出
+     */
+    void rejectFriend(String friendCode);
+    
+    /**
      * 搜索用户（按code或用户名模糊匹配）
      *
      * @param keyword 搜索关键词
