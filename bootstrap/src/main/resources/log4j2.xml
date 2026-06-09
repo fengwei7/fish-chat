@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Log4j2 配置文件
+    功能：
+    1. 控制台彩色输出（开发调试）
+    2. 文件滚动输出（生产环境）
+    3. 按日志级别分离存储
+    4. 异步日志提升性能
+-->
+<Configuration status="WARN" monitorInterval="30">
+    
+    <!-- 属性定义 -->
+    <Properties>
+        <!-- 日志文件存储目录 -->
+        <Property name="LOG_DIR">./logs</Property>
+        <!-- 应用名称 -->
+        <Property name="APP_NAME">fish-chat</Property>
+        <!-- 控制台日志格式（带颜色） -->
+        <Property name="CONSOLE_PATTERN">
+            %d{yyyy-MM-dd HH:mm:ss.SSS} %highlight{%-5level}{FATAL=bg_red, ERROR=red, WARN=yellow, INFO=green, DEBUG=cyan, TRACE=blue} [%thread] %logger{36} - %msg%n
+        </Property>
+        <!-- 文件日志格式（无颜色） -->
+        <Property name="FILE_PATTERN">
+            %d{yyyy-MM-dd HH:mm:ss.SSS}
+            %-5level
+            [%thread]
+            %logger{36} -
+            %msg%n
+        </Property>
+        <!-- 单个日志文件最大大小 -->
+        <Property name="MAX_FILE_SIZE">100MB</Property>
+        <!-- 日志文件保留天数 -->
+        <Property name="MAX_AGE">30</Property>
+    </Properties>
+
+    <!-- Appender 定义 -->
+    <Appenders>
+        
+        <!-- 1. 控制台输出 -->
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${CONSOLE_PATTERN}"/>
+        </Console>
+
+        <!-- 2. 所有日志文件（滚动） -->
+        <RollingFile name="AllFile" fileName="${LOG_DIR}/${APP_NAME}.log"
+                     filePattern="${LOG_DIR}/archive/${APP_NAME}-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${FILE_PATTERN}"/>
+            <Policies>
+                <!-- 按时间滚动：每天 -->
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <!-- 按大小滚动：超过100MB -->
+                <SizeBasedTriggeringPolicy size="${MAX_FILE_SIZE}"/>
+            </Policies>
+            <!-- 保留策略 -->
+            <DefaultRolloverStrategy max="100">
+                <Delete basePath="${LOG_DIR}/archive" maxDepth="2">
+                    <IfFileName glob="*.log.gz"/>
+                    <IfLastModified age="${MAX_AGE}d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- 3. INFO 级别日志（单独文件） -->
+        <RollingFile name="InfoFile" fileName="${LOG_DIR}/${APP_NAME}-info.log"
+                     filePattern="${LOG_DIR}/archive/${APP_NAME}-info-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${FILE_PATTERN}"/>
+            <Filters>
+                <!-- 拒绝 WARN 及以上级别 -->
+                <ThresholdFilter level="WARN" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <!-- 接受 INFO 及以上级别 -->
+                <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <SizeBasedTriggeringPolicy size="${MAX_FILE_SIZE}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100">
+                <Delete basePath="${LOG_DIR}/archive" maxDepth="2">
+                    <IfFileName glob="*-info-*.log.gz"/>
+                    <IfLastModified age="${MAX_AGE}d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- 4. ERROR 级别日志（单独文件） -->
+        <RollingFile name="ErrorFile" fileName="${LOG_DIR}/${APP_NAME}-error.log"
+                     filePattern="${LOG_DIR}/archive/${APP_NAME}-error-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${FILE_PATTERN}"/>
+            <Filters>
+                <!-- 只接受 ERROR 及以上级别 -->
+                <ThresholdFilter level="ERROR" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <SizeBasedTriggeringPolicy size="${MAX_FILE_SIZE}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100">
+                <Delete basePath="${LOG_DIR}/archive" maxDepth="2">
+                    <IfFileName glob="*-error-*.log.gz"/>
+                    <IfLastModified age="${MAX_AGE}d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <!-- 5. Netty 专用日志 -->
+        <RollingFile name="NettyFile" fileName="${LOG_DIR}/${APP_NAME}-netty.log"
+                     filePattern="${LOG_DIR}/archive/${APP_NAME}-netty-%d{yyyy-MM-dd}-%i.log.gz">
+            <PatternLayout pattern="${FILE_PATTERN}"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+                <SizeBasedTriggeringPolicy size="${MAX_FILE_SIZE}"/>
+            </Policies>
+            <DefaultRolloverStrategy max="100">
+                <Delete basePath="${LOG_DIR}/archive" maxDepth="2">
+                    <IfFileName glob="*-netty-*.log.gz"/>
+                    <IfLastModified age="${MAX_AGE}d"/>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+    </Appenders>
+
+    <!-- Logger 定义 -->
+    <Loggers>
+        
+        <!-- Netty 日志单独配置 -->
+        <Logger name="io.netty" level="INFO" additivity="false">
+            <AppenderRef ref="NettyFile"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- Spring 框架日志 -->
+        <Logger name="org.springframework" level="INFO" additivity="false">
+            <AppenderRef ref="AllFile"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- MyBatis 日志 -->
+        <Logger name="com.baomidou.mybatisplus" level="DEBUG" additivity="false">
+            <AppenderRef ref="AllFile"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- MongoDB 日志 -->
+        <Logger name="org.mongodb.driver" level="WARN" additivity="false">
+            <AppenderRef ref="AllFile"/>
+        </Logger>
+
+        <!-- Redis 日志 -->
+        <Logger name="org.springframework.data.redis" level="INFO" additivity="false">
+            <AppenderRef ref="AllFile"/>
+        </Logger>
+
+        <!-- Sa-Token 日志 -->
+        <Logger name="cn.dev33.satoken" level="DEBUG" additivity="false">
+            <AppenderRef ref="AllFile"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- 项目业务日志 -->
+        <Logger name="com.fish.chat" level="DEBUG" additivity="false">
+            <AppenderRef ref="AllFile"/>
+            <AppenderRef ref="InfoFile"/>
+            <AppenderRef ref="ErrorFile"/>
+            <AppenderRef ref="Console"/>
+        </Logger>
+
+        <!-- 根日志配置 -->
+        <Root level="INFO">
+            <AppenderRef ref="AllFile"/>
+            <AppenderRef ref="Console"/>
+        </Root>
+
+    </Loggers>
+</Configuration>

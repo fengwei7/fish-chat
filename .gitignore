@@ -34,3 +34,7 @@ build/
 .lingma/
 uploads
 .env
+
+### Logs ###
+logs/
+*.log

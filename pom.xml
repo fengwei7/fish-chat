@@ -32,6 +32,7 @@
         <fastjson2.version>2.0.43</fastjson2.version>
         <spring-security-crypto.version>5.8.16</spring-security-crypto.version>
         <redisson.version>3.25.0</redisson.version>
+        <log4j2.version>2.20.0</log4j2.version>
     </properties>
 
     <dependencyManagement>
