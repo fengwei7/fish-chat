@@ -302,4 +302,106 @@ public class RedisUtil {
             return false;
         }
     }
+
+    // ==================== Redis Sorted Set 操作 ====================
+
+    /**
+     * 向 Sorted Set 中添加元素（带分数）
+     */
+    public void addToSortedSet(String key, String value, double score) {
+        try {
+            redisTemplate.opsForZSet().add(key, value, score);
+        } catch (Exception e) {
+            log.error("向Sorted Set添加元素失败: key={}, value={}", key, value, e);
+        }
+    }
+
+    /**
+     * 从 Sorted Set 中倒序获取范围（按分数从高到低）
+     */
+    public Set<String> getSortedSetRange(String key, long start, long end) {
+        try {
+            // ZREVRANGE: 按分数倒序获取
+            Set<Object> objects = redisTemplate.opsForZSet().reverseRange(key, start, end);
+            if (objects == null) {
+                return new HashSet<>();
+            }
+            Set<String> result = new HashSet<>();
+            for (Object obj : objects) {
+                if (obj != null) {
+                    result.add(obj.toString());
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("获取Sorted Set范围失败: key={}", key, e);
+            return new HashSet<>();
+        }
+    }
+
+    /**
+     * 从 Sorted Set 中移除元素
+     */
+    public void removeFromSortedSet(String key, String value) {
+        try {
+            redisTemplate.opsForZSet().remove(key, value);
+        } catch (Exception e) {
+            log.error("从Sorted Set移除元素失败: key={}, value={}", key, value, e);
+        }
+    }
+
+    /**
+     * 更新 Sorted Set 中元素的分数
+     */
+    public void updateSortedSetScore(String key, String value, double score) {
+        try {
+            redisTemplate.opsForZSet().add(key, value, score);
+        } catch (Exception e) {
+            log.error("更新Sorted Set分数失败: key={}, value={}", key, value, e);
+        }
+    }
+
+    /**
+     * 获取 Sorted Set 中的元素数量
+     */
+    public long getSortedSetSize(String key) {
+        try {
+            Long size = redisTemplate.opsForZSet().zCard(key);
+            return size != null ? size : 0;
+        } catch (Exception e) {
+            log.error("获取Sorted Set大小失败: key={}", key, e);
+            return 0;
+        }
+    }
+
+    // ==================== Redis 自增操作 ====================
+
+    /**
+     * 自增指定key的值（原子操作）
+     */
+    public Long incrementValue(String key) {
+        try {
+            return redisTemplate.opsForValue().increment(key);
+        } catch (Exception e) {
+            log.error("自增值失败: key={}", key, e);
+            return null;
+        }
+    }
+
+    /**
+     * 自增指定key的值，并设置过期时间
+     */
+    public Long incrementValueWithExpire(String key, long timeout, TimeUnit unit) {
+        try {
+            Long result = redisTemplate.opsForValue().increment(key);
+            if (result != null && result == 1) {
+                // 第一次创建时设置过期时间
+                redisTemplate.expire(key, timeout, unit);
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("自增并设置过期时间失败: key={}", key, e);
+            return null;
+        }
+    }
 }

@@ -29,7 +29,10 @@ public class SessionManager {
     @Resource
     private RedisUtil redisUtil;
 
-    @PostConstruct
+    /**
+     * 初始化会话管理器
+     * 由 ApplicationStartupManager 统一调用
+     */
     public void init() {
         log.info("SessionManager 初始化完成");
         cleanDirtyData();

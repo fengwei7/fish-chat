@@ -35,7 +35,10 @@ public class NettyWebSocketServer {
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
 
-    @PostConstruct
+    /**
+     * 启动 Netty WebSocket 服务器
+     * 由 ApplicationStartupManager 统一调用
+     */
     public void start() throws InterruptedException {
         bossGroup = new NioEventLoopGroup(1);
         workerGroup = new NioEventLoopGroup();

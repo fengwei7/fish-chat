@@ -14,6 +14,7 @@ import com.fish.chat.core.enums.MessageType;
 import com.fish.chat.core.repository.ChatMessageRepository;
 import com.fish.chat.core.repository.GroupRepository;
 import com.fish.chat.core.repository.ChannelRepository;
+import com.fish.chat.core.service.ConversationService;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -56,6 +57,9 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
 
     @Resource
     private MessageBatchWriter messageBatchWriter;
+
+    @Resource
+    private ConversationService conversationService;
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame frame) {
@@ -187,6 +191,9 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
         // 广播到房间内所有在线成员
         Set<String> memberCodes = room.getMembers();
         sessionManager.broadcastToRoom(memberCodes, out, null); // 包括发送者自己（同步确认）
+
+        // 更新所有接收者的会话列表和未读数
+        updateConversations(body);
 
         // ACK
         sendAck(ctx, packet.getReqCode());
@@ -349,6 +356,56 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
     private void sendPacket(ChannelHandlerContext ctx, ChatMessagePacket packet) {
         if (ctx.channel().isActive()) {
             ctx.writeAndFlush(new TextWebSocketFrame(JSON.toJSONString(packet)));
+        }
+    }
+
+    /**
+     * 更新所有接收者的会话列表和未读数
+     */
+    private void updateConversations(ChatMessagePacket.Body body) {
+        String roomCode = body.getRoomCode();
+        String roomType = body.getRoomType();
+        String senderCode = body.getSenderCode();
+        
+        // 获取房间所有成员
+        Room room = roomManager.getRoom(roomCode);
+        if (room == null) {
+            return;
+        }
+        
+        Set<String> members = room.getMembers();
+        String lastMsgContent = buildLastMsgContent(body);
+        
+        for (String memberCode : members) {
+            if (!memberCode.equals(senderCode)) {
+                // 1. 更新会话列表（不包括发送者）
+                conversationService.updateConversation(
+                    memberCode, roomCode, roomType, lastMsgContent);
+                
+                // 2. 增加未读数（不包括发送者）
+                conversationService.incrementUnread(memberCode, roomCode);
+            }
+        }
+    }
+    
+    /**
+     * 构建最后一条消息内容（用于会话列表显示）
+     */
+    private String buildLastMsgContent(ChatMessagePacket.Body body) {
+        String senderName = body.getSenderName();
+        String msgType = body.getMsgType();
+        String content = body.getContent();
+        
+        // 根据消息类型显示不同内容
+        if (MessageType.IMAGE.getValue().equals(msgType)) {
+            return "[图片]";
+        } else if (MessageType.FILE.getValue().equals(msgType)) {
+            return "[文件]";
+        } else if (MessageType.SYSTEM.getValue().equals(msgType)) {
+            return content;
+        } else {
+            // 文本消息：显示发送者 + 内容
+            return senderName + ": " + content;
         }
     }
 }

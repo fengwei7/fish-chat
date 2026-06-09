@@ -47,7 +47,10 @@ public class MessageBatchWriter {
     /** 消息缓冲队列 */
     private BlockingQueue<ChatMessagePacket.Body> queue;
 
-    @PostConstruct
+    /**
+     * 启动消息批量写入器
+     * 由 ApplicationStartupManager 统一调用
+     */
     public void startBatchWriter() {
         // 初始化队列
         queue = new LinkedBlockingQueue<>(queueCapacity);
