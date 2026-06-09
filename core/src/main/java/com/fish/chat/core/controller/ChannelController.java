@@ -4,10 +4,13 @@ import com.fish.chat.common.constants.UrlConstants;
 import com.fish.chat.common.result.PageResult;
 import com.fish.chat.common.result.Result;
 import com.fish.chat.core.entity.dto.ChannelDTO;
+import com.fish.chat.core.entity.req.SetChannelAdminRequest;
+import com.fish.chat.core.entity.req.TransferChannelRequest;
 import com.fish.chat.core.service.ChannelService;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 import java.util.Map;
 
 @RestController
@@ -31,13 +34,13 @@ public class ChannelController {
     @PostMapping("/{code}/subscribe")
     public Result<Void> subscribe(@PathVariable String code) {
         channelService.subscribe(code);
-        return Result.success("订阅成功", null);
+        return Result.success();
     }
 
     @PostMapping("/{code}/unsubscribe")
     public Result<Void> unsubscribe(@PathVariable String code) {
         channelService.unsubscribe(code);
-        return Result.success("取消订阅", null);
+        return Result.success();
     }
 
     @GetMapping("/my")
@@ -59,9 +62,10 @@ public class ChannelController {
      * 转让频道（仅创建者可操作）
      */
     @PostMapping("/{code}/transfer")
-    public Result<Void> transfer(@PathVariable String code, @RequestBody Map<String, String> req) {
-        channelService.transferChannel(code, req.get("newOwnerCode"));
-        return Result.success("频道转让成功", null);
+    public Result<Void> transfer(@PathVariable String code, 
+                                  @Valid @RequestBody TransferChannelRequest req) {
+        channelService.transferChannel(code, req.getNewOwnerCode());
+        return Result.success();
     }
 
     /**
@@ -70,8 +74,8 @@ public class ChannelController {
     @PostMapping("/{code}/admin/{userCode}")
     public Result<Void> setAdmin(@PathVariable String code, 
                                  @PathVariable String userCode,
-                                 @RequestBody Map<String, Boolean> req) {
-        channelService.setAdmin(code, userCode, req.get("isAdmin"));
-        return Result.success("操作成功", null);
+                                 @Valid @RequestBody SetChannelAdminRequest req) {
+        channelService.setAdmin(code, userCode, req.getIsAdmin());
+        return Result.success();
     }
 }

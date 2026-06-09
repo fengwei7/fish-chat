@@ -15,6 +15,7 @@ import com.fish.chat.core.enums.MemberRole;
 import com.fish.chat.core.repository.ChannelRepository;
 import com.fish.chat.core.repository.UserRepository;
 import com.fish.chat.core.service.ChannelService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 public class ChannelServiceImpl implements ChannelService {
 
@@ -158,63 +160,88 @@ public class ChannelServiceImpl implements ChannelService {
         return dto;
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void transferChannel(String channelCode, String newOwnerCode) {
         String currentUserCode = StpUtil.getLoginIdAsString();
         ChannelPO channel = channelRepository.selectByCode(channelCode);
         if (channel == null) throw new BusinessException("频道不存在");
 
-        // 检查当前用户是否是创建者
-        Integer currentRole = channelRepository.getMemberRole(channelCode, currentUserCode);
-        if (!MemberRole.OWNER.getValue().equals(currentRole)) {
-            throw new BusinessException("仅频道创建者可以转让频道");
-        }
+        // 验证当前用户是创建者
+        validateChannelOwner(channelCode, currentUserCode);
 
         // 检查新创建者是否是频道成员
         Integer newOwnerRole = channelRepository.getMemberRole(channelCode, newOwnerCode);
         if (newOwnerRole == null) {
-            throw new BusinessException("新创建者必须是频道成员");
+            throw new BusinessException("无法转让频道：该用户未订阅此频道");
         }
 
-        // 转让：原创建者降为管理员，新成员升为创建者
-        channelRepository.updateMemberRole(channelCode, currentUserCode, MemberRole.ADMIN.getValue());
+        // 不能转让给自己
+        if (currentUserCode.equals(newOwnerCode)) {
+            throw new BusinessException("无法转让频道：不能转让给自己");
+        }
+
+        log.info("开始转让频道: channelCode={}, 原创建者={}, 新创建者={}", 
+                channelCode, currentUserCode, newOwnerCode);
+
+        // 在事务中更新：先更新新创建者为OWNER，再更新原创建者为ADMIN
+        // 如果任何一步失败，整个事务会回滚
         channelRepository.updateMemberRole(channelCode, newOwnerCode, MemberRole.OWNER.getValue());
+        channelRepository.updateMemberRole(channelCode, currentUserCode, MemberRole.ADMIN.getValue());
 
         // 更新频道的 owner_code
         channel.setOwnerCode(newOwnerCode);
         channelRepository.updateById(channel);
+
+        log.info("频道转让成功: channelCode={}, 原创建者={}, 新创建者={}", 
+                channelCode, currentUserCode, newOwnerCode);
     }
 
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void setAdmin(String channelCode, String userCode, boolean isAdmin) {
         String currentUserCode = StpUtil.getLoginIdAsString();
         ChannelPO channel = channelRepository.selectByCode(channelCode);
         if (channel == null) throw new BusinessException("频道不存在");
 
-        // 检查当前用户是否是创建者
-        Integer currentRole = channelRepository.getMemberRole(channelCode, currentUserCode);
-        if (!MemberRole.OWNER.getValue().equals(currentRole)) {
-            throw new BusinessException("仅频道创建者可以设置管理员");
+        // 验证当前用户是创建者
+        validateChannelOwner(channelCode, currentUserCode);
+
+        // 不能修改自己的角色
+        if (currentUserCode.equals(userCode)) {
+            throw new BusinessException("无法修改自己的角色");
         }
 
         // 检查目标用户是否是频道成员
         Integer targetRole = channelRepository.getMemberRole(channelCode, userCode);
         if (targetRole == null) {
-            throw new BusinessException("目标用户必须是频道成员");
+            throw new BusinessException("无法设置管理员：该用户未订阅此频道");
         }
 
         // 不能修改创建者的角色
         if (MemberRole.OWNER.getValue().equals(targetRole)) {
-            throw new BusinessException("不能修改创建者的角色");
+            throw new BusinessException("无法修改创建者的角色");
         }
 
+        String action = isAdmin ? "设置为管理员" : "取消管理员";
+        log.info("{}: channelCode={}, 操作者={}, 目标用户={}", 
+                action, channelCode, currentUserCode, userCode);
+
         // 设置或取消管理员
-        if (isAdmin) {
-            channelRepository.updateMemberRole(channelCode, userCode, MemberRole.ADMIN.getValue());
-        } else {
-            channelRepository.updateMemberRole(channelCode, userCode, MemberRole.MEMBER.getValue());
+        Integer newRole = isAdmin ? MemberRole.ADMIN.getValue() : MemberRole.MEMBER.getValue();
+        channelRepository.updateMemberRole(channelCode, userCode, newRole);
+
+        log.info("{}成功: channelCode={}, 操作者={}, 目标用户={}", 
+                action, channelCode, currentUserCode, userCode);
+    }
+
+    /**
+     * 验证用户是否是频道创建者
+     */
+    private void validateChannelOwner(String channelCode, String userCode) {
+        Integer role = channelRepository.getMemberRole(channelCode, userCode);
+        if (!MemberRole.OWNER.getValue().equals(role)) {
+            throw new BusinessException("仅频道创建者可以执行此操作");
         }
     }
 }

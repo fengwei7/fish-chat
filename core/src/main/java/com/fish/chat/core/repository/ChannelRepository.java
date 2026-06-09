@@ -129,6 +129,19 @@ public class ChannelRepository extends BaseRepository<ChannelPO> {
     }
 
     /**
+     * 带条件检查的成员角色更新（用于原子性操作）
+     * @return 影响的行数
+     */
+    public int updateMemberRoleWithCheck(String channelCode, String userCode, Integer newRole, Integer expectedOldRole) {
+        ChannelMemberPO member = new ChannelMemberPO();
+        member.setRole(newRole);
+        return channelMemberMapper.update(member, Wrappers.<ChannelMemberPO>lambdaQuery()
+                .eq(ChannelMemberPO::getChannelCode, channelCode)
+                .eq(ChannelMemberPO::getUserCode, userCode)
+                .eq(ChannelMemberPO::getRole, expectedOldRole));
+    }
+
+    /**
      * 查询成员角色
      */
     public Integer getMemberRole(String channelCode, String userCode) {
