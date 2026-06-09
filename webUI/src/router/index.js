@@ -1,23 +1,21 @@
 import {createRouter, createWebHashHistory, createWebHistory} from 'vue-router'
 import { setupRouterGuard } from './guard'
-import { adminMenusRoutes } from '@/router/menus.js'
-import { pubRoutes } from '@/router/pubRoutes.js'
 
 const routes = [
+  // 用户资料页面
   {
     path: '/',
-    redirect: '/admin'
+    name: 'UserProfile',
+    component: () => import('@/views/user/UserProfile.vue'),
+    meta: { requiresAuth: true }
   },
-  // 后台布局路由
+  // UI组件展示页面
   {
-    path: '/admin',
-    name: 'AdminLayout',
-    component: () => import('@/layouts/AdminLayout.vue'),
-    meta: { requiresAuth: true },
-    children: adminMenusRoutes
-  },
-  // 公共路由
-  ...pubRoutes
+    path: '/ui-showcase',
+    name: 'UiShowcase',
+    component: () => import('@/views/ui/UiShowcase.vue'),
+    meta: { requiresAuth: false }
+  }
 ]
 
 const router = createRouter({
@@ -26,7 +24,7 @@ const router = createRouter({
 })
 
 // 路由守卫开关
-const enableRouterGuard = true
+const enableRouterGuard = false
 setupRouterGuard(router, enableRouterGuard)
 
 export default router

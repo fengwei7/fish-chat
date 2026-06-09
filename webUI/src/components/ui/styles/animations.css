@@ -1,0 +1,195 @@
+/* ============================================
+ * Fish-Chat UI 组件库 - 全局动画定义
+ * ============================================ */
+
+/* 淡入动画 */
+@keyframes fc-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 淡出动画 */
+@keyframes fc-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+/* 从上方滑入 */
+@keyframes fc-slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 从下方滑入 */
+@keyframes fc-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 从左侧滑入 */
+@keyframes fc-slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 从右侧滑入 */
+@keyframes fc-slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* 缩放淡入 */
+@keyframes fc-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 缩放淡出 */
+@keyframes fc-scale-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}
+
+/* 脉冲动画（用于加载指示器） */
+@keyframes fc-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* 旋转动画 */
+@keyframes fc-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 弹跳动画 */
+@keyframes fc-bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* 骨架屏闪烁 */
+@keyframes fc-skeleton {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* 抖动动画（用于错误提示） */
+@keyframes fc-shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+/* ============================================
+ * 动画工具类
+ * ============================================ */
+
+.fc-animate-fade-in {
+  animation: fc-fade-in var(--fc-transition-normal) var(--fc-easing);
+}
+
+.fc-animate-slide-down {
+  animation: fc-slide-down var(--fc-transition-slow) var(--fc-easing);
+}
+
+.fc-animate-slide-up {
+  animation: fc-slide-up var(--fc-transition-slow) var(--fc-easing);
+}
+
+.fc-animate-scale-in {
+  animation: fc-scale-in var(--fc-transition-slow) var(--fc-easing);
+}
+
+.fc-animate-pulse {
+  animation: fc-pulse 2s ease-in-out infinite;
+}
+
+.fc-animate-spin {
+  animation: fc-spin 1s linear infinite;
+}
+
+.fc-animate-bounce {
+  animation: fc-bounce 1s ease-in-out infinite;
+}
+
+.fc-animate-shake {
+  animation: fc-shake 0.5s ease-in-out;
+}
+
+.fc-animate-skeleton {
+  animation: fc-skeleton 1.5s ease-in-out infinite;
+  background: linear-gradient(
+    90deg,
+    var(--fc-gray-100) 25%,
+    var(--fc-gray-200) 50%,
+    var(--fc-gray-100) 75%
+  );
+  background-size: 200% 100%;
+}

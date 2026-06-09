@@ -1,0 +1,26 @@
+/* ============================================
+ * Fish-Chat 聊天组件 - CSS变量系统
+ * ============================================ */
+
+:root {
+  /* 聊天专属颜色 */
+  --chat-bubble-mine: var(--fc-primary-500);
+  --chat-bubble-other: white;
+  --chat-bubble-text-mine: white;
+  --chat-bubble-text-other: var(--fc-gray-800);
+  
+  /* 聊天背景 */
+  --chat-bg: var(--fc-gray-50);
+  --chat-header-bg: white;
+  --chat-input-bg: white;
+  
+  /* 气泡样式 */
+  --chat-bubble-radius: 12px;
+  --chat-bubble-max-width: 70%;
+  --chat-bubble-padding: 12px 16px;
+  
+  /* 间距 */
+  --chat-message-gap: 12px;
+  --chat-avatar-size: 40px;
+  --chat-time-font-size: 11px;
+}
