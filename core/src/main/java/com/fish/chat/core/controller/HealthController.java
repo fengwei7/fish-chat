@@ -2,6 +2,7 @@ package com.fish.chat.core.controller;
 
 import com.fish.chat.common.result.Result;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -27,6 +28,7 @@ import java.util.Map;
  * @author fengwei
  * @since 2026-06-09
  */
+@Slf4j
 @RestController
 @RequestMapping("/actuator")
 public class HealthController {
@@ -156,22 +158,6 @@ public class HealthController {
             status.setDetail("MongoDB connection failed: " + e.getMessage());
         }
         return status;
-    }
-
-    /**
-     * 简化的健康检查（仅返回状态）
-     */
-    @GetMapping("/health/simple")
-    public Result<String> healthSimple() {
-        try {
-            // 快速检查数据库
-            if (jdbcTemplate != null) {
-                jdbcTemplate.queryForObject("SELECT 1", Integer.class);
-            }
-            return Result.success("UP");
-        } catch (Exception e) {
-            return Result.error("DOWN: " + e.getMessage());
-        }
     }
 
     /**
