@@ -16,7 +16,7 @@ public class PasswordEncoderConfig {
      * BCrypt 强度配置（范围 4-31，默认 10）
      * 数值越大计算越慢，安全性越高
      */
-    @Value("${security.password.bcrypt-strength:10}")
+    @Value("${fish-chat-config.security.password.bcrypt-strength:10}")
     private int bcryptStrength;
     
     /**

@@ -54,6 +54,9 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
     @Resource
     private ChannelRepository channelRepository;
 
+    @Resource
+    private MessageBatchWriter messageBatchWriter;
+
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame frame) {
         String userCode = ctx.channel().attr(AuthHandshakeHandler.USER_CODE_KEY).get();
@@ -173,8 +176,8 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
         body.setTimestamp(System.currentTimeMillis());
         body.setRoomType(room.getType().name());
 
-        // 持久化到 MongoDB
-        String msgId = saveToMongo(body);
+        // 异步持久化到 MongoDB（批量写入）
+        String msgId = saveToMongoAsync(body);
         body.setMsgId(msgId);
 
         // 构建下行包
@@ -306,7 +309,16 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
     }
 
     /**
-     * 保存消息到 MongoDB
+     * 异步保存消息到 MongoDB（通过批量写入器）
+     * 消息ID会立即生成并返回，实际持久化在后台批量完成
+     */
+    private String saveToMongoAsync(ChatMessagePacket.Body body) {
+        // 添加到批量写入队列，并立即获取生成的消息ID
+        return messageBatchWriter.addMessage(body);
+    }
+
+    /**
+     * 同步保存消息到 MongoDB（保留用于特殊场景）
      */
     private String saveToMongo(ChatMessagePacket.Body body) {
         ChatMessage msg = new ChatMessage();

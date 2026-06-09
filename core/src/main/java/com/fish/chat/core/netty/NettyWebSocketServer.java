@@ -23,7 +23,7 @@ import java.net.InetSocketAddress;
 @Component
 public class NettyWebSocketServer {
 
-    @Value("${netty.websocket.port:8081}")
+    @Value("${fish-chat-config.netty.websocket.port:8081}")
     private int port;
 
     @Resource
