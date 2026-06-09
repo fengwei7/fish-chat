@@ -6,11 +6,10 @@ import { useUserStore } from '@/stores/user.js'
 // HTTP 请求实例
 // ============================================
 
-const LS_TOKEN_KEY = 'fish-token'
+const TOKEN = 'token'
 
 const http = axios.create({
   baseURL: '/api',
-  // baseURL: 'http://localhost:8080',
   timeout: 50000,
   headers: { 'Content-Type': 'application/json;charset=utf-8' }
 })
@@ -22,9 +21,9 @@ const http = axios.create({
 http.interceptors.request.use(
   (config) => {
     // 添加 Sa-Token：从 localStorage 读取（userStore 持久化的主源）
-    const token = localStorage.getItem(LS_TOKEN_KEY) || ''
+    const token = localStorage.getItem(TOKEN) || ''
     if (token) {
-      config.headers['fish-token'] = token
+      config.headers[TOKEN] = token
     }
     return config
   },
@@ -64,13 +63,8 @@ http.interceptors.response.use(
       return Promise.reject(error)
     }
     if (response.status === 401) {
-      // 401 时同时清除 localStorage 和 pinia
-      try {
-        const userStore = useUserStore()
-        userStore.clearUserInfo()
-      } catch {
-        localStorage.removeItem(LS_TOKEN_KEY)
-      }
+      // 401 时清除 token
+
       window.location.href = '/login'
       return Promise.reject(new Error('登录已过期'))
     }

@@ -19,70 +19,7 @@ const baseMenus = [
       title: '聊天',
       roles: ['admin', 'user']
     }
-  },
-  {
-    path: '/contacts',
-    name: 'Contacts',
-    meta: {
-      isShow: true,
-      title: '通讯录',
-      roles: ['admin', 'user'],
-      isParent: true
-    },
-    children: [
-      {
-        path: '/contacts/friends',
-        name: 'Friends',
-        component: () => import('@/views/friend/Friend.vue'),
-        meta: {
-          isShow: true,
-          title: '好友管理',
-          roles: ['admin', 'user']
-        }
-      },
-      {
-        path: '/contacts/groups',
-        name: 'Groups',
-        component: () => import('@/views/group/Group.vue'),
-        meta: {
-          isShow: true,
-          title: '群组管理',
-          roles: ['admin', 'user']
-        }
-      },
-      {
-        path: '/contacts/channels',
-        name: 'Channels',
-        component: () => import('@/views/channel/Channel.vue'),
-        meta: {
-          isShow: true,
-          title: '频道管理',
-          roles: ['admin', 'user']
-        }
-      }
-    ]
-  },
-  {
-    path: '/user',
-    name: 'User',
-    meta: {
-      isShow: true,
-      title: '用户中心',
-      roles: ['admin', 'user'],
-      isParent: true
-    },
-    children: [
-      {
-        path: '/user/profile',
-        name: 'UserProfile',
-        component: () => import('@/views/user/Info.vue'),
-        meta: {
-          isShow: true,
-          title: '个人资料',
-          roles: ['admin', 'user']
-        }
-      }
-    ]
+
   }
 ]
 
