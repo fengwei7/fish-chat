@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * 文件上传配置属性
  */
 @Data
-@ConfigurationProperties(prefix = "file.upload")
+@ConfigurationProperties(prefix = "fish-chat-config.file.upload")
 public class FileUploadProperties {
 
     /**

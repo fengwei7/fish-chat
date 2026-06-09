@@ -38,17 +38,11 @@ public class FriendServiceImpl implements FriendService {
         if (friend == null) throw new BusinessException("用户不存在");
         if (me.getId().equals(friend.getId())) throw new BusinessException("不能添加自己为好友");
 
-        long count = friendRepository.selectCount(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserCode, me.getCode())
-                .eq(FriendPO::getFriendCode, friend.getCode()));
-        if (count > 0) throw new BusinessException("已发送好友请求");
+        if (friendRepository.existsFriendRelation(me.getCode(), friend.getCode())) {
+            throw new BusinessException("已发送好友请求");
+        }
 
-        FriendPO po = new FriendPO();
-        po.setUserCode(me.getCode());
-        po.setFriendCode(friend.getCode());
-        po.setRemark(remark);
-        po.setStatus(FriendStatus.PENDING.getValue());
-        friendRepository.save(po);
+        friendRepository.addFriendRequest(me.getCode(), friend.getCode(), remark);
     }
 
     @Transactional
@@ -60,20 +54,28 @@ public class FriendServiceImpl implements FriendService {
         if (friend == null) throw new BusinessException("用户不存在");
 
         // 更新对方发来的请求
-        FriendPO po = friendRepository.selectOne(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserCode, friend.getCode())
-                .eq(FriendPO::getFriendCode, me.getCode())
-                .eq(FriendPO::getStatus, FriendStatus.PENDING.getValue()));
+        FriendPO po = friendRepository.selectPendingRequest(friend.getCode(), me.getCode());
         if (po == null) throw new BusinessException("没有待确认的好友请求");
-        po.setStatus(FriendStatus.CONFIRMED.getValue());
-        friendRepository.updateById(po);
+        friendRepository.acceptFriendRequest(po);
 
         // 反向添加
-        FriendPO reverse = new FriendPO();
-        reverse.setUserCode(me.getCode());
-        reverse.setFriendCode(friend.getCode());
-        reverse.setStatus(FriendStatus.CONFIRMED.getValue());
-        friendRepository.save(reverse);
+        friendRepository.addConfirmedFriend(me.getCode(), friend.getCode());
+    }
+
+    @Transactional
+    @Override
+    public void rejectFriend(String friendCode) {
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO me = resolveUser(userCode);
+        UserPO friend = userRepository.selectByCode(friendCode);
+        if (friend == null) throw new BusinessException("用户不存在");
+
+        // 查找对方发来的好友请求
+        FriendPO po = friendRepository.selectPendingRequest(friend.getCode(), me.getCode());
+        if (po == null) throw new BusinessException("没有待确认的好友请求");
+        
+        // 更新状态为已拒绝
+        friendRepository.rejectFriendRequest(po);
     }
 
     @Transactional
@@ -84,10 +86,7 @@ public class FriendServiceImpl implements FriendService {
         UserPO friend = userRepository.selectByCode(friendCode);
         if (friend == null) throw new BusinessException("用户不存在");
 
-        friendRepository.delete(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserCode, me.getCode()).eq(FriendPO::getFriendCode, friend.getCode()));
-        friendRepository.delete(Wrappers.<FriendPO>lambdaQuery()
-                .eq(FriendPO::getUserCode, friend.getCode()).eq(FriendPO::getFriendCode, me.getCode()));
+        friendRepository.deleteBidirectionalFriend(me.getCode(), friend.getCode());
     }
 
     @Override
@@ -164,6 +163,25 @@ public class FriendServiceImpl implements FriendService {
             }
         }
         return PageResult.of(result, pageNum, pageSize, requestPage.getTotal());
+    }
+
+    @Transactional
+    @Override
+    public void updateFriendRemark(String friendCode, String remark) {
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO me = resolveUser(userCode);
+        UserPO friend = userRepository.selectByCode(friendCode);
+        if (friend == null) throw new BusinessException("好友不存在");
+
+        // 更新好友备注
+        FriendPO po = friendRepository.selectOne(Wrappers.<FriendPO>lambdaQuery()
+                .eq(FriendPO::getUserCode, me.getCode())
+                .eq(FriendPO::getFriendCode, friend.getCode())
+                .eq(FriendPO::getStatus, FriendStatus.CONFIRMED.getValue()));
+        if (po == null) throw new BusinessException("好友不存在");
+        
+        po.setRemark(remark);
+        friendRepository.updateById(po);
     }
 
     @Override

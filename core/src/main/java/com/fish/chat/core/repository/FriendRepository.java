@@ -73,4 +73,74 @@ public class FriendRepository {
     public int delete(Wrapper<FriendPO> queryWrapper) {
         return friendMapper.delete(queryWrapper);
     }
+
+    /**
+     * 检查两个用户之间是否存在好友关系（任意状态）
+     */
+    public boolean existsFriendRelation(String userCode, String friendCode) {
+        return selectCount(Wrappers.<FriendPO>lambdaQuery()
+                .eq(FriendPO::getUserCode, userCode)
+                .eq(FriendPO::getFriendCode, friendCode)) > 0;
+    }
+
+    /**
+     * 查询待处理的好友请求（由对方发起）
+     */
+    public FriendPO selectPendingRequest(String fromUserCode, String toUserCode) {
+        return selectOne(Wrappers.<FriendPO>lambdaQuery()
+                .eq(FriendPO::getUserCode, fromUserCode)
+                .eq(FriendPO::getFriendCode, toUserCode)
+                .eq(FriendPO::getStatus, FriendStatus.PENDING.getValue()));
+    }
+
+    /**
+     * 添加好友请求
+     */
+    public void addFriendRequest(String userCode, String friendCode, String remark) {
+        FriendPO po = new FriendPO();
+        po.setUserCode(userCode);
+        po.setFriendCode(friendCode);
+        po.setRemark(remark);
+        po.setStatus(FriendStatus.PENDING.getValue());
+        save(po);
+    }
+
+    /**
+     * 接受好友请求（更新状态为已确认）
+     */
+    public void acceptFriendRequest(FriendPO friendRequest) {
+        friendRequest.setStatus(FriendStatus.CONFIRMED.getValue());
+        updateById(friendRequest);
+    }
+
+    /**
+     * 拒绝好友请求（更新状态为已拒绝）
+     */
+    public void rejectFriendRequest(FriendPO friendRequest) {
+        friendRequest.setStatus(FriendStatus.REJECTED.getValue());
+        updateById(friendRequest);
+    }
+
+    /**
+     * 添加已确认的好友关系
+     */
+    public void addConfirmedFriend(String userCode, String friendCode) {
+        FriendPO po = new FriendPO();
+        po.setUserCode(userCode);
+        po.setFriendCode(friendCode);
+        po.setStatus(FriendStatus.CONFIRMED.getValue());
+        save(po);
+    }
+
+    /**
+     * 删除双向好友关系
+     */
+    public void deleteBidirectionalFriend(String userCode, String friendCode) {
+        delete(Wrappers.<FriendPO>lambdaQuery()
+                .eq(FriendPO::getUserCode, userCode)
+                .eq(FriendPO::getFriendCode, friendCode));
+        delete(Wrappers.<FriendPO>lambdaQuery()
+                .eq(FriendPO::getUserCode, friendCode)
+                .eq(FriendPO::getFriendCode, userCode));
+    }
 }

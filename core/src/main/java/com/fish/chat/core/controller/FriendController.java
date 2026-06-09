@@ -29,6 +29,18 @@ public class FriendController {
         return Result.success("已添加好友", null);
     }
 
+    @PostMapping("/reject")
+    public Result<Void> reject(@RequestBody Map<String, String> req) {
+        friendService.rejectFriend(req.get("friendCode"));
+        return Result.success("好友请求已拒绝", null);
+    }
+
+    @PutMapping("/{friendCode}/remark")
+    public Result<Void> updateRemark(@PathVariable String friendCode, @RequestBody Map<String, String> req) {
+        friendService.updateFriendRemark(friendCode, req.get("remark"));
+        return Result.success("好友备注已更新", null);
+    }
+
     @PostMapping("/remove")
     public Result<Void> remove(@RequestBody Map<String, String> req) {
         friendService.removeFriend(req.get("friendCode"));

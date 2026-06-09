@@ -40,4 +40,15 @@ public interface AuthService {
      * @throws cn.dev33.satoken.exception.NotLoginException 当用户未登录时抛出
      */
     void logout();
+    
+    /**
+     * 修改密码
+     * 
+     * 验证旧密码后更新为新密码，修改成功后会自动登出当前用户
+     *
+     * @param oldPassword 原密码
+     * @param newPassword 新密码
+     * @throws com.fish.chat.common.exception.BusinessException 当原密码错误或新密码不合法时抛出
+     */
+    void changePassword(String oldPassword, String newPassword);
 }

@@ -2,11 +2,6 @@
 server:
   port: 8080
 
-# Netty WebSocket 配置
-netty:
-  websocket:
-    port: 8081
-
 spring:
   profiles:
     active: ${SPRING_PROFILES_ACTIVE:dev}
@@ -20,15 +15,6 @@ sa-token:
   is-share: false
   token-style: uuid
   is-log: true
-
-# 安全配置
-security:
-  password:
-    # BCrypt 加密强度（范围 4-31，默认 10）
-    # 数值越大计算越慢，安全性越高
-    bcrypt-strength: 10
-
-
 
 mybatis-plus:
   configuration:
@@ -44,10 +30,31 @@ mybatis-plus:
       logic-delete-field: deleted
     enable-sql-runner: true
 
-# 文件上传配置
-file:
-  upload:
-    # 上传文件保存目录（支持相对路径或绝对路径）
-    dir: ./uploads
-    # 上传文件的访问 URL 前缀
-    access-path: /files/
+
+fish-chat-config:
+  # Netty WebSocket 配置
+  netty:
+    websocket:
+      port: 8081
+  # 文件上传配置
+  file:
+    upload:
+      # 上传文件保存目录（支持相对路径或绝对路径）
+      dir: ./uploads
+      # 上传文件的访问 URL 前缀
+      access-path: /files/
+  # 消息批量写入配置
+  mongo-message-batch:
+    # 消息缓冲队列最大容量
+    queue-capacity: 10000
+    # 批量写入大小
+    batch-size: 100
+    # 轮询超时时间（毫秒）
+    poll-timeout-ms: 100
+
+  # 安全配置
+  security:
+    password:
+      # BCrypt 加密强度（范围 4-31，默认 10）
+      # 数值越大计算越慢，安全性越高
+      bcrypt-strength: 10

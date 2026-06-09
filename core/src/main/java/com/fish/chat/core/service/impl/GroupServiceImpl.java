@@ -10,6 +10,8 @@ import com.fish.chat.core.chat.room.RoomManager;
 import com.fish.chat.core.enums.CommonStatus;
 import com.fish.chat.core.enums.MemberRole;
 import com.fish.chat.core.entity.dto.GroupDTO;
+import com.fish.chat.core.entity.dto.GroupMemberDTO;
+import com.fish.chat.core.chat.SessionManager;
 import com.fish.chat.core.entity.po.GroupMemberPO;
 import com.fish.chat.core.entity.po.GroupPO;
 import com.fish.chat.core.entity.po.UserPO;
@@ -32,6 +34,7 @@ public class GroupServiceImpl implements GroupService {
     @Resource private GroupRepository groupRepository;
     @Resource private UserRepository userRepository;
     @Resource private RoomManager roomManager;
+    @Resource private SessionManager sessionManager;
 
     @Transactional
     @Override
@@ -157,6 +160,29 @@ public class GroupServiceImpl implements GroupService {
         return PageResult.of(result, pageNum, pageSize, memberPage.getTotal());
     }
 
+    @Transactional
+    @Override
+    public void leaveGroup(String groupCode) {
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO current = resolveUser(userCode);
+
+        GroupPO group = groupRepository.selectByCode(groupCode);
+        if (group == null) throw new BusinessException("群组不存在");
+        
+        // 检查用户是否是群主
+        if (group.getOwnerCode().equals(current.getCode())) {
+            throw new BusinessException("群主不能退出群组，请先转让或解散");
+        }
+
+        // 检查用户是否在群组中
+        if (!groupRepository.isMember(group.getCode(), current.getCode())) {
+            throw new BusinessException("您不在该群组中");
+        }
+
+        // 移除成员
+        removeMember(groupCode, current.getCode());
+    }
+
     @Override
     public PageResult<GroupDTO> searchGroups(String keyword, int pageNum, int pageSize) {
         Page<GroupPO> pageParam = new Page<>(pageNum, pageSize);
@@ -166,6 +192,124 @@ public class GroupServiceImpl implements GroupService {
         List<GroupDTO> list = pageResult.getRecords().stream()
                 .map(g -> toDTO(g, "", 0)).collect(Collectors.toList());
         return PageResult.of(list, pageNum, pageSize, pageResult.getTotal());
+    }
+
+    @Override
+    public PageResult<GroupMemberDTO> listGroupMembers(String groupCode, int pageNum, int pageSize) {
+        // 检查群组是否存在
+        GroupPO group = groupRepository.selectByCode(groupCode);
+        if (group == null) throw new BusinessException("群组不存在");
+
+        // 分页查询群成员
+        Page<GroupMemberPO> memberPage = groupRepository.selectGroupMemberPage(
+                groupCode, new Page<>(pageNum, pageSize));
+
+        List<String> userCodes = memberPage.getRecords().stream()
+                .map(GroupMemberPO::getUserCode)
+                .collect(Collectors.toList());
+
+        if (userCodes.isEmpty()) {
+            return PageResult.of(new ArrayList<>(), pageNum, pageSize, memberPage.getTotal());
+        }
+
+        // 批量查询用户信息
+        List<UserPO> users = userRepository.selectByCodes(userCodes);
+        Map<String, UserPO> userMap = users.stream()
+                .collect(Collectors.toMap(UserPO::getCode, u -> u));
+
+        // 组装 DTO
+        List<GroupMemberDTO> result = new ArrayList<>();
+        for (GroupMemberPO member : memberPage.getRecords()) {
+            UserPO user = userMap.get(member.getUserCode());
+            if (user != null) {
+                GroupMemberDTO dto = new GroupMemberDTO();
+                dto.setCode(user.getCode());
+                dto.setUsername(user.getUsername());
+                dto.setNickname(user.getNickname());
+                dto.setAvatarUrl(user.getAvatarUrl());
+                dto.setRole(member.getRole());
+                dto.setOnline(sessionManager.isOnline(user.getCode()));
+                result.add(dto);
+            }
+        }
+        return PageResult.of(result, pageNum, pageSize, memberPage.getTotal());
+    }
+
+    @Transactional
+    @Override
+    public GroupDTO updateGroup(String code, String name, String avatar, String notice) {
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO current = resolveUser(userCode);
+
+        GroupPO group = groupRepository.selectByCode(code);
+        if (group == null) throw new BusinessException("群组不存在");
+
+        // 权限检查：仅群主或管理员可以修改群组信息
+        GroupMemberPO member = groupRepository.selectMember(group.getCode(), current.getCode());
+        if (member == null) {
+            throw new BusinessException("您不在该群组中");
+        }
+        
+        MemberRole role = MemberRole.fromValue(member.getRole());
+        if (!role.canManage()) {
+            throw new BusinessException("只有群主或管理员可以修改群组信息");
+        }
+
+        // 选择性更新非空字段
+        if (name != null) {
+            group.setName(name);
+        }
+        if (avatar != null) {
+            group.setAvatar(avatar);
+        }
+        if (notice != null) {
+            group.setNotice(notice);
+        }
+
+        groupRepository.updateById(group);
+
+        // 更新 RoomManager 中的群组信息
+        if (name != null || avatar != null) {
+            roomManager.updateGroupInfo(group.getCode(), group.getName(), group.getAvatar());
+        }
+
+        UserPO owner = userRepository.selectByCode(group.getOwnerCode());
+        long count = groupRepository.countMembers(group.getCode());
+        return toDTO(group, owner != null ? owner.getCode() : "", (int) count);
+    }
+
+    @Transactional
+    @Override
+    public void setGroupAdmin(String groupCode, String userCode, boolean isAdmin) {
+        String currentUserCode = StpUtil.getLoginIdAsString();
+        UserPO current = resolveUser(currentUserCode);
+
+        GroupPO group = groupRepository.selectByCode(groupCode);
+        if (group == null) throw new BusinessException("群组不存在");
+
+        // 权限检查：仅群主可以设置管理员
+        if (!group.getOwnerCode().equals(currentUserCode)) {
+            throw new BusinessException("仅群主可设置管理员");
+        }
+
+        // 不能设置群主自己为管理员（已经是群主）
+        if (group.getOwnerCode().equals(userCode)) {
+            throw new BusinessException("不能设置群主为管理员");
+        }
+
+        // 查询目标用户是否为群成员
+        GroupMemberPO member = groupRepository.selectMember(groupCode, userCode);
+        if (member == null) {
+            throw new BusinessException("该用户不在群组中");
+        }
+
+        // 更新角色
+        if (isAdmin) {
+            member.setRole(MemberRole.ADMIN.getValue());
+        } else {
+            member.setRole(MemberRole.MEMBER.getValue());
+        }
+        groupRepository.updateMember(member);
     }
 
     // --- helpers ---

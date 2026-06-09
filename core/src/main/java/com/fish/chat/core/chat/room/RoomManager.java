@@ -127,6 +127,23 @@ public class RoomManager {
             }
         }
     }
+    
+    /**
+     * 更新群组信息（名称、头像）
+     */
+    public void updateGroupInfo(String groupCode, String name, String avatar) {
+        String roomCode = RoomType.GROUP.getValue() + ":" + groupCode;
+        Room room = rooms.get(roomCode);
+        if (room != null) {
+            if (name != null) {
+                room.setName(name);
+            }
+            if (avatar != null) {
+                room.setAvatar(avatar);
+            }
+            log.info("更新群组房间信息: {}", roomCode);
+        }
+    }
 
     // ==================== 查询 ====================
 

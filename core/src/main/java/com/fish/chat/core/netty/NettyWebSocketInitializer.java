@@ -21,8 +21,6 @@ import static com.fish.chat.common.constants.UrlConstants.WS_URL_PREFIX;
 @Component
 public class NettyWebSocketInitializer extends ChannelInitializer<SocketChannel> {
 
-    private static final String WEBSOCKET_PATH = "/ws";
-
     @Resource
     private AuthHandshakeHandler authHandshakeHandler;
 
@@ -41,7 +39,7 @@ public class NettyWebSocketInitializer extends ChannelInitializer<SocketChannel>
         pipeline.addLast("http-aggregator", new HttpObjectAggregator(65536));
         // 4. WebSocket 协议升级（checkStartsWith=true 允许 URI 带 query string）
         pipeline.addLast("websocket-protocol",
-                new WebSocketServerProtocolHandler(WS_URL_PREFIX + WEBSOCKET_PATH, null, true, 65536, false, true));
+                new WebSocketServerProtocolHandler(WS_URL_PREFIX, null, true, 65536, false, true));
         // 5. Token 认证（握手后验证）
         pipeline.addLast("auth-handler", authHandshakeHandler);
         // 6. 空闲检测：180秒无读关闭连接

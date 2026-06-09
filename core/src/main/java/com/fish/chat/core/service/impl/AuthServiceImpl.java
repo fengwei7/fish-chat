@@ -81,4 +81,25 @@ public class AuthServiceImpl implements AuthService {
     public void logout() {
         StpUtil.logout();
     }
+
+    @Override
+    public void changePassword(String oldPassword, String newPassword) {
+        String userCode = StpUtil.getLoginIdAsString();
+        UserPO user = userRepository.selectByCode(userCode);
+        if (user == null) {
+            throw new BusinessException("用户不存在");
+        }
+
+        // 1. 验证旧密码
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+            throw new BusinessException("原密码错误");
+        }
+
+        // 2. 加密新密码
+        user.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.updateById(user);
+
+        // 3. 登出当前用户（强制重新登录）
+        StpUtil.logout();
+    }
 }
