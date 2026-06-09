@@ -10,6 +10,8 @@ import com.fish.chat.core.entity.dto.ChannelDTO;
 import com.fish.chat.core.entity.po.ChannelMemberPO;
 import com.fish.chat.core.entity.po.ChannelPO;
 import com.fish.chat.core.entity.po.UserPO;
+import com.fish.chat.core.enums.CommonStatus;
+import com.fish.chat.core.enums.MemberRole;
 import com.fish.chat.core.repository.ChannelRepository;
 import com.fish.chat.core.repository.UserRepository;
 import com.fish.chat.core.service.ChannelService;
@@ -41,13 +43,13 @@ public class ChannelServiceImpl implements ChannelService {
         channel.setAvatar(avatar);
         channel.setDescription(description);
         channel.setOwnerCode(owner.getCode());
-        channel.setStatus(1);
+        channel.setStatus(CommonStatus.NORMAL.getValue());
         channelRepository.save(channel);
 
         ChannelMemberPO member = new ChannelMemberPO();
         member.setChannelCode(channel.getCode());
         member.setUserCode(owner.getCode());
-        member.setRole(2);
+        member.setRole(MemberRole.OWNER.getValue());
         member.setJoinTime(LocalDateTime.now());
         channelRepository.insertMember(member);
 
@@ -79,7 +81,7 @@ public class ChannelServiceImpl implements ChannelService {
         ChannelMemberPO member = new ChannelMemberPO();
         member.setChannelCode(channel.getCode());
         member.setUserCode(user.getCode());
-        member.setRole(0);
+        member.setRole(MemberRole.MEMBER.getValue());
         member.setJoinTime(LocalDateTime.now());
         channelRepository.insertMember(member);
     }
@@ -131,7 +133,7 @@ public class ChannelServiceImpl implements ChannelService {
     public PageResult<ChannelDTO> searchChannels(String keyword, int pageNum, int pageSize) {
         Page<ChannelPO> pageParam = new Page<>(pageNum, pageSize);
         Page<ChannelPO> pageResult = channelRepository.selectPage(pageParam, Wrappers.<ChannelPO>lambdaQuery()
-                .like(ChannelPO::getName, keyword).eq(ChannelPO::getStatus, 1));
+                .like(ChannelPO::getName, keyword).eq(ChannelPO::getStatus, CommonStatus.NORMAL.getValue()));
         List<ChannelDTO> list = pageResult.getRecords().stream()
                 .map(c -> toDTO(c, "", 0)).collect(Collectors.toList());
         return PageResult.of(list, pageNum, pageSize, pageResult.getTotal());
@@ -154,5 +156,65 @@ public class ChannelServiceImpl implements ChannelService {
         dto.setSubscriberCount(subs);
         dto.setStatus(c.getStatus());
         return dto;
+    }
+
+    @Transactional
+    @Override
+    public void transferChannel(String channelCode, String newOwnerCode) {
+        String currentUserCode = StpUtil.getLoginIdAsString();
+        ChannelPO channel = channelRepository.selectByCode(channelCode);
+        if (channel == null) throw new BusinessException("频道不存在");
+
+        // 检查当前用户是否是创建者
+        Integer currentRole = channelRepository.getMemberRole(channelCode, currentUserCode);
+        if (!MemberRole.OWNER.getValue().equals(currentRole)) {
+            throw new BusinessException("仅频道创建者可以转让频道");
+        }
+
+        // 检查新创建者是否是频道成员
+        Integer newOwnerRole = channelRepository.getMemberRole(channelCode, newOwnerCode);
+        if (newOwnerRole == null) {
+            throw new BusinessException("新创建者必须是频道成员");
+        }
+
+        // 转让：原创建者降为管理员，新成员升为创建者
+        channelRepository.updateMemberRole(channelCode, currentUserCode, MemberRole.ADMIN.getValue());
+        channelRepository.updateMemberRole(channelCode, newOwnerCode, MemberRole.OWNER.getValue());
+
+        // 更新频道的 owner_code
+        channel.setOwnerCode(newOwnerCode);
+        channelRepository.updateById(channel);
+    }
+
+    @Transactional
+    @Override
+    public void setAdmin(String channelCode, String userCode, boolean isAdmin) {
+        String currentUserCode = StpUtil.getLoginIdAsString();
+        ChannelPO channel = channelRepository.selectByCode(channelCode);
+        if (channel == null) throw new BusinessException("频道不存在");
+
+        // 检查当前用户是否是创建者
+        Integer currentRole = channelRepository.getMemberRole(channelCode, currentUserCode);
+        if (!MemberRole.OWNER.getValue().equals(currentRole)) {
+            throw new BusinessException("仅频道创建者可以设置管理员");
+        }
+
+        // 检查目标用户是否是频道成员
+        Integer targetRole = channelRepository.getMemberRole(channelCode, userCode);
+        if (targetRole == null) {
+            throw new BusinessException("目标用户必须是频道成员");
+        }
+
+        // 不能修改创建者的角色
+        if (MemberRole.OWNER.getValue().equals(targetRole)) {
+            throw new BusinessException("不能修改创建者的角色");
+        }
+
+        // 设置或取消管理员
+        if (isAdmin) {
+            channelRepository.updateMemberRole(channelCode, userCode, MemberRole.ADMIN.getValue());
+        } else {
+            channelRepository.updateMemberRole(channelCode, userCode, MemberRole.MEMBER.getValue());
+        }
     }
 }

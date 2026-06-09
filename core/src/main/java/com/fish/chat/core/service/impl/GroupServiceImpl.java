@@ -7,6 +7,8 @@ import com.fish.chat.common.result.PageResult;
 import com.fish.chat.common.exception.BusinessException;
 import com.fish.chat.core.chat.room.Room;
 import com.fish.chat.core.chat.room.RoomManager;
+import com.fish.chat.core.enums.CommonStatus;
+import com.fish.chat.core.enums.MemberRole;
 import com.fish.chat.core.entity.dto.GroupDTO;
 import com.fish.chat.core.entity.po.GroupMemberPO;
 import com.fish.chat.core.entity.po.GroupPO;
@@ -42,7 +44,7 @@ public class GroupServiceImpl implements GroupService {
         group.setAvatar(avatar);
         group.setOwnerCode(owner.getCode());
         group.setMaxMembers(200);
-        group.setStatus(1);
+        group.setStatus(CommonStatus.NORMAL.getValue());
         groupRepository.save(group);
         // BasePO auto-fill sets code
 
@@ -50,7 +52,7 @@ public class GroupServiceImpl implements GroupService {
         GroupMemberPO member = new GroupMemberPO();
         member.setGroupCode(group.getCode());
         member.setUserCode(owner.getCode());
-        member.setRole(2); // 群主
+        member.setRole(MemberRole.OWNER.getValue());
         member.setJoinTime(LocalDateTime.now());
         groupRepository.insertMember(member);
 
@@ -82,7 +84,7 @@ public class GroupServiceImpl implements GroupService {
         if (group == null) throw new BusinessException("群组不存在");
         if (!group.getOwnerCode().equals(current.getCode())) throw new BusinessException("只有群主可以解散群组");
 
-        group.setStatus(0);
+        group.setStatus(CommonStatus.DISABLED.getValue());
         groupRepository.updateById(group);
     }
 
@@ -103,7 +105,7 @@ public class GroupServiceImpl implements GroupService {
         GroupMemberPO member = new GroupMemberPO();
         member.setGroupCode(group.getCode());
         member.setUserCode(user.getCode());
-        member.setRole(0);
+        member.setRole(MemberRole.MEMBER.getValue());
         member.setJoinTime(LocalDateTime.now());
         groupRepository.insertMember(member);
 
@@ -162,7 +164,7 @@ public class GroupServiceImpl implements GroupService {
         Page<GroupPO> pageParam = new Page<>(pageNum, pageSize);
         Page<GroupPO> pageResult = groupRepository.selectPage(pageParam, Wrappers.<GroupPO>lambdaQuery()
                 .like(GroupPO::getName, keyword)
-                .eq(GroupPO::getStatus, 1));
+                .eq(GroupPO::getStatus, CommonStatus.NORMAL.getValue()));
         List<GroupDTO> list = pageResult.getRecords().stream()
                 .map(g -> toDTO(g, "", 0)).collect(Collectors.toList());
         return PageResult.of(list, pageNum, pageSize, pageResult.getTotal());

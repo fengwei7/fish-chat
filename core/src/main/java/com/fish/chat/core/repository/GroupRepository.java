@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fish.chat.common.repository.BaseRepository;
 import com.fish.chat.core.entity.po.GroupMemberPO;
 import com.fish.chat.core.entity.po.GroupPO;
+import com.fish.chat.core.enums.CommonStatus;
 import com.fish.chat.core.mapper.GroupMapper;
 import com.fish.chat.core.mapper.GroupMemberMapper;
 import org.springframework.stereotype.Repository;
@@ -46,7 +47,7 @@ public class GroupRepository extends BaseRepository<GroupPO> {
         return groupMapper.selectList(
                 Wrappers.<GroupPO>lambdaQuery()
                         .in(GroupPO::getCode, codes)
-                        .eq(GroupPO::getStatus, 1));
+                        .eq(GroupPO::getStatus, CommonStatus.NORMAL.getValue()));
     }
 
     /**

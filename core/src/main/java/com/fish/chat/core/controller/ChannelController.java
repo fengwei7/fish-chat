@@ -54,4 +54,24 @@ public class ChannelController {
             @RequestParam(defaultValue = "20") int pageSize) {
         return Result.success(channelService.searchChannels(keyword, pageNum, pageSize));
     }
+
+    /**
+     * 转让频道（仅创建者可操作）
+     */
+    @PostMapping("/{code}/transfer")
+    public Result<Void> transfer(@PathVariable String code, @RequestBody Map<String, String> req) {
+        channelService.transferChannel(code, req.get("newOwnerCode"));
+        return Result.success("频道转让成功", null);
+    }
+
+    /**
+     * 设置/取消管理员（仅创建者可操作）
+     */
+    @PostMapping("/{code}/admin/{userCode}")
+    public Result<Void> setAdmin(@PathVariable String code, 
+                                 @PathVariable String userCode,
+                                 @RequestBody Map<String, Boolean> req) {
+        channelService.setAdmin(code, userCode, req.get("isAdmin"));
+        return Result.success("操作成功", null);
+    }
 }

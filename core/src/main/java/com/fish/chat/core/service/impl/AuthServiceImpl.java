@@ -7,6 +7,7 @@ import com.fish.chat.core.entity.dto.AuthDTO;
 import com.fish.chat.core.entity.po.UserPO;
 import com.fish.chat.core.entity.req.LoginRequest;
 import com.fish.chat.core.entity.req.RegisterRequest;
+import com.fish.chat.core.enums.CommonStatus;
 import com.fish.chat.core.repository.UserRepository;
 import com.fish.chat.core.service.AuthService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -43,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
         userPO.setMobile(request.getMobile());
         userPO.setEmail(request.getEmail());
         userPO.setNickname(request.getNickname());
-        userPO.setStatus(1);
+        userPO.setStatus(CommonStatus.NORMAL.getValue());
 
         userRepository.save(userPO);
         return true;
@@ -61,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BusinessException("用户名或密码错误");
         }
 
-        if (userPO.getStatus() != 1) {
+        if (!CommonStatus.NORMAL.getValue().equals(userPO.getStatus())) {
             throw new BusinessException("账户已被禁用");
         }
 

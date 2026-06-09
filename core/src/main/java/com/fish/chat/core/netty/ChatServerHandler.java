@@ -151,6 +151,19 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
             return;
         }
 
+        // 检查频道发言权限
+        if (room.getType() == RoomType.CHANNEL) {
+            String channelCode = roomCode.substring(RoomType.CHANNEL.getValue().length() + 1);
+            boolean isAdmin = channelRepository.isAdmin(channelCode, userCode);
+            boolean isOwner = channelRepository.isOwner(channelCode, userCode);
+            
+            if (!isAdmin && !isOwner) {
+                log.warn("用户 {} 无权在频道 {} 发言", userCode, roomCode);
+                sendError(ctx, packet.getReqCode(), "仅频道管理员或创建者可以发言");
+                return;
+            }
+        }
+
         // 设置消息属性
         body.setSenderCode(userCode);
 
@@ -282,11 +295,6 @@ public class ChatServerHandler extends SimpleChannelInboundHandler<TextWebSocket
                 log.warn("房间不存在: {}", roomCode);
                 return null;
             }
-        }
-
-        // 检查权限（频道只允许管理员发言）
-        if (room.getType() == RoomType.CHANNEL) {
-            // TODO: 检查用户是否是频道管理员
         }
 
         if (!room.isMember(userCode)) {
