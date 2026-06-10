@@ -68,7 +68,7 @@ defineProps({
   
   /**
    * 按钮尺寸
-   * @values sm, md, lg
+   * @values sm, md, lg, large
    */
   size: {
     type: String,
@@ -233,10 +233,12 @@ const handleClick = (event) => {
   min-height: 40px;
 }
 
-.fc-button--lg {
-  padding: var(--fc-spacing-lg) var(--fc-spacing-2xl);
+.fc-button--lg,
+.fc-button--large {
+  padding: 16px 32px;
   font-size: var(--fc-text-lg);
-  min-height: 48px;
+  min-height: 56px;
+  border-radius: var(--fc-radius-lg);
 }
 
 /* 块级按钮 */

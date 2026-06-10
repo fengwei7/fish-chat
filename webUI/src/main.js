@@ -1,9 +1,18 @@
 import { createApp } from 'vue'
 import App from './App.vue'
-import ElementPlus from 'element-plus'
-import 'element-plus/dist/index.css'
 import router from './router'
 import pinia from './stores'
+
+// 导入自定义UI组件库
+import {
+  FcButton,
+  FcInput,
+  FcModal,
+  FcAvatar,
+  FcCard,
+  FcBadge,
+  FcSkeleton
+} from './components/ui/index.js'
 
 // 导入自定义UI组件库样式
 import './components/ui/styles/variables.css'
@@ -14,9 +23,17 @@ import './components/chat/styles/chat.css'
 
 const app = createApp(App)
 
+// 注册 Pinia 和 Router
 app.use(pinia)
 app.use(router)
-// 暂时保留ElementPlus，后续逐步替换
-// app.use(ElementPlus)
+
+// 全局注册 UI 组件
+app.component('FcButton', FcButton)
+app.component('FcInput', FcInput)
+app.component('FcModal', FcModal)
+app.component('FcAvatar', FcAvatar)
+app.component('FcCard', FcCard)
+app.component('FcBadge', FcBadge)
+app.component('FcSkeleton', FcSkeleton)
 
 app.mount('#app')

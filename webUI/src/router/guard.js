@@ -14,5 +14,32 @@ export function setupRouterGuard(router, enableGuard = true) {
   router.beforeEach(async (to, from, next) => {
     const userStore = useUserStore()
 
+    // 动态设置页面标题
+    if (to.meta.title) {
+      // console.log('to.meta.title', to.meta.title)
+      document.title = to.meta.title
+    } else {
+      document.title = 'Fish-Chat'
+    }
+
+    // 需要登录的页面
+    if (to.meta.requiresAuth) {
+      if (!userStore.isLogin) {
+        // 未登录，重定向到登录页
+        return next({
+          path: '/login',
+          query: { redirect: to.fullPath } // 保存目标路由，登录后可跳回
+        })
+      }
+    }
+
+    // 已登录用户访问登录/注册页，重定向到聊天页
+    if (to.path === '/login' || to.path === '/register') {
+      if (userStore.isLogin) {
+        return next('/chat')
+      }
+    }
+
+    next()
   })
 }
