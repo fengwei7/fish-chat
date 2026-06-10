@@ -71,10 +71,10 @@ const props = defineProps({
   
   /**
    * 头像尺寸
-   * @values xs, sm, md, lg, xl
+   * @values xs, sm, md, lg, xl（字符串）或数字（像素）
    */
   size: {
-    type: String,
+    type: [String, Number],
     default: 'md'
   },
   
@@ -127,7 +127,14 @@ const avatarStyle = computed(() => {
   const style = {}
   
   // 尺寸
-  const size = sizeMap[props.size] || sizeMap.md
+  let size
+  if (typeof props.size === 'number') {
+    // 如果是数字，直接作为像素值
+    size = `${props.size}px`
+  } else {
+    // 如果是字符串，从 sizeMap 中查找
+    size = sizeMap[props.size] || sizeMap.md
+  }
   style.width = size
   style.height = size
   

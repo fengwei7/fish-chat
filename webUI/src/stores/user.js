@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useWebSocket } from '@/composables/useWebSocket.js'
 
 export const useUserStore = defineStore('user', () => {
   // Token
@@ -39,6 +40,15 @@ export const useUserStore = defineStore('user', () => {
    * 退出登录，清空所有状态
    */
   function logout() {
+    // 断开 WebSocket 连接
+    try {
+      const { disconnect } = useWebSocket()
+      disconnect()
+    } catch (error) {
+      console.error('[UserStore] 断开 WebSocket 失败:', error)
+    }
+    
+    // 清空用户状态
     token.value = ''
     userInfo.value = {
       code: '',
@@ -56,13 +66,22 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = { ...userInfo.value, ...data }
   }
 
+  /**
+   * 设置用户信息（覆盖模式）
+   * @param {Object} data - 完整的用户信息
+   */
+  function setUserInfo(data) {
+    userInfo.value = { ...userInfo.value, ...data }
+  }
+
   return {
     token,
     userInfo,
     isLogin,
     login,
     logout,
-    updateUserInfo
+    updateUserInfo,
+    setUserInfo
   }
 }, {
   persist: true

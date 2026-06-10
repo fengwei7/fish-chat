@@ -99,14 +99,13 @@ export function useWebSocket() {
    * }
    * ```
    */
-  async function connect() {
+  async function connect(options = {}) {
     try {
       const token = userStore.token || localStorage.getItem('token')
       if (!token) {
         throw new Error('未找到 token')
       }
-      
-      await WSManager.connect(token)
+      await WSManager.connect(token, options)
       status.value = 'connected'
       isConnected.value = true
     } catch (error) {

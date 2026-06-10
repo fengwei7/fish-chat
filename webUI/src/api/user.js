@@ -47,3 +47,27 @@ export function getOnlineUsers(params = {}) {
 export function searchUsers(params) {
   return http.get('/user/search', { params })
 }
+
+/**
+ * 上传头像
+ * @param {File} file - 头像文件
+ * @returns {Promise}
+ */
+export function uploadAvatar(file) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return http.post('/user/avatar', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data'
+    }
+  })
+}
+
+/**
+ * 修改密码
+ * @param {Object} data - { oldPassword, newPassword }
+ * @returns {Promise}
+ */
+export function changePassword(data) {
+  return http.post('/user/password', data)
+}

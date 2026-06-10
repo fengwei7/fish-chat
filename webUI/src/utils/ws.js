@@ -131,7 +131,7 @@ class WSManager {
     // 构建 WebSocket URL
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
-    this.wsUrl = options.wsUrl || `${protocol}//${host}/ws`
+    this.wsUrl = options.wsUrl || `${protocol}//${host}/ws-api`
 
     // 如果 token 在 query 中传递（握手认证）
     const url = `${this.wsUrl}?token=${token}`
