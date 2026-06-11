@@ -57,7 +57,12 @@
                 <artifactId>core</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
+            <dependency>
+                <groupId>com.fish</groupId>
+                <artifactId>bootstrap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+
             <!-- 核心框架和Web支持 -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
