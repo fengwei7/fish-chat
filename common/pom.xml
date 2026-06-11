@@ -50,7 +50,7 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-core</artifactId>
-            <version>3.5.5</version>
+            <version>${mybatis-plus.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -58,8 +58,8 @@
             <artifactId>spring-tx</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework.data</groupId>
-            <artifactId>spring-data-redis</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
         <dependency>
             <groupId>cn.hutool</groupId>
@@ -70,12 +70,26 @@
         <dependency>
             <groupId>org.redisson</groupId>
             <artifactId>redisson-spring-boot-starter</artifactId>
+            <version>${redisson.version}</version>
+            <exclusions>
+                <!-- 排除自动引入的 Spring Data 集成，使用兼容版本 -->
+                <exclusion>
+                    <groupId>org.redisson</groupId>
+                    <artifactId>redisson-spring-data-32</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <!-- 手动添加与 Spring Boot 2.7.18 兼容的 Redisson Spring Data 集成 -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-data-27</artifactId>
+            <version>${redisson.version}</version>
         </dependency>
         
         <dependency>
             <groupId>cn.dev33</groupId>
             <artifactId>sa-token-core</artifactId>
-            <version>1.45.0</version>
+            <version>${sa-token.version}</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

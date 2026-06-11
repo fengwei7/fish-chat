@@ -47,7 +47,7 @@
     </dependencies>
 
     <build>
-        <finalName>${project.artifactId}</finalName>
+        <finalName>${project.parent.artifactId}-${project.artifactId}</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>
@@ -55,6 +55,7 @@
                 <version>${spring-boot.version}</version>
                 <configuration>
                     <mainClass>com.fish.chat.bootstrap.BootstrapApplication</mainClass>
+                    <outputDirectory>${project.parent.basedir}/out</outputDirectory>
                 </configuration>
 
                 <executions>

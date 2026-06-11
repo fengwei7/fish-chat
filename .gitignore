@@ -38,3 +38,9 @@ uploads
 ### Logs ###
 logs/
 *.log
+
+### Static Files ###
+bootstrap/src/main/resources/static/
+
+### Build Output ###
+out/
