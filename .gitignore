@@ -32,15 +32,18 @@ build/
 ### VS Code ###
 .vscode/
 .lingma/
-uploads
+.claude/
 .env
 
 ### Logs ###
 logs/
 *.log
+uploads/
 
 ### Static Files ###
 bootstrap/src/main/resources/static/
 
 ### Build Output ###
 out/
+
+*.http

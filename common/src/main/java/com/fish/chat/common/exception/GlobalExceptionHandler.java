@@ -32,6 +32,26 @@ public class GlobalExceptionHandler {
     }
     
     /**
+     * 处理领域异常
+     */
+    @ExceptionHandler(DomainException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public Result<Void> handleDomainException(DomainException e) {
+        log.warn("领域异常：{}", e.getMessage());
+        return Result.error(e.getCode(), e.getMessage());
+    }
+    
+    /**
+     * 处理应用异常
+     */
+    @ExceptionHandler(AppException.class)
+    @ResponseStatus(HttpStatus.OK)
+    public Result<Void> handleAppException(AppException e) {
+        log.warn("应用异常：{}", e.getMessage());
+        return Result.error(e.getCode(), e.getMessage());
+    }
+    
+    /**
      * 处理业务异常
      */
     @ExceptionHandler(BusinessException.class)

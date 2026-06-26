@@ -31,6 +31,13 @@ public enum ErrorCodeEnum {
     TOKEN_EXPIRED(1005, "登录过期，请重新登录"),
     LOGIN_FAILED(1006, "登录失败，请检查账号或密码"),
     REGISTER_FAILED(1007,"注册失败"),
+        
+    /**
+     * ========== DDD 架构异常 ==========
+     */
+    DOMAIN_ERROR(1101, "领域业务规则校验失败"),
+    APP_ERROR(1102, "应用层流程执行失败"),
+    INFRASTRUCTURE_ERROR(1103, "基础设施层执行失败"),
 
 
     /**
