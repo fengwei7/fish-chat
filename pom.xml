@@ -19,6 +19,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <spring-boot.version>2.7.18</spring-boot.version>
+        <sofa.boot.version>3.25.0</sofa.boot.version>
         <mysql.version>8.0.33</mysql.version>
         <lombok.version>1.18.30</lombok.version>
         <sa-token.version>1.45.0</sa-token.version>
@@ -45,7 +46,19 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            
+
+            <!--   sofa boot BOM   -->
+<!--            <dependency>-->
+<!--                <groupId>com.alipay.sofa</groupId>-->
+<!--                <artifactId>sofaboot-dependencies</artifactId>-->
+<!--                <version>${sofa.boot.version}</version>-->
+<!--                <type>pom</type>-->
+<!--                <scope>import</scope>-->
+<!--            </dependency>-->
+<!--            <dependency>-->
+<!--                <groupId>com.alipay.sofa</groupId>-->
+<!--                <artifactId>healthcheck-sofa-boot-starter</artifactId>-->
+<!--            </dependency>-->
             <!-- 项目内部模块 -->
             <dependency>
                 <groupId>com.fish</groupId>
@@ -57,7 +70,11 @@
                 <artifactId>core</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            
+            <dependency>
+                <groupId>com.fish</groupId>
+                <artifactId>bootstrap</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- 核心框架和Web支持 -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>

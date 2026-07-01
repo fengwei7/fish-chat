@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 @EnableMongoRepositories(basePackages = "com.fish.chat.core.repository")
 @EnableCaching
 @EnableScheduling
-@EnableConfigurationProperties(FileUploadProperties.class)
 @Slf4j
 public class BootstrapApplication {
     
