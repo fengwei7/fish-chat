@@ -1,118 +1,82 @@
 package com.fish.chat.application.user.service;
 
 import com.fish.chat.application.user.dto.UserDTO;
-import com.fish.chat.common.exception.AppException;
 import com.fish.chat.common.result.PageResult;
-import com.fish.chat.domain.user.model.entity.User;
-import com.fish.chat.domain.user.repository.UserRepository;
-import lombok.RequiredArgsConstructor;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 
-/**
- * 用户应用服务
- * 
- * 职责:
- * - 流程编排
- * - 事务管理
- * - 权限校验（可选）
- * - 领域事件发布（可选）
- */
-@Service
-@RequiredArgsConstructor
-public class UserAppService {
-    
-    private final UserRepository userRepository;
+
+public interface UserAppService {
+
+    /**
+     * 用户注册
+     * 
+     * @param username 用户名
+     * @param password 密码
+     * @return 注册后的用户 DTO
+     */
+    UserDTO register(String username, String password);
     
     /**
-     * 根据用户 code 获取用户信息
+     * 用户登录
+     * 
+     * @param username 用户名
+     * @param password 密码
+     * @return 登录结果（包含 token 和用户信息）
      */
-    public UserDTO getUserByCode(String code) {
-        User user = userRepository.findByCode(code);
-        if (user == null) {
-            throw new AppException("用户不存在");
-        }
-        return toDTO(user);
-    }
-    
-    /**
-     * 更新用户资料
-     */
-    @Transactional(rollbackFor = Exception.class)
-    public UserDTO updateProfile(String userCode, String nickname, String avatarUrl, 
-                                  String profile, String email, String mobile) {
-        // 1. 查询实体
-        User user = userRepository.findByCode(userCode);
-        if (user == null) {
-            throw new AppException("用户不存在");
-        }
-        
-        // 2. 调用实体业务方法（业务规则校验在实体内部）
-        user.updateProfile(nickname, avatarUrl, profile, email, mobile);
-        
-        // 3. 持久化
-        userRepository.save(user);
-        
-        // 4. 返回 DTO
-        return toDTO(user);
-    }
+    UserDTO login(String username, String password);
     
     /**
      * 修改密码
+     * 
+     * @param userCode 用户编码
+     * @param oldPassword 原密码
+     * @param newPassword 新密码
      */
-    @Transactional(rollbackFor = Exception.class)
-    public void changePassword(String userCode, String oldPassword, String newPassword) {
-        // 1. 查询实体
-        User user = userRepository.findByCode(userCode);
-        if (user == null) {
-            throw new AppException("用户不存在");
-        }
-        
-        // 2. 调用实体业务方法
-        user.changePassword(oldPassword, newPassword);
-        
-        // 3. 持久化
-        userRepository.save(user);
-    }
+    void changePassword(String userCode, String oldPassword, String newPassword);
+    
+    // ==================== 用户信息管理 ====================
+    
+    /**
+     * 获取当前用户信息
+     * 
+     * @param userCode 用户编码
+     * @return 用户 DTO
+     */
+    UserDTO getCurrentUser(String userCode);
+    
+    /**
+     * 更新当前用户信息
+     * 
+     * @param userCode 用户编码
+     * @param nickname 昵称
+     * @param avatarUrl 头像 URL
+     * @param profile 个人简介
+     * @param email 邮箱
+     * @param mobile 手机号
+     * @return 更新后的用户 DTO
+     */
+    UserDTO updateCurrentUser(String userCode, String nickname, String avatarUrl, 
+                              String profile, String email, String mobile);
+    
+    /**
+     * 根据用户 Code 获取用户信息
+     * 
+     * @param code 用户编码
+     * @return 用户 DTO
+     */
+    UserDTO getUserByCode(String code);
+    
+    // ==================== 用户搜索 ====================
     
     /**
      * 搜索用户
+     * 
+     * @param keyword 搜索关键字
+     * @param pageNum 页码（从 1 开始）
+     * @param pageSize 每页大小
+     * @return 分页的用户搜索结果
      */
-    public PageResult<UserDTO> searchUsers(String keyword, int pageNum, int pageSize) {
-        // 1. 查询总数
-        long total = userRepository.countByKeyword(keyword);
-        
-        // 2. 查询数据
-        List<User> users = userRepository.searchByKeyword(keyword, pageNum, pageSize);
-        
-        // 3. 转换为 DTO
-        List<UserDTO> dtoList = new ArrayList<>();
-        for (User user : users) {
-            dtoList.add(toDTO(user));
-        }
-        
-        return PageResult.of(dtoList, pageNum, pageSize, total);
-    }
+    PageResult<UserDTO> searchUsers(String keyword, int pageNum, int pageSize);
     
-    /**
-     * Entity → DTO
-     */
-    private UserDTO toDTO(User user) {
-        if (user == null) {
-            return null;
-        }
-        UserDTO dto = new UserDTO();
-        dto.setCode(user.getCode());
-        dto.setUsername(user.getUsername());
-        dto.setNickname(user.getNickname());
-        dto.setAvatarUrl(user.getAvatarUrl());
-        dto.setProfile(user.getProfile());
-        dto.setEmail(user.getEmail());
-        dto.setMobile(user.getMobile());
-        dto.setCreateTime(user.getCreateTime());
-        return dto;
-    }
 }

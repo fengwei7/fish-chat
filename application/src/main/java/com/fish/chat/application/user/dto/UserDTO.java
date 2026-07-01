@@ -14,6 +14,11 @@ public class UserDTO {
      * 用户唯一标识
      */
     private String code;
+
+    /**
+     * token
+     */
+    private String token;
     
     /**
      * 用户名
