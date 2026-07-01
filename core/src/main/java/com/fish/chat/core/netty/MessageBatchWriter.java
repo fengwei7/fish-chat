@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +46,12 @@ public class MessageBatchWriter {
 
     /** 消息缓冲队列 */
     private BlockingQueue<ChatMessagePacket.Body> queue;
+    
+    /** 批量写入线程池 */
+    private ExecutorService batchWriterExecutor;
+    
+    /** 标识是否正在关闭 */
+    private volatile boolean isShuttingDown = false;
 
     /**
      * 启动消息批量写入器
@@ -54,13 +61,15 @@ public class MessageBatchWriter {
         // 初始化队列
         queue = new LinkedBlockingQueue<>(queueCapacity);
         
-        Executors.newSingleThreadExecutor().execute(() -> {
+        // 创建单线程执行器
+        batchWriterExecutor = Executors.newSingleThreadExecutor();
+        batchWriterExecutor.execute(() -> {
             List<ChatMessagePacket.Body> batch = new ArrayList<>();
             
             log.info("消息批量写入器已启动，队列容量: {}, 批量大小: {}, 轮询超时: {}ms", 
                     queueCapacity, batchSize, pollTimeoutMs);
             
-            while (true) {
+            while (!isShuttingDown) {
                 try {
                     ChatMessagePacket.Body body = queue.poll(pollTimeoutMs, TimeUnit.MILLISECONDS);
                     if (body != null) {
@@ -80,6 +89,15 @@ public class MessageBatchWriter {
                     log.error("消息批量写入异常", e);
                 }
             }
+            
+            // 退出循环前，保存剩余消息
+            if (!batch.isEmpty()) {
+                log.info("保存剩余消息，数量: {}", batch.size());
+                batchSave(batch);
+                batch.clear();
+            }
+            
+            log.info("消息批量写入器已停止");
         });
     }
 
@@ -159,6 +177,39 @@ public class MessageBatchWriter {
      * @return 待处理消息数
      */
     public int getPendingCount() {
-        return queue.size();
+        return queue != null ? queue.size() : 0;
+    }
+    
+    /**
+     * 优雅关闭批量写入器
+     * 将队列中剩余的消息保存到 MongoDB
+     * 由 ApplicationStartupManager 统一调用
+     */
+    public void shutdown() {
+        if (isShuttingDown) {
+            log.warn("消息批量写入器正在关闭中，请勿重复调用");
+            return;
+        }
+        
+        isShuttingDown = true;
+        log.info("开始关闭消息批量写入器，待处理消息数: {}", getPendingCount());
+        
+        // 等待批量写入线程处理完剩余消息
+        if (batchWriterExecutor != null) {
+            batchWriterExecutor.shutdown();
+            try {
+                // 最多等待 10 秒
+                if (!batchWriterExecutor.awaitTermination(10, TimeUnit.SECONDS)) {
+                    log.warn("消息批量写入器关闭超时，强制关闭");
+                    batchWriterExecutor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                log.error("等待消息批量写入器关闭时被中断", e);
+                batchWriterExecutor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+        
+        log.info("消息批量写入器已关闭");
     }
 }

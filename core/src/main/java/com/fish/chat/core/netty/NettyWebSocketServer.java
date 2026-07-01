@@ -11,7 +11,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
 import java.net.InetSocketAddress;
 
@@ -27,9 +26,6 @@ public class NettyWebSocketServer {
 
     @Resource
     private NettyWebSocketInitializer initializer;
-
-    @Resource
-    private SessionManager sessionManager;
 
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
@@ -53,16 +49,13 @@ public class NettyWebSocketServer {
 
         ChannelFuture future = bootstrap.bind().sync();
         log.info("Netty WebSocket 启动成功！端口: {}", port);
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            log.info("关闭 Netty 服务器...");
-            sessionManager.shutdown();
-            shutdown();
-        }));
     }
-
-    @PreDestroy
+    
+    /**
+     * 关闭 Netty WebSocket 服务器
+     * 由 ApplicationStartupManager 统一调用
+     */
     public void shutdown() {
-        sessionManager.shutdown();
         if (bossGroup != null && !bossGroup.isShutdown()) {
             bossGroup.shutdownGracefully();
         }
