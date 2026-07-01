@@ -46,3 +46,4 @@ bootstrap/src/main/resources/static/
 out/
 
 .claude
+.DS_Store
