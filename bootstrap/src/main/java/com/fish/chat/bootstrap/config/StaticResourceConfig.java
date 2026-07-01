@@ -1,6 +1,6 @@
 package com.fish.chat.bootstrap.config;
 
-import org.springframework.beans.factory.annotation.Value;
+import com.fish.chat.common.properties.FileUploadProperties;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -14,17 +14,8 @@ import java.nio.file.Paths;
 @Configuration
 public class StaticResourceConfig implements WebMvcConfigurer {
 
-    /**
-     * 文件上传保存目录（相对路径或绝对路径）
-     */
-    @Value("${fish-chat-config.file.upload.dir}")
-    private String dir = "./uploads";
-
-    /**
-     * 上传文件的访问 URL 前缀
-     */
-    @Value("${fish-chat-config.file.upload.access-path}")
-    private String accessPath = "/uploads/";
+    @Resource
+    private FileUploadProperties fileUploadProperties;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -33,7 +24,7 @@ public class StaticResourceConfig implements WebMvcConfigurer {
                 .addResourceLocations("classpath:/static/");
 
         // 上传文件目录映射为静态资源
-        String accessPath = this.accessPath;
+        String accessPath = fileUploadProperties.getAccessPath();
         if (!accessPath.startsWith("/")) {
             accessPath = "/" + accessPath;
         }
@@ -42,7 +33,7 @@ public class StaticResourceConfig implements WebMvcConfigurer {
         }
 
         // 将相对路径转换为绝对路径
-        String uploadDir = Paths.get(this.dir)
+        String uploadDir = Paths.get(fileUploadProperties.getDir())
                 .toAbsolutePath()
                 .normalize()
                 .toString();
